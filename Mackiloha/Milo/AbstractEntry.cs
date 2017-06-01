@@ -21,9 +21,21 @@ namespace Mackiloha.Milo
             BigEndian = bigEndian;
         }
 
+        /// <summary>
+        /// Gets name
+        /// </summary>
         public string Name { get; set; }
+        /// <summary>
+        /// Gets type
+        /// </summary>
         public virtual string Type { get; }
+        /// <summary>
+        /// Gets raw bytes
+        /// </summary>
         public abstract byte[] Data { get; }
+        /// <summary>
+        /// Gets or sets endianess
+        /// </summary>
         public bool BigEndian { get; set; }
     }
 }
