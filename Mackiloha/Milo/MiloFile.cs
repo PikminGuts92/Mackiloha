@@ -8,7 +8,7 @@ using PanicAttack;
 
 namespace Mackiloha.Milo
 {
-    public partial class MiloFile : AbstractEntry
+    public partial class MiloFile : AbstractEntry, IJsonable
     {
         private BlockStructure _structure;
         private uint _offset;
@@ -26,6 +26,14 @@ namespace Mackiloha.Milo
             _offset = 2064;
 
             Entries = new List<AbstractEntry>();
+        }
+
+        public static MiloFile FromFile(string input)
+        {
+            using (FileStream fs = File.OpenRead(input))
+            {
+                return FromStream(fs);
+            }
         }
 
         public static MiloFile FromStream(Stream input)
@@ -118,6 +126,21 @@ namespace Mackiloha.Milo
             ms.Close();
             
             return milo;
+        }
+
+        public void Deserialize(string filePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Serialize(string filePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string ToJson()
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

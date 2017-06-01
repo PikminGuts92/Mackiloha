@@ -27,6 +27,7 @@ namespace Mackiloha.Milo
             milo = new MiloFile(dirName, dirType, ar.BigEndian);
             milo._structure = structure;
             milo._offset = offset;
+
             // TODO: Add component parser (Difficult)
             // TODO: Add entry parser
             
@@ -50,7 +51,7 @@ namespace Mackiloha.Milo
 
             count = ar.ReadInt32();
 
-            while (count >= 0)
+            while (count > 0)
             {
                 // Reads entry name + type
                 types.Add(ar.ReadString());
