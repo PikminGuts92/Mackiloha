@@ -8,10 +8,11 @@ using PanicAttack;
 
 namespace Mackiloha.Milo
 {
-    public class MiloFile : AbstractEntry
+    public partial class MiloFile : AbstractEntry
     {
         private BlockStructure _structure;
         private uint _offset;
+        private MiloVersion _version;
         private const uint MAX_BLOCK_SIZE = 0x8000; // 2^15
 
         public MiloFile() : this("", "")
@@ -30,7 +31,7 @@ namespace Mackiloha.Milo
         public static MiloFile FromStream(Stream input)
         {
             BlockStructure structure;
-            uint offset;
+            uint offset = 0;
 
             MemoryStream ms = new MemoryStream(); // Raw milo data
             using (AwesomeReader ar = new AwesomeReader(input))
@@ -105,17 +106,18 @@ namespace Mackiloha.Milo
                 }
             }
 
+            MiloFile milo;
             ms.Seek(0, SeekOrigin.Begin);
+
             using (AwesomeReader ar = new AwesomeReader(ms))
             {
                 // Parses milo directory
-
+                milo = ParseDirectory(ar, structure, offset);
             }
-
+            
             ms.Close();
             
-            // Not yet implemented
-            return null;
+            return milo;
         }
 
         /// <summary>
@@ -142,6 +144,22 @@ namespace Mackiloha.Milo
                 }
             }
         }
+
+        /// <summary>
+        /// Gets or sets milo directory version
+        /// </summary>
+        public MiloVersion Version
+        {
+            get
+            {
+                return _version;
+            }
+            set
+            {
+                if (IsVersionValid(value)) _version = value;
+            }
+        }
+
         public List<AbstractEntry> Entries { get; }
         public override byte[] Data { get { return null; } }
     }

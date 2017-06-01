@@ -49,8 +49,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Compression.cs" />
     <Compile Include="Milo\AbstractEntry.cs" />
-    <Compile Include="Milo\MiloFile.cs" />
+    <Compile Include="Milo\BlockStructure.cs" />
+	<Compile Include="Milo\MiloFile.cs" />
+    <Compile Include="Milo\MiloFile.Directory.cs">
+		<DependentUpon>MiloFile.cs</DependentUpon>
+	</Compile>
     <Compile Include="Milo\MiloEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
