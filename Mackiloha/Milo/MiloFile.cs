@@ -138,6 +138,8 @@ namespace Mackiloha.Milo
 
         public void Export(string path)
         {
+            string extractPath = $@"{FileHelper.RemoveExtension(path)}.extracted";
+
             dynamic json = new JObject();
             json.FileType = "MiloFile";
             json.Structure = JsonConvert.SerializeObject(_structure, new StringEnumConverter()).Replace("\"", "");
@@ -150,7 +152,7 @@ namespace Mackiloha.Milo
                 json.DirectoryType = Type;
             }
 
-            string extractPath = $@"Extracted_{FileHelper.RemoveExtension(path)}";
+            json.ExtractDirectory = FileHelper.GetFileName(extractPath);
 
             // Writes entries
             JArray array = new JArray();
@@ -165,6 +167,11 @@ namespace Mackiloha.Milo
                 jsonEntry.ExtractPath = entryPath;
                 array.Add(jsonEntry);
 
+                // TODO: Check if entry is MiloEntry or is IExportable
+                string fullEntryPath = $@"{extractPath}\{entryPath}";
+                FileHelper.CreateDirectoryIfNotExists(fullEntryPath);
+
+                File.WriteAllBytes(fullEntryPath, entry.Data);
             }
 
             json.Entries = array;

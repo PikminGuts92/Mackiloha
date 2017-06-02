@@ -25,9 +25,20 @@ namespace Mackiloha
             return Path.GetFileName(filePath);
         }
 
-        public static string RemoveExtension(string filePath)
+        public static string GetFileNameWithoutExtension(string filePath)
         {
             return Path.GetFileNameWithoutExtension(filePath);
+        }
+
+        public static void CreateDirectoryIfNotExists(string filePath)
+        {
+            string directory = GetDirectory(filePath);
+            if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+        }
+
+        public static string RemoveExtension(string filePath)
+        {
+            return $@"{GetDirectory(filePath)}\{GetFileNameWithoutExtension(filePath)}";
         }
     }
 }
