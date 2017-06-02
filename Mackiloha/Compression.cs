@@ -17,7 +17,7 @@ namespace Mackiloha
 
     public static class Compression
     {
-        private static byte[] ZLIB_MAGIC = new byte[] { 0x78, 0x9C }; // Default compression
+        private static byte[] ZLIB_MAGIC = { 0x78, 0x9C }; // Default compression
 
         public static byte[] InflateBlock(byte[] inBlock, CompressionType type, int offset = 0)
         {

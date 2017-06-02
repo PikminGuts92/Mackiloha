@@ -27,7 +27,7 @@ namespace Porkchop
                         if (otherArgs[0].Equals("serialize", StringComparison.CurrentCultureIgnoreCase))
                         {
                             // Opens input milo file
-                            MiloFile.FromFile(otherArgs[1]);
+                            MiloFile milo = MiloFile.FromFile(otherArgs[1]);
 
                             // TODO: Write output json file
                         }

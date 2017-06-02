@@ -26,5 +26,10 @@ namespace Mackiloha.Milo
         /// Gets raw bytes
         /// </summary>
         public override byte[] Data { get { return _data; } }
+
+        public override string ToString()
+        {
+            return string.Format("{0} - {1} ({2} bytes)", Type, Name, _data.Length);
+        }
     }
 }

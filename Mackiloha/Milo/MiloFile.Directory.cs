@@ -10,6 +10,8 @@ namespace Mackiloha.Milo
 {
     public partial class MiloFile
     {
+        private static byte[] ADDE_PADDING = { 0xAD, 0xDE, 0xAD, 0xDE }; // Used to pad files
+
         private static MiloFile ParseDirectory(AwesomeReader ar, BlockStructure structure, uint offset)
         {
             bool origBigEndian = ar.BigEndian; // Used to preserve orig stream
@@ -17,7 +19,7 @@ namespace Mackiloha.Milo
             MiloVersion version;
             bool valid;
             string dirName, dirType;
-            List<string> entryNames, entryTypes;
+            string[] entryNames, entryTypes;
 
             // Guesses endianess
             ar.BigEndian = DetermineEndianess(ar.ReadBytes(4), out version, out valid);
@@ -27,18 +29,44 @@ namespace Mackiloha.Milo
             milo = new MiloFile(dirName, dirType, ar.BigEndian);
             milo._structure = structure;
             milo._offset = offset;
+            milo._version = version;
 
             // TODO: Add component parser (Difficult)
-            // TODO: Add entry parser
-            
+
+            // Reads each file
+            for (int i = 0; i < entryNames.Length; i++)
+            {
+                long start = ar.BaseStream.Position;
+                int size = (int)(ar.FindNext(ADDE_PADDING));
+
+                ar.BaseStream.Position = start;
+                milo.Entries.Add(new MiloEntry(entryNames[i], entryTypes[i], ar.ReadBytes(size), milo.BigEndian));
+                ar.BaseStream.Position += 4; // Jumps ADDE padding
+
+                /* TODO: Implement milo files as entries
+                if (type[i] == "ObjectDir" || type[i] == "MoveDir")
+                {
+                    // Directory embedded as an entry
+                    // Skips over redundant directory info
+                    ar.BaseStream.Position += 4;
+                    dir.Entries.Add(MiloFile.FromStream(ar));
+                }
+                else
+                {
+                    // Regular entry
+                    ar.BaseStream.Position = start;
+                    dir.Entries.Add(new MEntry(name[i], type[i], ar.ReadBytes(size)));
+                    ar.BaseStream.Position += 4;
+                } */
+            }
+
+            ar.BigEndian = origBigEndian;
             return milo;
         }
 
-        private static void ParseEntryNames(AwesomeReader ar, MiloVersion version, out string dirName, out string dirType, out List<string> names, out List<string> types)
+        private static void ParseEntryNames(AwesomeReader ar, MiloVersion version, out string dirName, out string dirType, out string[] names, out string[] types)
         {
             dirName = dirType = ""; // Only used on versions 24+
-            names = new List<string>();
-            types = new List<string>();
             int count;
             
             if ((int)version >= 24)
@@ -50,14 +78,14 @@ namespace Mackiloha.Milo
             }
 
             count = ar.ReadInt32();
+            names = new string[count];
+            types = new string[count];
 
-            while (count > 0)
+            for (int i = 0; i < count; i++)
             {
                 // Reads entry name + type
-                types.Add(ar.ReadString());
-                names.Add(ar.ReadString());
-
-                count--;
+                types[i] = ar.ReadString();
+                names[i] = ar.ReadString();
             }
         }
 
