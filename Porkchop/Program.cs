@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Mackiloha;
 using Mackiloha.Milo;
 
 namespace Porkchop
@@ -28,8 +29,10 @@ namespace Porkchop
                         {
                             // Opens input milo file
                             MiloFile milo = MiloFile.FromFile(otherArgs[1]);
+                            
 
                             // TODO: Write output json file
+                            milo.Export(otherArgs[1] + ".json");
                         }
 
                         break;
@@ -52,6 +55,5 @@ namespace Porkchop
 
             return other;
         }
-
     }
 }

@@ -5,10 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using PanicAttack;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Converters;
 
 namespace Mackiloha.Milo
 {
-    public partial class MiloFile : AbstractEntry, IJsonable
+    public partial class MiloFile : AbstractEntry, IExportable
     {
         private BlockStructure _structure;
         private uint _offset;
@@ -128,19 +131,45 @@ namespace Mackiloha.Milo
             return milo;
         }
 
-        public void Deserialize(string filePath)
+        public void Import(string path)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
-        public void Serialize(string filePath)
+        public void Export(string path)
         {
-            throw new NotImplementedException();
-        }
+            dynamic json = new JObject();
+            json.FileType = "MiloFile";
+            json.Structure = JsonConvert.SerializeObject(_structure, new StringEnumConverter()).Replace("\"", "");
+            json.BlockOffset = _offset;
+            json.Version = _version;
+            
+            if ((uint)_version > 10)
+            {
+                json.DirectoryName = Name;
+                json.DirectoryType = Type;
+            }
 
-        public string ToJson()
-        {
-            throw new NotImplementedException();
+            string extractPath = $@"Extracted_{FileHelper.RemoveExtension(path)}";
+
+            // Writes entries
+            JArray array = new JArray();
+            foreach(AbstractEntry entry in Entries)
+            {
+                string entryPath = $@"Entries\{entry.Type}\{entry.Name}";
+
+                // Adds to json file
+                dynamic jsonEntry = new JObject();
+                jsonEntry.Name = entry.Name;
+                jsonEntry.Type = entry.Type;
+                jsonEntry.ExtractPath = entryPath;
+                array.Add(jsonEntry);
+
+            }
+
+            json.Entries = array;
+
+            File.WriteAllText(path, json.ToString());
         }
 
         /// <summary>

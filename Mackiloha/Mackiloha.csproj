@@ -50,6 +50,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compression.cs" />
+    <Compile Include="FileHelper.cs" />
+    <Compile Include="IExportable.cs" />
     <Compile Include="Milo\AbstractEntry.cs" />
     <Compile Include="Milo\BlockStructure.cs" />
     <Compile Include="Milo\MiloFile.cs" />
