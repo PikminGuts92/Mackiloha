@@ -31,7 +31,7 @@ namespace Mackiloha
             if (bpp == 4)
             {
                 // 16 color palette (RGBa)
-                Color[] palette = GetColorPalette(ar, 16, 0xFF); // 2^4 = 16 colors
+                Color[] palette = GetColorPalette(ar, 16); // 2^4 = 16 colors
                 int index, pixel1, pixel2;
                 //return bmp; // Fix later
 
@@ -54,7 +54,7 @@ namespace Mackiloha
             else if (bpp == 8)
             {
                 // 256 color palette (RGBa)
-                Color[] palette = GetColorPalette(ar, 256, 0xFF); // 2^8 = 256 colors
+                Color[] palette = GetColorPalette(ar, 256); // 2^8 = 256 colors
                 int index, bit3, bit4;
 
                 for (int h = 0; h < height; h++)
@@ -106,6 +106,10 @@ namespace Mackiloha
                         B = ar.ReadByte();
                         a = ar.ReadByte();
 
+                        if (a == 0x80) a = 0xFF;
+                        else if (a > 0x80) Console.WriteLine("Alpha channel has value of {0}", a);
+                        else a = (byte)(a << 1);
+
                         bmp.SetPixel(w, h, Color.FromArgb(a, R, G, B));
                     }
                 }
@@ -128,6 +132,10 @@ namespace Mackiloha
                     G = ar.ReadByte();
                     B = ar.ReadByte();
                     a = ar.ReadByte();
+
+                    if (a == 0x80) a = 0xFF;
+                    else if (a > 0x80) Console.WriteLine("Alpha channel has value of {0}", a);
+                    else a = (byte)(a << 1);
 
                     // Sets color
                     colors[i] = Color.FromArgb(a, R, G, B);

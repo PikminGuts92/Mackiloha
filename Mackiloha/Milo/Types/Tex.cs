@@ -30,31 +30,24 @@ namespace Mackiloha.Milo
             using (AwesomeReader ar = new AwesomeReader(input))
             {
                 int version;
-                bool valid;
+                bool valid, useExternal;
                 Tex tex = new Tex("");
 
                 // Guesses endianess
                 ar.BigEndian = DetermineEndianess(ar.ReadBytes(4), out version, out valid);
 
                 if (!valid) return null; // Probably do something else later
-
-                checkVersion:
-                if (version == 8 || version == 9)
+                
+                if (version == 8)
                 {
-                    if (version == 9)
-                    {
-                        ar.BaseStream.Position += version << 2;
-                        version = ar.ReadInt32();
-                        goto checkVersion;
-                    }
-                    
                     // Parses tex header
                     ar.BaseStream.Position += 12; // Skips duplicate width, height, bpp info
                     tex.ExternalPath = ar.ReadString();
-                    ar.BaseStream.Position += 9; // Skips unknown stuff
+                    ar.BaseStream.Position += 8; // Skips unknown stuff
+                    useExternal = ar.ReadBoolean();
 
                     // Parses hmx image
-                    tex.Image = HMXImage.FromStream(ar.BaseStream);
+                    if (!useExternal) tex.Image = HMXImage.FromStream(ar.BaseStream);
                 }
                 else
                     return null;
@@ -88,7 +81,6 @@ namespace Mackiloha.Milo
             switch (version)
             {
                 case 8: // PS2
-                case 9: // PS2 - Special case?
                     return true;
                 default:
                     return false;
@@ -105,12 +97,16 @@ namespace Mackiloha.Milo
             dynamic json = new JObject();
             json.FileType = "Tex";
             json.ExternalPath = ExternalPath;
-            json.Encoding = JsonConvert.SerializeObject(Image.Encoding, new StringEnumConverter()).Replace("\"", "");
 
-            // Exports image as PNG
-            string pngPath = $@"{FileHelper.RemoveExtension(path)}.png";
-            Image.SaveAs(pngPath);
-            json.Png = FileHelper.GetFileName(pngPath);
+            if (Image != null)
+            {
+                json.Encoding = JsonConvert.SerializeObject(Image.Encoding, new StringEnumConverter()).Replace("\"", "");
+
+                // Exports image as PNG
+                string pngPath = $@"{FileHelper.RemoveExtension(path)}.png";
+                Image.SaveAs(pngPath);
+                json.Png = FileHelper.GetFileName(pngPath);
+            }
 
             File.WriteAllText(path, json.ToString());
         }

@@ -32,6 +32,8 @@ namespace Mackiloha.Milo
             milo._version = version;
 
             // TODO: Add component parser (Difficult)
+            if (version == MiloVersion.V10)
+                GetExternalResources(ar);
 
             // Reads each file
             for (int i = 0; i < entryNames.Length; i++)
@@ -109,6 +111,26 @@ namespace Mackiloha.Milo
                 types[i] = ar.ReadString();
                 names[i] = ar.ReadString();
             }
+        }
+
+        private static string[] GetExternalResources(AwesomeReader ar)
+        {
+            string[] res = new string[ar.ReadUInt32()];
+
+            // Mostly zero'd
+            for (int i = 0; i < res.Length; i++)
+            {
+                uint charCount = ar.ReadUInt32();
+
+                // Reads string if not some outrageous number
+                if (charCount < 0xFFFF)
+                {
+                    ar.BaseStream.Position -= 4;
+                    res[i] = ar.ReadString();
+                }
+            }
+
+            return res;
         }
 
         private static bool DetermineEndianess(byte[] head, out MiloVersion version, out bool valid)
