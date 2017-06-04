@@ -165,13 +165,28 @@ namespace Mackiloha.Milo
                 jsonEntry.Name = entry.Name;
                 jsonEntry.Type = entry.Type;
                 jsonEntry.ExtractPath = entryPath;
+                
+                // Checks if entry is IExportable
+                if (entry is IExportable)
+                {
+                    string fullEntryPath = $@"{extractPath}\{entryPath}.json";
+                    FileHelper.CreateDirectoryIfNotExists(fullEntryPath);
+
+                    // Exports entry
+                    IExportable export = entry as IExportable;
+                    export.Export(fullEntryPath);
+                    jsonEntry.Exported = true;
+                }
+                else
+                {
+                    // Writes raw bytes
+                    string fullEntryPath = $@"{extractPath}\{entryPath}";
+                    FileHelper.CreateDirectoryIfNotExists(fullEntryPath);
+                    File.WriteAllBytes(fullEntryPath, entry.Data);
+                }
+
+                // Adds entry
                 array.Add(jsonEntry);
-
-                // TODO: Check if entry is MiloEntry or is IExportable
-                string fullEntryPath = $@"{extractPath}\{entryPath}";
-                FileHelper.CreateDirectoryIfNotExists(fullEntryPath);
-
-                File.WriteAllBytes(fullEntryPath, entry.Data);
             }
 
             json.Entries = array;

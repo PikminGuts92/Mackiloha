@@ -38,10 +38,32 @@ namespace Mackiloha.Milo
             {
                 long start = ar.BaseStream.Position;
                 int size = (int)(ar.FindNext(ADDE_PADDING));
+                byte[] bytes;
 
+                // Reads raw file bytes
                 ar.BaseStream.Position = start;
-                milo.Entries.Add(new MiloEntry(entryNames[i], entryTypes[i], ar.ReadBytes(size), milo.BigEndian));
+                bytes = ar.ReadBytes(size);
                 ar.BaseStream.Position += 4; // Jumps ADDE padding
+
+                switch (entryTypes[i])
+                {
+                    case "Tex":
+                        using (MemoryStream ms = new MemoryStream(bytes))
+                        {
+                            AbstractEntry entry = Tex.FromStream(ms);
+                            if (entry == null) goto defaultCase;
+
+                            entry.Name = entryNames[i];
+                            milo.Entries.Add(entry);
+                        }
+                        break;
+                    default:
+                        defaultCase:
+                        milo.Entries.Add(new MiloEntry(entryNames[i], entryTypes[i], bytes, milo.BigEndian));
+                        break;
+                }
+
+                
 
                 /* TODO: Implement milo files as entries
                 if (type[i] == "ObjectDir" || type[i] == "MoveDir")

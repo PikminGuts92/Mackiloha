@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using PanicAttack;
 
@@ -62,13 +63,23 @@ namespace Mackiloha
                 if (ar.ReadByte() != 0x01) return null; // Should always be 1!
                 bpp = ar.ReadByte();
 
-                if (!(bpp == 4 || bpp == 8)) return null; // Probably should do something else
+                switch(bpp)
+                {
+                    case 4:
+                    case 8:
+                    case 24:
+                    case 32:
+                        break;
+                    default:
+                        return null; // Probably should do something else
+                }
 
                 // Guesses endianess
                 ar.BigEndian = DetermineEndianess(ar.ReadBytes(4), out encoding, out valid);
                 if (!valid) return null; // Maybe do something else later
 
                 // Reads rest of header
+                ar.ReadByte(); // Mipmap count
                 width = ar.ReadUInt16();
                 height = ar.ReadUInt16();
                 bpl = ar.ReadUInt16();
@@ -76,8 +87,16 @@ namespace Mackiloha
 
                 // Decodes image
                 Bitmap bmp = Decode(ar, encoding, bpp, width, height, bpl);
-                return new HMXImage(bmp);
+                HMXImage image = new HMXImage(bmp);
+                image.Encoding = encoding;
+
+                return image;
             }
+        }
+
+        public void SaveAs(string path)
+        {
+            _bmp.Save(path, ImageFormat.Png);
         }
 
         private static bool DetermineEndianess(byte[] head, out ImageEncoding encoding, out bool valid)
@@ -113,5 +132,11 @@ namespace Mackiloha
                     return false;
             }
         }
+
+        public ImageEncoding Encoding { get; set; }
+
+        public int Width => _bmp.Width;
+
+        public int Height => _bmp.Height;
     }
 }
