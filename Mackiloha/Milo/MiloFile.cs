@@ -77,7 +77,7 @@ namespace Mackiloha.Milo
                     for (int i = 0; i < blockCount; i++)
                     {
                         blockSize[i] = ar.ReadInt24();
-                        blockCompressed[i] = ar.ReadBoolean(); // "01" is uncompressed for milo_d
+                        blockCompressed[i] = ar.ReadBoolean(); // "01" is uncompressed for MILO_D
 
                         if (structure == BlockStructure.MILO_D && blockCompressed[i])
                         {
@@ -129,6 +129,118 @@ namespace Mackiloha.Milo
             ms.Close();
             
             return milo;
+        }
+
+        public void ToFile(string outputPath)
+        {
+            FileHelper.CreateDirectoryIfNotExists(outputPath);
+
+            using (FileStream fs = File.Create(outputPath))
+            {
+                ToStream(fs);
+            }
+        }
+
+        public void ToStream(Stream output)
+        {
+            using (AwesomeWriter aw = new AwesomeWriter(output, false))
+            {
+                WriteToStream(aw, 0);
+            }
+        }
+
+        private long WriteToStream(AwesomeWriter aw, int depth)
+        {
+            // TODO: Implement recursion and multi-directory writing
+            long startOffset = aw.BaseStream.Position;
+            long endOffset = 0;
+            byte[] data = this.Data;
+
+            // Writes just raw data if no block structure
+            if (depth == 0 && _structure == BlockStructure.NONE)
+            {
+                aw.Write(data);
+                return aw.BaseStream.Position - startOffset;
+            }
+            else if (depth == 0 && _structure == BlockStructure.GZIP)
+            {
+                aw.Write(Compression.DeflateBlock(data, CompressionType.GZIP));
+                return aw.BaseStream.Position - startOffset;
+            }
+            
+            // Milo block structure
+            using (AwesomeReader ar = new AwesomeReader(new MemoryStream(data)))
+            {
+                List<int> blockSizes = new List<int>();
+                int currentBlockSize = 0, largetBlockSize = 0;
+                
+                // Calculates uncompressed block sizes
+                while (ar.BaseStream.Position < ar.BaseStream.Length)
+                {
+                    // This assumes at least embedded file entry - Fix later?
+                    long nextAdde = ar.FindNext(ADDE_PADDING);
+                    currentBlockSize += (int)nextAdde + 4;
+
+                    if (currentBlockSize >= MAX_BLOCK_SIZE || ar.BaseStream.Position == ar.BaseStream.Position - 1)
+                    {
+                        if (currentBlockSize > largetBlockSize) largetBlockSize = currentBlockSize; // Sets larget block size
+
+                        blockSizes.Add(currentBlockSize);
+                        currentBlockSize = 0;
+                    }
+                }
+
+                // Writes header (16 bytes)
+                aw.Write((int)_structure);
+                aw.Write(_offset);
+                aw.Write(blockSizes.Count);
+                aw.Write(largetBlockSize);
+                aw.BaseStream.Seek(startOffset + _offset, SeekOrigin.Begin);
+
+                ar.BaseStream.Seek(0, SeekOrigin.Begin);
+
+                // Compresses blocks
+                for (int i = 0; i < blockSizes.Count; i++)
+                {
+                    byte[] block = ar.ReadBytes(blockSizes[i]);
+
+                    switch(_structure)
+                    {
+                        case BlockStructure.MILO_B:
+                            block = Compression.DeflateBlock(block, CompressionType.ZLIB);
+                            break;
+                        case BlockStructure.MILO_C: // Gzip
+                            block = Compression.DeflateBlock(block, CompressionType.GZIP);
+                            break;
+                        case BlockStructure.MILO_D:
+                            byte[] size = BitConverter.GetBytes(block.Length);
+                            byte[] temp = Compression.DeflateBlock(block, CompressionType.ZLIB);
+
+                            block = new byte[temp.Length + 4];
+                            Array.Copy(size, 0, block, 0, size.Length);
+                            Array.Copy(temp, 0, block, size.Length, block.Length - size.Length);
+                            break;
+                    }
+
+                    // Updates block size
+                    blockSizes[i] = block.Length;
+
+                    // Writes block
+                    aw.Write(block);
+                }
+
+                // Updates end offset
+                endOffset = aw.BaseStream.Position;
+
+                // Writes block sizes in header
+                aw.BaseStream.Seek(startOffset + 16, SeekOrigin.Begin);
+                foreach(int blockSize in blockSizes)
+                {
+                    aw.Write(blockSize);
+                }
+            }
+            
+            return endOffset - startOffset;
         }
 
         public void Import(string path)
@@ -235,6 +347,16 @@ namespace Mackiloha.Milo
         }
 
         public List<AbstractEntry> Entries { get; }
-        public override byte[] Data { get { return null; } }
+        public override byte[] Data => CreateData();
+
+        private byte[] CreateData()
+        {
+            using (AwesomeWriter ar = new AwesomeWriter(new MemoryStream(), BigEndian))
+            {
+
+
+                return ((MemoryStream)(ar.BaseStream)).ToArray();
+            }
+        }
     }
 }

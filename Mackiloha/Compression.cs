@@ -58,5 +58,44 @@ namespace Mackiloha
 
             return outBlock;
         }
+
+        public static byte[] DeflateBlock(byte[] inBlock, CompressionType type, int offset = 0)
+        {
+            if (offset < 0) offset = 0;
+            byte[] outBlock;
+
+            switch (type)
+            {
+                case CompressionType.GZIP:
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        // Compresses gzip stream
+                        GZipStream gzip = new GZipStream(new MemoryStream(), CompressionMode.Compress);
+                        gzip.Write(inBlock, offset, inBlock.Length - offset);
+
+                        gzip.CopyTo(ms);
+                        outBlock = ms.ToArray();
+                        gzip.Flush();
+                    }
+                    break;
+                case CompressionType.ZLIB:
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        // Compresses zlib stream
+                        ZInputStream inZStream = new ZInputStream(ms);
+                        inZStream.Read(inBlock, offset, inBlock.Length - offset);
+
+                        outBlock = ms.ToArray();
+                        inZStream.Close();
+                    }
+                    break;
+                default:
+                    outBlock = new byte[inBlock.Length];
+                    Array.Copy(inBlock, outBlock, inBlock.Length);
+                    break;
+            }
+
+            return outBlock;
+        }
     }
 }
