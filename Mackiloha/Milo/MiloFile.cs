@@ -179,9 +179,10 @@ namespace Mackiloha.Milo
                 {
                     // This assumes at least embedded file entry - Fix later?
                     long nextAdde = ar.FindNext(ADDE_PADDING);
+                    ar.BaseStream.Position += 4;
                     currentBlockSize += (int)nextAdde + 4;
 
-                    if (currentBlockSize >= MAX_BLOCK_SIZE || ar.BaseStream.Position == ar.BaseStream.Position - 1)
+                    if (currentBlockSize >= MAX_BLOCK_SIZE || ar.BaseStream.Position >= ar.BaseStream.Position)
                     {
                         if (currentBlockSize > largetBlockSize) largetBlockSize = currentBlockSize; // Sets larget block size
 
@@ -351,11 +352,30 @@ namespace Mackiloha.Milo
 
         private byte[] CreateData()
         {
-            using (AwesomeWriter ar = new AwesomeWriter(new MemoryStream(), BigEndian))
+            using (AwesomeWriter aw = new AwesomeWriter(new MemoryStream(), BigEndian))
             {
+                aw.Write((int)_version);
+                // TODO: Implement directory type + name writing
 
+                aw.Write(Entries.Count);
 
-                return ((MemoryStream)(ar.BaseStream)).ToArray();
+                // Writes entry type + name
+                foreach(AbstractEntry entry in Entries)
+                {
+                    aw.Write(entry.Type);
+                    aw.Write(entry.Name);
+                }
+
+                if (_version == MiloVersion.V10) aw.Write((int)0);
+
+                // Writes data from each entry
+                foreach(AbstractEntry entry in Entries)
+                {
+                    aw.Write(entry.Data);
+                    aw.Write(ADDE_PADDING);
+                }
+
+                return ((MemoryStream)(aw.BaseStream)).ToArray();
             }
         }
     }

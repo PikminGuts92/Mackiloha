@@ -82,13 +82,14 @@ namespace Mackiloha
                     using (MemoryStream ms = new MemoryStream())
                     {
                         // Compresses zlib stream
-                        ZInputStream inZStream = new ZInputStream(ms);
-                        inZStream.Read(inBlock, offset, inBlock.Length - offset);
+                        ZOutputStream outZStream = new ZOutputStream(ms, zlibConst.Z_DEFAULT_COMPRESSION);
+                        outZStream.Write(inBlock, offset, inBlock.Length - offset);
+                        outZStream.finish();
 
                         outBlock = ms.ToArray();
-                        inZStream.Close();
+                        outZStream.Flush();
                     }
-                    break;
+                    return outBlock.Skip(2).ToArray(); // Returns without magic
                 default:
                     outBlock = new byte[inBlock.Length];
                     Array.Copy(inBlock, outBlock, inBlock.Length);
