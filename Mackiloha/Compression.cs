@@ -30,8 +30,7 @@ namespace Mackiloha
                     using (MemoryStream ms = new MemoryStream())
                     {
                         // Decompresses gzip stream
-                        GZipStream gzip = new GZipStream(new MemoryStream(), CompressionMode.Decompress);
-                        gzip.Write(inBlock, offset, inBlock.Length - offset);
+                        GZipStream gzip = new GZipStream(new MemoryStream(inBlock.Skip(offset).ToArray()), CompressionMode.Decompress);
 
                         gzip.CopyTo(ms);
                         outBlock = ms.ToArray();
@@ -70,8 +69,7 @@ namespace Mackiloha
                     using (MemoryStream ms = new MemoryStream())
                     {
                         // Compresses gzip stream
-                        GZipStream gzip = new GZipStream(new MemoryStream(), CompressionMode.Compress);
-                        gzip.Write(inBlock, offset, inBlock.Length - offset);
+                        GZipStream gzip = new GZipStream(new MemoryStream(inBlock.Skip(offset).ToArray()), CompressionMode.Compress);
 
                         gzip.CopyTo(ms);
                         outBlock = ms.ToArray();

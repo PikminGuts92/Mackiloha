@@ -99,11 +99,11 @@ namespace Mackiloha.Milo
                         {
                             switch(structure)
                             {
-                                case BlockStructure.GZIP:
-                                    block = Compression.InflateBlock(block, CompressionType.GZIP);
-                                    break;
                                 case BlockStructure.MILO_B:
                                     block = Compression.InflateBlock(block, CompressionType.ZLIB);
+                                    break;
+                                case BlockStructure.MILO_C:
+                                    block = Compression.InflateBlock(block, CompressionType.GZIP);
                                     break;
                                 default: // MILO_D
                                     block = Compression.InflateBlock(block, CompressionType.ZLIB, 4);
