@@ -59,6 +59,16 @@ namespace Mackiloha.Milo
                             milo.Entries.Add(entry);
                         }
                         break;
+                    case "Mesh":
+                        using (MemoryStream ms = new MemoryStream(bytes))
+                        {
+                            AbstractEntry entry = Mesh.FromStream(ms);
+                            if (entry == null) goto defaultCase;
+
+                            entry.Name = entryNames[i];
+                            milo.Entries.Add(entry);
+                        }
+                        break;
                     default:
                         defaultCase:
                         milo.Entries.Add(new MiloEntry(entryNames[i], entryTypes[i], bytes, milo.BigEndian));
