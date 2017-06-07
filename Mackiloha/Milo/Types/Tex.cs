@@ -30,28 +30,28 @@ namespace Mackiloha.Milo
             using (AwesomeReader ar = new AwesomeReader(input))
             {
                 int version;
-                bool valid, useExternal;
+                bool valid, useExternal = true;
                 Tex tex = new Tex("");
 
                 // Guesses endianess
                 ar.BigEndian = DetermineEndianess(ar.ReadBytes(4), out version, out valid);
-
                 if (!valid) return null; // Probably do something else later
                 
-                if (version == 8)
+                // Parses tex header
+                ar.BaseStream.Position += 12; // Skips duplicate width, height, bpp info
+                tex.ExternalPath = ar.ReadString();
+
+                if (version != 5)
                 {
-                    // Parses tex header
-                    ar.BaseStream.Position += 12; // Skips duplicate width, height, bpp info
-                    tex.ExternalPath = ar.ReadString();
                     ar.BaseStream.Position += 8; // Skips unknown stuff
                     useExternal = ar.ReadBoolean();
-
-                    // Parses hmx image
-                    if (!useExternal) tex.Image = HMXImage.FromStream(ar.BaseStream);
                 }
                 else
-                    return null;
+                    ar.BaseStream.Position += 5; // Amp doesn't embed textures?
 
+                // Parses hmx image
+                if (!useExternal) tex.Image = HMXImage.FromStream(ar.BaseStream);
+               
                 return tex;
             }
         }
@@ -80,7 +80,8 @@ namespace Mackiloha.Milo
         {
             switch (version)
             {
-                case 8: // PS2
+                case 5: // PS2 - Amp
+                case 8: // PS2 - GH1
                     return true;
                 default:
                     return false;
