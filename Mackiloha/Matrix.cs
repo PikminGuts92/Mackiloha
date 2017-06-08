@@ -33,21 +33,22 @@ namespace Mackiloha
             // Reads from stream, usually embedded inside milo directories and mesh files
             Matrix mat = new Matrix();
 
-            mat.RX = ar.ReadSingle();
-            mat.RY = ar.ReadSingle();
-            mat.RZ = ar.ReadSingle();
+            mat.RX = ar.ReadSingle(); // M11
+            mat.RY = ar.ReadSingle(); // M12
+            mat.RZ = ar.ReadSingle(); // M13
 
-            mat.UX = ar.ReadSingle();
-            mat.UY = ar.ReadSingle();
-            mat.UZ = ar.ReadSingle();
+            mat.UX = ar.ReadSingle(); // M21
+            mat.UY = ar.ReadSingle(); // M22
+            mat.UZ = ar.ReadSingle(); // M23
 
-            mat.FX = ar.ReadSingle();
-            mat.FY = ar.ReadSingle();
-            mat.FZ = ar.ReadSingle();
+            mat.FX = ar.ReadSingle(); // M31
+            mat.FY = ar.ReadSingle(); // M32
+            mat.FZ = ar.ReadSingle(); // M33
 
-            mat.PX = ar.ReadSingle();
-            mat.PY = ar.ReadSingle();
-            mat.PZ = ar.ReadSingle();
+            mat.PX = ar.ReadSingle(); // M41
+            mat.PY = ar.ReadSingle(); // M42
+            mat.PZ = ar.ReadSingle(); // M43
+            mat.PW = 1.0f;            // M44 - Implicit
 
             return mat;
         }
@@ -62,7 +63,7 @@ namespace Mackiloha
         public float UZ;
         public float UW;
 
-        public float FX; // Front
+        public float FX; // Forward
         public float FY;
         public float FZ;
         public float FW;

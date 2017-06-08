@@ -25,6 +25,7 @@ namespace Mackiloha.Milo
     public class Mesh : AbstractEntry, IExportable
     {
         private MeshVersion _version;
+        private Matrix _mat1, _mat2;
         private Vertex[] _vertices;
         private ushort[][] _faces;
 
@@ -67,8 +68,8 @@ namespace Mackiloha.Milo
                 else ar.BaseStream.Position += 17;
 
                 // Reads in matrix tables
-                Matrix mat1 = Matrix.FromStream(ar);
-                Matrix mat2 = Matrix.FromStream(ar);
+                mesh._mat1 = Matrix.FromStream(ar);
+                mesh._mat2 = Matrix.FromStream(ar);
 
                 // Reads sub mesh strings
                 if (mesh._version == MeshVersion.GH1)
@@ -263,6 +264,9 @@ namespace Mackiloha.Milo
         }
 
         public MeshVersion Version { get { return _version; } }
+
+        public Matrix Mat1 { get { return _mat1; } }
+        public Matrix Mat2 { get { return _mat2; } }
 
         public Vertex[] Vertices { get { return _vertices; } }
 
