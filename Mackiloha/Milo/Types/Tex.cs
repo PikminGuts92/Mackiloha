@@ -96,7 +96,7 @@ namespace Mackiloha.Milo
         public void Export(string path)
         {
             dynamic json = new JObject();
-            json.FileType = "Tex";
+            json.FileType = Type;
             json.ExternalPath = ExternalPath;
 
             if (Image != null)

@@ -16,7 +16,7 @@ namespace Mackiloha
          *  |       0       0       1       0   Forward
          *  |       0       0       0       1   Position
          */
-        
+
         public static Matrix Identity()
         {
             return new Matrix()
@@ -27,6 +27,14 @@ namespace Mackiloha
                 PW = 1.0f
             };
         }
+
+        public float[,] GetRawMatrix => new float[,]
+        {
+            { RX, RY, RZ, RW },
+            { UX, UY, UZ, UW },
+            { FX, FY, FZ, FW },
+            { PX, PY, PZ, PW },
+        };
 
         public static Matrix FromStream(AwesomeReader ar)
         {
