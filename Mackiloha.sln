@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+VisualStudioVersion = 15.0.26430.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mackiloha", "Mackiloha\Mackiloha.csproj", "{6F65B855-4191-45BD-956C-6D1513AFDADB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Porkchop", "Porkchop\Porkchop.csproj", "{17164C6F-EB95-4DF5-A897-4CFEFE2D160F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFreq", "SuperFreq\SuperFreq.csproj", "{45FB4506-5EB0-4259-8CA5-389BE08644A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{17164C6F-EB95-4DF5-A897-4CFEFE2D160F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17164C6F-EB95-4DF5-A897-4CFEFE2D160F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17164C6F-EB95-4DF5-A897-4CFEFE2D160F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45FB4506-5EB0-4259-8CA5-389BE08644A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45FB4506-5EB0-4259-8CA5-389BE08644A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45FB4506-5EB0-4259-8CA5-389BE08644A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45FB4506-5EB0-4259-8CA5-389BE08644A6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
