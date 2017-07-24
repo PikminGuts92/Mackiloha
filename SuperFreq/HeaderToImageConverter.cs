@@ -5,6 +5,7 @@ using System.Windows.Data;
 using System.Windows.Media.Imaging;
 using static System.IO.Path;
 using GameArchives;
+using GameArchives.Ark;
 
 // What a nice guy! :)
 // http://www.codeproject.com/Articles/21248/A-Simple-WPF-Explorer-Tree 
@@ -22,11 +23,10 @@ namespace SuperFreq
         {
             string path = "pack://application:,,,/Assets/";
 
-            if (value is IDirectory)
+            if (value is ArkPackage)
             {
                 // Root
-                //path += "box.png";
-                path += "folder_closed.png";
+                path += "box.png";
             }
             else if (value is TreeArkEntryInfo)
             {
@@ -36,7 +36,7 @@ namespace SuperFreq
                 switch (fileInfo.EntryType)
                 {
                     case ArkEntryType.Folder:
-                        
+                        path += "folder_closed.png";
                         break;
                     case ArkEntryType.Script:
                         path += "page_white_code_green.png";

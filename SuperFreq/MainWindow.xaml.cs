@@ -82,6 +82,20 @@ namespace SuperFreq
             parent.Items.SortDescriptions.Add(new SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending));
         }
 
+        private List<string> GetFiles(IDirectory parent, string parentPath = "")
+        {
+            List<string> paths = new List<string>();
+            string childDirectory = parentPath == "" ? "" : parentPath + "/";
+
+            foreach (IFile file in parent.Files)
+                paths.Add(parentPath + "/" + file.Name);
+
+            foreach (IDirectory child in parent.Dirs)
+                paths.AddRange(GetFiles(child, childDirectory + child.Name));
+
+            return paths;
+        }
+
         private void RefreshFileTree()
         {
             // Unregisters nodes
@@ -100,12 +114,13 @@ namespace SuperFreq
             //root.ContextMenu = TreeView_Archive.Resources["CM_Directory"] as ContextMenu;
 
             TreeViewItem tn = root;
-            foreach (List<IFile> entry in ark.RootDirectory.Files)
+            List<string> entries = GetFiles(ark.RootDirectory); // Recursive
+            foreach (string entry in entries)
             {
                 tn = root;
                 string currentPath = "";
-                //string[] splitNames = entry.Name.Split('/');
-                string[] splitNames = new string[] { };
+                string[] splitNames = entry.Split('/');
+                //string[] splitNames = new string[] { };
                 
                 for (int i = 0; i < splitNames.Length; i++)
                 {
