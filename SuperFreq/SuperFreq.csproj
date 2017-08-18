@@ -66,6 +66,9 @@
     <Compile Include="DTBEditor.xaml.cs">
       <DependentUpon>DTBEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="MiloEditor.xaml.cs">
+      <DependentUpon>MiloEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="TreeArkEntryInfo.cs" />
     <Page Include="DTBEditor.xaml">
       <SubType>Designer</SubType>
@@ -84,6 +87,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="MiloEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

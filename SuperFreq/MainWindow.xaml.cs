@@ -245,9 +245,9 @@ namespace SuperFreq
                         {
                             MenuItem itemOpen = new MenuItem();
                             itemOpen.Header = "Open";
-                            //itemOpen.Click += ItemOpen_Click;
+                            itemOpen.Click += ItemOpen_Click;
 
-                            //node.MouseDoubleClick += Node_MouseDoubleClick;
+                            node.MouseDoubleClick += Node_MouseDoubleClick;
                             node.ContextMenu.Items.Insert(0, itemOpen);
                             break;
                         }
@@ -314,19 +314,18 @@ namespace SuperFreq
                 case ArkEntryType.Audio:
                     return;
                 case ArkEntryType.Archive:
-                    /*
+                    
                     // Opens Milo file
                     TabItem miloTab = TabControl_Files.Resources["TabItem_Milo"] as TabItem;
                     miloTab.Header = GetFileName(info.InternalPath);
                     MiloEditor milo = miloTab.Content as MiloEditor;
 
                     // Gets entry from ark
-                    ArkFileEntry miloEntry = ark.Entries[info.InternalPath];
-                    Stream miloStream = miloEntry.OpenReadStream();
+                    Stream miloStream = ark.GetFile(info.InternalPath).Stream;
 
                     milo.OpenMiloFile(miloStream);
                     selectedIdx = TabControl_Files.Items.Add(miloTab);
-                    break;*/
+                    break;
                 case ArkEntryType.Video:
                 case ArkEntryType.Midi:
                 default: // ArkFileType.Default

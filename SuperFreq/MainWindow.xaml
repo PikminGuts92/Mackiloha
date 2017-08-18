@@ -103,9 +103,9 @@
                     <TabItem x:Key="TabItem_DTB" x:Shared="false" Header="DTB" Background="{StaticResource Brush_Menu}">
                         <local:DTBEditor x:Name="DTB_Editor" Visibility="Visible" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                     </TabItem>
-                    <!--<TabItem x:Key="TabItem_Milo" x:Shared="false" Header="Milo" Background="{StaticResource Brush_Menu}">
+                    <TabItem x:Key="TabItem_Milo" x:Shared="false" Header="Milo" Background="{StaticResource Brush_Menu}">
                         <local:MiloEditor x:Name="Milo_Editor" Visibility="Visible" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                    </TabItem>-->
+                    </TabItem>
                 </TabControl.Resources>
             </TabControl>
 
