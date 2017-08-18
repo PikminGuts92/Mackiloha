@@ -17,6 +17,10 @@ using System.ComponentModel; // SortDescription
 using static System.IO.Path;
 using GameArchives;
 using GameArchives.Ark;
+using Mackiloha;
+using Mackiloha.DTB;
+using Mackiloha.Milo;
+using System.IO;
 
 namespace SuperFreq
 {
@@ -228,10 +232,10 @@ namespace SuperFreq
                         {
                             MenuItem itemOpen = new MenuItem();
                             itemOpen.Header = "Open";
-                            //itemOpen.Click += ItemOpen_Click;
+                            itemOpen.Click += ItemOpen_Click;
 
-                            //node.MouseDoubleClick += Node_MouseDoubleClick;
-                            //node.ContextMenu.Items.Insert(0, itemOpen);
+                            node.MouseDoubleClick += Node_MouseDoubleClick;
+                            node.ContextMenu.Items.Insert(0, itemOpen);
                             break;
                         }
                     case ArkEntryType.Texture:
@@ -258,6 +262,80 @@ namespace SuperFreq
             //{
             //    node.ContextMenu = TreeView_Archive.Resources["CM_Directory"] as ContextMenu;
             //}
+        }
+
+        private void Node_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            OpenSelectedFile();
+        }
+
+        private void ItemOpen_Click(object sender, RoutedEventArgs e)
+        {
+            OpenSelectedFile();
+        }
+
+        private void OpenSelectedFile()
+        {
+            if (TreeView_Archive.SelectedItem == null || !(TreeView_Archive.SelectedItem is TreeViewItem)) return;
+
+            TreeViewItem item = TreeView_Archive.SelectedItem as TreeViewItem;
+            if (item.Tag == null || !(item.Tag is TreeArkEntryInfo)) return;
+
+            TreeArkEntryInfo info = item.Tag as TreeArkEntryInfo;
+
+            int selectedIdx;
+
+            switch (info.EntryType)
+            {
+                case ArkEntryType.Script:
+                    
+                    // Open DTB file
+                    TabItem dtbTab = TabControl_Files.Resources["TabItem_DTB"] as TabItem;
+                    dtbTab.Header = GetFileName(info.InternalPath);
+                    DTBEditor dtb = dtbTab.Content as DTBEditor;
+
+                    // Gets entry from ark
+                    Stream dtbStream = ark.GetFile(info.InternalPath).Stream;
+                    
+                    try
+                    {
+                        dtb.OpenDTBFile(dtbStream, false, DTBEncoding.Classic);
+                        selectedIdx = TabControl_Files.Items.Add(dtbTab);
+
+                        dtbStream.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        dtbStream.Close();
+                        return;
+                    }
+                    break;
+                case ArkEntryType.Texture:
+                case ArkEntryType.Audio:
+                    return;
+                case ArkEntryType.Archive:
+                    /*
+                    // Opens Milo file
+                    TabItem miloTab = TabControl_Files.Resources["TabItem_Milo"] as TabItem;
+                    miloTab.Header = GetFileName(info.InternalPath);
+                    MiloEditor milo = miloTab.Content as MiloEditor;
+
+                    // Gets entry from ark
+                    ArkFileEntry miloEntry = ark.Entries[info.InternalPath];
+                    Stream miloStream = miloEntry.OpenReadStream();
+
+                    milo.OpenMiloFile(miloStream);
+                    selectedIdx = TabControl_Files.Items.Add(miloTab);
+                    break;*/
+                case ArkEntryType.Video:
+                case ArkEntryType.Midi:
+                default: // ArkFileType.Default
+                    return;
+            }
+
+            // Changes selected tab to most recently added
+            TabControl_Files.Visibility = Visibility.Visible;
+            TabControl_Files.SelectedIndex = selectedIdx;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

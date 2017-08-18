@@ -33,9 +33,6 @@
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="PanicAttack, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\PanicAttack.1.0.1\lib\net452\PanicAttack.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -50,7 +47,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AwesomeReader.cs" />
+    <Compile Include="AwesomeWriter.cs" />
     <Compile Include="Compression.cs" />
+    <Compile Include="Crypt.cs" />
+    <Compile Include="DTB\DTAParsing.cs" />
+    <Compile Include="DTB\DTBEncoding.cs" />
+    <Compile Include="DTB\DTBFile.cs" />
+    <Compile Include="DTB\DTBItem.cs" />
+    <Compile Include="DTB\FloatItem.cs" />
+    <Compile Include="DTB\IntegerItem.cs" />
+    <Compile Include="DTB\ParentItem.cs" />
+    <Compile Include="DTB\StringItem.cs" />
     <Compile Include="FileHelper.cs" />
     <Compile Include="HMXImage.cs" />
     <Compile Include="HMXImage.Encoding.cs">

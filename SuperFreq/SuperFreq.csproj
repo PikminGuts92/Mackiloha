@@ -63,7 +63,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DTBEditor.xaml.cs">
+      <DependentUpon>DTBEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="TreeArkEntryInfo.cs" />
+    <Page Include="DTBEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -122,6 +129,12 @@
     <Resource Include="Assets\page_white_code_green.png" />
     <Resource Include="Assets\page_white_music.png" />
     <Resource Include="Assets\page_white_text.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mackiloha\Mackiloha.csproj">
+      <Project>{6f65b855-4191-45bd-956c-6d1513afdadb}</Project>
+      <Name>Mackiloha</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
