@@ -130,6 +130,14 @@ namespace Mackiloha.Milo
             return milo;
         }
 
+        public AbstractEntry this[string entryName]
+        {
+            get
+            {
+                return this.Entries.FirstOrDefault(x => string.Compare(x.Name, entryName, true) == 0);
+            }
+        }
+
         public void ToFile(string outputPath)
         {
             FileHelper.CreateDirectoryIfNotExists(outputPath);

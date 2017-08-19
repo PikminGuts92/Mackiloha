@@ -74,6 +74,7 @@
     </Compile>
     <Compile Include="Milo\MiloEntry.cs" />
     <Compile Include="Milo\MiloVersion.cs" />
+    <Compile Include="Milo\Types\Mat.cs" />
     <Compile Include="Milo\Types\Mesh.cs" />
     <Compile Include="Milo\Types\Tex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

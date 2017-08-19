@@ -82,7 +82,7 @@ namespace Mackiloha.Milo
                 ar.BaseStream.Position += 25;
 
                 if (mesh._version == MeshVersion.GDRB) ar.BaseStream.Position += 4;
-                ar.ReadString(); // Reads material
+                mesh.Material = ar.ReadString(); // Reads material
                 ar.ReadString(); // Reads mesh name
                 ar.BaseStream.Position += 9;
 
@@ -311,6 +311,8 @@ namespace Mackiloha.Milo
 
         public Matrix Mat1 { get { return _mat1; } }
         public Matrix Mat2 { get { return _mat2; } }
+        
+        public string Material { get; set; }
 
         public Vertex[] Vertices { get { return _vertices; } }
 

@@ -39,6 +39,7 @@ namespace Mackiloha
                 return FromStream(fs);
             }
         }
+
         public static HMXImage FromStream(Stream input)
         {
             /* Header size = 32 bytes
@@ -92,6 +93,8 @@ namespace Mackiloha
                 return image;
             }
         }
+
+        public IntPtr Hbitmap => new Bitmap(_bmp).GetHbitmap(); // Copies image
 
         public void SaveAs(string path)
         {
