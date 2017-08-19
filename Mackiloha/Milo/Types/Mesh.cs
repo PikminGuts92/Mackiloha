@@ -79,7 +79,13 @@ namespace Mackiloha.Milo
 
                 ar.BaseStream.Position += 9;
                 ar.ReadString(); // Reads view
-                ar.BaseStream.Position += 25;
+                //ar.BaseStream.Position += 25;
+
+                // Skipping these other mesh strings
+                ar.BaseStream.Position += 5;
+                uint meshCount = ar.ReadUInt32();
+                for (int i = 0; i < meshCount; i++) ar.ReadString();
+                ar.BaseStream.Position += 16; // Four floats - Quaternions?
 
                 if (mesh._version == MeshVersion.GDRB) ar.BaseStream.Position += 4;
                 mesh.Material = ar.ReadString(); // Reads material

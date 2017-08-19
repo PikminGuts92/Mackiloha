@@ -38,7 +38,7 @@ namespace Mackiloha.Milo
                 
                 // Parses tex header
                 ar.BaseStream.Position += 12; // Skips duplicate width, height, bpp info
-                tex.ExternalPath = ar.ReadString();
+                tex.ExternalPath = ar.ReadString(); // Relative path
 
                 if (version != 5)
                 {

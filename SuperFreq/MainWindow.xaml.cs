@@ -292,14 +292,14 @@ namespace SuperFreq
                     // Open DTB file
                     TabItem dtbTab = TabControl_Files.Resources["TabItem_DTB"] as TabItem;
                     dtbTab.Header = GetFileName(info.InternalPath);
-                    DTBEditor dtb = dtbTab.Content as DTBEditor;
+                    DTBEditor dtbEdit = dtbTab.Content as DTBEditor;
 
                     // Gets entry from ark
                     Stream dtbStream = ark.GetFile(info.InternalPath).Stream;
                     
                     try
                     {
-                        dtb.OpenDTBFile(dtbStream, false, DTBEncoding.Classic);
+                        dtbEdit.OpenDTBFile(dtbStream, false, DTBEncoding.Classic);
                         selectedIdx = TabControl_Files.Items.Add(dtbTab);
 
                         dtbStream.Close();
@@ -318,12 +318,14 @@ namespace SuperFreq
                     // Opens Milo file
                     TabItem miloTab = TabControl_Files.Resources["TabItem_Milo"] as TabItem;
                     miloTab.Header = GetFileName(info.InternalPath);
-                    MiloEditor milo = miloTab.Content as MiloEditor;
+                    MiloEditor miloEdit = miloTab.Content as MiloEditor;
+                    miloEdit.SetArk(this.ark);
+                    miloEdit.SetFilePath(info.InternalPath);
 
                     // Gets entry from ark
                     Stream miloStream = ark.GetFile(info.InternalPath).Stream;
 
-                    milo.OpenMiloFile(miloStream);
+                    miloEdit.OpenMiloFile(miloStream);
                     selectedIdx = TabControl_Files.Items.Add(miloTab);
                     break;
                 case ArkEntryType.Video:

@@ -53,6 +53,7 @@ namespace Mackiloha
              * INT16 - Bytes Per Line
              * BYTES - 19 bytes of zero'd data
              */
+            if (input.Position == input.Length) return null; // End of stream;
 
             using (AwesomeReader ar = new AwesomeReader(input))
             {

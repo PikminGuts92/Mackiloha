@@ -20,6 +20,8 @@ using System.IO;
 using System.Windows.Media.Media3D;
 //using System.Drawing; // TODO: Use something else for images
 using System.Windows.Interop;
+using GameArchives;
+using GameArchives.Ark;
 
 namespace SuperFreq
 {
@@ -28,10 +30,16 @@ namespace SuperFreq
     /// </summary>
     public partial class MiloEditor : UserControl
     {
+        private ArkPackage ark;
+        private string arkFilePath;
+
         public MiloEditor()
         {
             InitializeComponent();
         }
+
+        public void SetArk(ArkPackage arkInput) => this.ark = arkInput;
+        public void SetFilePath(string path) => this.arkFilePath = path;
 
         public void OpenMiloFile(Stream source)
         {
@@ -123,10 +131,13 @@ namespace SuperFreq
 
             ab = milo[(ab as Mat).Texture];
             if (ab == null || !(ab is Tex)) return null;
+            HMXImage img = (ab as Tex).Image;
+            if (img == null) img = TryOpenExternalImage((ab as Tex).ExternalPath);
+            if (img == null) return null;
 
             // Converts texture to WPF-acceptable format
             ImageBrush brush = new ImageBrush();
-            brush.ImageSource = Imaging.CreateBitmapSourceFromHBitmap((ab as Tex).Image.Hbitmap, // Don't forget to dispose
+            brush.ImageSource = Imaging.CreateBitmapSourceFromHBitmap(img.Hbitmap, // Don't forget to dispose
                                 IntPtr.Zero,
                                 Int32Rect.Empty,
                                 BitmapSizeOptions.FromEmptyOptions());
@@ -134,6 +145,27 @@ namespace SuperFreq
 
             mat.Brush = brush;
             return mat;
+        }
+
+        private HMXImage TryOpenExternalImage(string bmpPath)
+        {
+            bmpPath = System.IO.Path.GetDirectoryName(this.arkFilePath) + "/" + System.IO.Path.GetDirectoryName(bmpPath) + "/gen/" + System.IO.Path.GetFileName(bmpPath) + GetPlatformExtension();
+            IFile bmpFile = this.ark.GetFile(bmpPath);
+
+            return HMXImage.FromStream(bmpFile.Stream);
+        }
+
+        private string GetPlatformExtension()
+        {
+            string ext = System.IO.Path.GetExtension(this.arkFilePath);
+
+            switch(ext)
+            {
+                case ".gh":
+                    return "_ps2";
+                default:
+                    return ext.Remove(0, ext.Length - ext.LastIndexOf('_'));
+            }
         }
     }
 }
