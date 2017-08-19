@@ -112,7 +112,7 @@ namespace SuperFreq
             // Putting it all together
             ModelVisual3D model3d = new ModelVisual3D();
             GeometryModel3D geom3d = new GeometryModel3D();
-
+            
             geom3d.Geometry = mesh3d;
             geom3d.Material = mat;
             model3d.Content = geom3d;
@@ -123,36 +123,62 @@ namespace SuperFreq
 
         private Material GetMaterial(string matName, MiloFile milo)
         {
-            DiffuseMaterial mat = new DiffuseMaterial();
-            mat.SetName(matName);
+            // Materials can have multiple textures
+            MaterialGroup group = new MaterialGroup();
+            group.SetName(matName);
 
+            
             AbstractEntry ab = milo[matName];
             if (ab == null || !(ab is Mat)) return null;
 
-            ab = milo[(ab as Mat).Texture];
-            if (ab == null || !(ab is Tex)) return null;
-            HMXImage img = (ab as Tex).Image;
-            if (img == null) img = TryOpenExternalImage((ab as Tex).ExternalPath);
-            if (img == null) return null;
+            // Enumerates textures in material
+            foreach(string texName in (ab as Mat).Textures)
+            {
+                DiffuseMaterial mat = new DiffuseMaterial();
 
-            // Converts texture to WPF-acceptable format
-            ImageBrush brush = new ImageBrush();
-            brush.ImageSource = Imaging.CreateBitmapSourceFromHBitmap(img.Hbitmap, // Don't forget to dispose
-                                IntPtr.Zero,
-                                Int32Rect.Empty,
-                                BitmapSizeOptions.FromEmptyOptions());
-            brush.ViewportUnits = BrushMappingMode.Absolute;
+                ab = milo[texName];
+                if (ab == null || !(ab is Tex)) continue;
 
-            mat.Brush = brush;
-            return mat;
+                HMXImage img = (ab as Tex).Image;
+                if (img == null) img = TryOpenExternalImage((ab as Tex).ExternalPath);
+                if (img == null) continue;
+
+                // Converts texture to WPF-acceptable format
+                ImageBrush brush = new ImageBrush();
+                brush.ImageSource = Imaging.CreateBitmapSourceFromHBitmap(img.Hbitmap, // Don't forget to dispose
+                                    IntPtr.Zero,
+                                    Int32Rect.Empty,
+                                    BitmapSizeOptions.FromEmptyOptions());
+                brush.ViewportUnits = BrushMappingMode.Absolute;
+
+                mat.Brush = brush;
+                group.Children.Add(mat);
+            }
+
+            return (group.Children.Count > 0) ? group : null;
         }
 
         private HMXImage TryOpenExternalImage(string bmpPath)
         {
-            bmpPath = System.IO.Path.GetDirectoryName(this.arkFilePath) + "/" + System.IO.Path.GetDirectoryName(bmpPath) + "/gen/" + System.IO.Path.GetFileName(bmpPath) + GetPlatformExtension();
-            IFile bmpFile = this.ark.GetFile(bmpPath);
+            IFile bmpFile = this.ark.GetFile(GetAbsolutePath(System.IO.Path.GetDirectoryName(this.arkFilePath), bmpPath));
 
             return HMXImage.FromStream(bmpFile.Stream);
+        }
+
+        private string GetAbsolutePath(string absoluteDirectory, string relativeFilePath)
+        {
+            absoluteDirectory = absoluteDirectory.Replace("\\", "/");
+            relativeFilePath = relativeFilePath.Replace("\\", "/");
+
+            while (relativeFilePath.StartsWith("../"))
+            {
+                relativeFilePath = relativeFilePath.Remove(0, 3);
+                absoluteDirectory = absoluteDirectory.Remove(absoluteDirectory.LastIndexOf("/"));
+            }
+
+            string path = absoluteDirectory + "/" + relativeFilePath;
+            path = System.IO.Path.GetDirectoryName(path) + "/gen/" + System.IO.Path.GetFileName(path) + GetPlatformExtension();
+            return path.Replace("\\", "/");
         }
 
         private string GetPlatformExtension()

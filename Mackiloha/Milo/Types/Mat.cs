@@ -33,12 +33,28 @@ namespace Mackiloha.Milo
                 ar.BigEndian = DetermineEndianess(ar.ReadBytes(4), out version, out valid);
                 if (!valid) return null; // Probably do something else later
 
-                int listsTexture = ar.ReadInt32();
-                if (listsTexture != 1) return null;
+                int textureCount = ar.ReadInt32(); // Usually between 0-2
 
-                // Skips to texture name
-                ar.BaseStream.Position += 60;
-                mat.Texture= ar.ReadString();
+                for (int i = 0; i < textureCount; i++)
+                {
+                    // INT32 - Unknown (2)
+                    // INT32 - Unknown (0, 5)
+                    // MATRIX
+                    //      1.0 0.0 0.0 0.0
+                    //      1.0 0.0 0.0 0.0
+                    //      1.0 0.0 0.0 0.0
+                    // INT32 - Either 0 or 1
+                    // \____ 60 bytes ____/
+                    ar.BaseStream.Position += 60;
+                    mat.Textures.Add(ar.ReadString());
+                }
+
+                // INT32 - Always 3
+                // FLOAT - Not sure // Four floats - Values between 0 and 1 (Transparency?)
+                // FLOAT -   |
+                // FLOAT -   |
+                // FLOAT -  /
+                // BYTES(13)
 
                 return mat;
             }
@@ -85,7 +101,7 @@ namespace Mackiloha.Milo
             throw new NotImplementedException();
         }
 
-        public string Texture { get; set; }
+        public List<string> Textures { get; } = new List<string>();
 
         public override byte[] Data => throw new NotImplementedException();
 
