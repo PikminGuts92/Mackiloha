@@ -12,9 +12,8 @@ namespace Mackiloha.Ark
     public class ArkFile : IEnumerable<ArkEntry>
     {
         private ArkVersion _version;
-        private string _hdrPath;
         private bool _encrypted;
-        private string[] _parts;
+        private string[] _arkPaths; // 0 = HDR
         private ArkEntry[] _entries;
 
         private ArkFile() { }
@@ -34,7 +33,6 @@ namespace Mackiloha.Ark
         {
             ArkFile ark = new ArkFile();
             ark._version = ArkVersion.V3;
-            ark._hdrPath = input;
             ark._encrypted = false;
 
             using (AwesomeReader ar = new AwesomeReader(stream))
@@ -45,7 +43,7 @@ namespace Mackiloha.Ark
                 uint arkFileSizeCount = ar.ReadUInt32(); // Should be same as ark file count
 
                 uint[] partSizes = new uint[arkFileSizeCount];
-                ark._parts = GetPartNames(ark._hdrPath, partSizes.Length);
+                ark._arkPaths = GetPartNames(input, partSizes.Length);
 
                 // Reads ark file sizes
                 for (int i = 0; i < partSizes.Length; i++)
@@ -84,7 +82,8 @@ namespace Mackiloha.Ark
                     uint size = ar.ReadUInt32();
                     uint inflatedSize = ar.ReadUInt32();
 
-                    ark._entries[i] = new ArkEntry(ark, entryOffset, filePath, direPath, size, inflatedSize);
+                    // TODO: Do some calculation to figure out which ark path to use
+                    ark._entries[i] = new ArkEntry(ark, entryOffset, filePath, direPath, size, inflatedSize, 1);
                 }
             }
 
@@ -95,17 +94,24 @@ namespace Mackiloha.Ark
         {
             string directory = Path.GetDirectoryName(hdrPath).Replace("\\", "/");
             string fileName = Path.GetFileNameWithoutExtension(hdrPath);
-            string extension = Path.GetExtension(hdrPath);
+            string extension = Path.GetExtension(hdrPath).All(c => c == '.' || char.IsUpper(c)) ? ".ARK" : ".ark";
 
-            string[] arkPaths = new string[count];
+            string[] arkPaths = new string[count + 1];
+            arkPaths[0] = hdrPath.Replace("\\", "/");
 
             for (int i = 0; i < count; i++)
-                arkPaths[i] = $"{directory}/{fileName}_{i}{extension}";
+                arkPaths[i+1] = $"{directory}/{fileName}_{i}{extension}";
 
             return arkPaths;
         }
 
         public ArkEntry this[string fullPath] => this._entries.FirstOrDefault(x => string.Compare(x.FullPath, fullPath, true) == 0);
+
+        public string DirectoryName => Path.GetDirectoryName(this._arkPaths[0]);
+        public string FileName => Path.GetFileName(this._arkPaths[0]);
+        public string FullPath => this._arkPaths[0];
+
+        internal string ArkPath(int index) => this._arkPaths[index];
 
         public IEnumerator<ArkEntry> GetEnumerator()
         {

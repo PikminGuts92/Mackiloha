@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Mackiloha;
+using Mackiloha.Ark;
 using Mackiloha.Milo;
 using HelixToolkit;
 using HelixToolkit.Wpf;
@@ -20,8 +21,6 @@ using System.IO;
 using System.Windows.Media.Media3D;
 //using System.Drawing; // TODO: Use something else for images
 using System.Windows.Interop;
-using GameArchives;
-using GameArchives.Ark;
 
 namespace SuperFreq
 {
@@ -30,7 +29,7 @@ namespace SuperFreq
     /// </summary>
     public partial class MiloEditor : UserControl
     {
-        private ArkPackage ark;
+        private ArkFile ark;
         private string arkFilePath;
 
         public MiloEditor()
@@ -38,7 +37,7 @@ namespace SuperFreq
             InitializeComponent();
         }
 
-        public void SetArk(ArkPackage arkInput) => this.ark = arkInput;
+        public void SetArk(ArkFile arkInput) => this.ark = arkInput;
         public void SetFilePath(string path) => this.arkFilePath = path;
 
         public void OpenMiloFile(Stream source)
@@ -160,9 +159,9 @@ namespace SuperFreq
 
         private HMXImage TryOpenExternalImage(string bmpPath)
         {
-            IFile bmpFile = this.ark.GetFile(GetAbsolutePath(System.IO.Path.GetDirectoryName(this.arkFilePath), bmpPath));
+            ArkEntry bmpFile = this.ark[GetAbsolutePath(System.IO.Path.GetDirectoryName(this.arkFilePath), bmpPath)];
 
-            return HMXImage.FromStream(bmpFile.Stream);
+            return HMXImage.FromStream(bmpFile.GetStream());
         }
 
         private string GetAbsolutePath(string absoluteDirectory, string relativeFilePath)

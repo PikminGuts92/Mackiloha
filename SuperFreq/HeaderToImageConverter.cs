@@ -4,8 +4,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media.Imaging;
 using static System.IO.Path;
-using GameArchives;
-using GameArchives.Ark;
+using Mackiloha.Ark;
 
 // What a nice guy! :)
 // http://www.codeproject.com/Articles/21248/A-Simple-WPF-Explorer-Tree 
@@ -23,7 +22,7 @@ namespace SuperFreq
         {
             string path = "pack://application:,,,/Assets/";
 
-            if (value is ArkPackage)
+            if (value is ArkFile)
             {
                 // Root
                 path += "box.png";

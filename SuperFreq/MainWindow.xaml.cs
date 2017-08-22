@@ -15,9 +15,8 @@ using System.Windows.Shapes;
 using Microsoft.Win32; // OpenFileDialog
 using System.ComponentModel; // SortDescription
 using static System.IO.Path;
-using GameArchives;
-using GameArchives.Ark;
 using Mackiloha;
+using Mackiloha.Ark;
 using Mackiloha.DTB;
 using Mackiloha.Milo;
 using System.IO;
@@ -29,7 +28,7 @@ namespace SuperFreq
     /// </summary>
     public partial class MainWindow : Window
     {
-        ArkPackage ark;
+        ArkFile ark;
 
         public MainWindow()
         {
@@ -42,16 +41,11 @@ namespace SuperFreq
             }
         }
 
-        private async void OpenArchive(string path)
+        private void OpenArchive(string path)
         {
             try
             {
-                AbstractPackage pack = await Task.Run(() => PackageReader.ReadPackageFromFile(path));
-
-                if (pack is ArkPackage)
-                    ark = pack as ArkPackage;
-                else
-                    ark = null;
+                ark = ArkFile.FromFile(path);
             }
             catch
             {
@@ -86,20 +80,6 @@ namespace SuperFreq
             parent.Items.SortDescriptions.Add(new SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending));
         }
 
-        private List<string> GetFiles(IDirectory parent, string parentPath = "")
-        {
-            List<string> paths = new List<string>();
-            string childDirectory = parentPath == "" ? "" : parentPath + "/";
-
-            foreach (IFile file in parent.Files)
-                paths.Add(parentPath + "/" + file.Name);
-
-            foreach (IDirectory child in parent.Dirs)
-                paths.AddRange(GetFiles(child, childDirectory + child.Name));
-
-            return paths;
-        }
-
         private void RefreshFileTree()
         {
             // Unregisters nodes
@@ -118,7 +98,7 @@ namespace SuperFreq
             //root.ContextMenu = TreeView_Archive.Resources["CM_Directory"] as ContextMenu;
 
             TreeViewItem tn = root;
-            List<string> entries = GetFiles(ark.RootDirectory); // Recursive
+            List<string> entries = ark.Select(x => x.FullPath).ToList(); // Recursive
             foreach (string entry in entries)
             {
                 tn = root;
@@ -295,7 +275,7 @@ namespace SuperFreq
                     DTBEditor dtbEdit = dtbTab.Content as DTBEditor;
 
                     // Gets entry from ark
-                    Stream dtbStream = ark.GetFile(info.InternalPath).Stream;
+                    Stream dtbStream = ark[info.InternalPath].GetStream();
                     
                     try
                     {
@@ -323,7 +303,7 @@ namespace SuperFreq
                     miloEdit.SetFilePath(info.InternalPath);
 
                     // Gets entry from ark
-                    Stream miloStream = ark.GetFile(info.InternalPath).Stream;
+                    Stream miloStream = ark[info.InternalPath].GetStream();
 
                     miloEdit.OpenMiloFile(miloStream);
                     selectedIdx = TabControl_Files.Items.Add(miloTab);
