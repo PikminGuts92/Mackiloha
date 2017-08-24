@@ -29,7 +29,7 @@ namespace SuperFreq
     /// </summary>
     public partial class MiloEditor : UserControl
     {
-        private ArkFile ark;
+        private Archive ark;
         private string arkFilePath;
 
         public MiloEditor()
@@ -37,7 +37,7 @@ namespace SuperFreq
             InitializeComponent();
         }
 
-        public void SetArk(ArkFile arkInput) => this.ark = arkInput;
+        public void SetArk(Archive arkInput) => this.ark = arkInput;
         public void SetFilePath(string path) => this.arkFilePath = path;
 
         public void OpenMiloFile(Stream source)

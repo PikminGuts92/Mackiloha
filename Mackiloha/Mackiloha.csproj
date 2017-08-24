@@ -48,7 +48,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Ark\ArkEntry.cs" />
-    <Compile Include="Ark\ArkFile.cs" />
+    <Compile Include="Ark\Archive.cs" />
+    <Compile Include="Ark\ArkEntryStatus.cs" />
     <Compile Include="Ark\ArkVersion.cs" />
     <Compile Include="AwesomeReader.cs" />
     <Compile Include="AwesomeWriter.cs" />

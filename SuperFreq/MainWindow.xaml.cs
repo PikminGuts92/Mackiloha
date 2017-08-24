@@ -28,7 +28,7 @@ namespace SuperFreq
     /// </summary>
     public partial class MainWindow : Window
     {
-        ArkFile ark;
+        Archive ark;
 
         public MainWindow()
         {
@@ -45,7 +45,7 @@ namespace SuperFreq
         {
             try
             {
-                ark = ArkFile.FromFile(path);
+                ark = Archive.FromFile(path);
             }
             catch
             {

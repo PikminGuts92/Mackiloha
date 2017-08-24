@@ -9,12 +9,15 @@ namespace Mackiloha.Ark
 {
     public class ArkEntry
     {
-        private readonly ArkFile _ark;
+        private readonly Archive _ark;
         private readonly string _filePath;
         private readonly string _directoryPath;
         private readonly int _part;
 
-        internal ArkEntry(ArkFile ark, long offset, string filePath, string directoryPath, uint size, uint inflatedSize, int part)
+        private string _tempFile;
+        private ArkEntryStatus _status;
+
+        internal ArkEntry(Archive ark, long offset, string filePath, string directoryPath, uint size, uint inflatedSize, int part)
         {
             this._ark = ark;
             this._filePath = filePath;
@@ -24,6 +27,22 @@ namespace Mackiloha.Ark
             this.Offset = offset;
             this.Size = size;
             this.InflatedSize = inflatedSize;
+
+            this._tempFile = null;
+            this._status = ArkEntryStatus.Original;
+        }
+
+        public bool Import(string path, bool overwritePending = false)
+        {
+            // TODO: Also check if ark temp directory is set
+            if (!File.Exists(path)) return false;
+
+            // Creates temp file
+            string tempPath = (this._tempFile != null) ? this._tempFile : $"{this._ark.WorkingDirectory}/{Guid.NewGuid()}"; 
+            File.Copy(path, tempPath);
+
+            this._status = ArkEntryStatus.PendingChanges;
+            return true;
         }
         
         public byte[] GetBytes()

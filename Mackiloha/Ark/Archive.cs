@@ -9,16 +9,18 @@ using System.Collections;
 
 namespace Mackiloha.Ark
 {
-    public class ArkFile : IEnumerable<ArkEntry>
+    public class Archive : IEnumerable<ArkEntry>
     {
         private ArkVersion _version;
         private bool _encrypted;
         private string[] _arkPaths; // 0 = HDR
         private ArkEntry[] _entries;
 
-        private ArkFile() { }
+        private string _workingDirectory;
 
-        public static ArkFile FromFile(string input)
+        private Archive() { }
+
+        public static Archive FromFile(string input)
         {
             if (input == null) throw new ArgumentNullException();
             string ext = Path.GetExtension(input).ToLower(); // TODO: Do something with this
@@ -29,9 +31,9 @@ namespace Mackiloha.Ark
             }
         }
 
-        private static ArkFile ParseHeader(string input, Stream stream)
+        private static Archive ParseHeader(string input, Stream stream)
         {
-            ArkFile ark = new ArkFile();
+            Archive ark = new Archive();
             ark._version = ArkVersion.V3;
             ark._encrypted = false;
 
@@ -105,6 +107,19 @@ namespace Mackiloha.Ark
             return arkPaths;
         }
 
+        public void SetWorkingDirectory(string path)
+        {
+            path = Path.GetFullPath(path).Replace("\\", "/");
+
+            // Checks access permission
+            if (!FileHelper.HasAccess(path))
+            {
+                // Do something here
+            }
+
+            this._workingDirectory = path;
+        }
+
         public ArkEntry this[string fullPath] => this._entries.FirstOrDefault(x => string.Compare(x.FullPath, fullPath, true) == 0);
 
         public string DirectoryName => Path.GetDirectoryName(this._arkPaths[0]);
@@ -127,5 +142,6 @@ namespace Mackiloha.Ark
 
         public bool Encrypted => this._encrypted;
         public ArkVersion Version => this._version;
+        public string WorkingDirectory => this._workingDirectory;
     }
 }
