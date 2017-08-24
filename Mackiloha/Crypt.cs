@@ -4,13 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Security.Cryptography;
 
 namespace Mackiloha
 {
     public class Crypt
     {
         /// <summary>
-        /// Decrypts input file and writes to output file.
+        /// Decrypts input file and writes to output file
         /// </summary>
         /// <param name="input"></param>
         /// <param name="output"></param>
@@ -30,7 +31,7 @@ namespace Mackiloha
         }
 
         /// <summary>
-        /// Encrypts/Decrypts inputted stream.
+        /// Encrypts/decrypts input stream
         /// </summary>
         /// <param name="stream">Input</param>
         /// <param name="key">32-bit key</param>
@@ -39,28 +40,34 @@ namespace Mackiloha
         {
             int b;
             long position = stream.Position;
-            CryptTable table = (!newStyle) ? new CryptTable(key) : null;
 
-            // Crypts stream until it reaches file end.
-            while ((b = stream.ReadByte()) > -1)
+            if (newStyle) // X360 version
             {
-                if (newStyle)
+                // Crypts stream until it reaches file end.
+                while ((b = stream.ReadByte()) > -1)
                 {
-                    // X360 - Code taken from RockArk pretty much
-                    key = dtb_xor_x360(key);
+                    key = X360_XOR(key);
                     stream.Seek(-1, SeekOrigin.Current);
                     stream.WriteByte((byte)(b ^ key));
                 }
-                else
-                {
-                    // PS2 - Code converted from ArkTool v6
-                    table.Table[table.Index1] ^= table.Table[table.Index2];
-                    stream.Seek(-1, SeekOrigin.Current);
-                    stream.WriteByte((byte)(b ^ table.Table[table.Index1]));
+                
+                stream.Seek(position, SeekOrigin.Begin);
+                return;
+            }
+            
+            // PS2 version
+            CryptTable table = new CryptTable(key);
 
-                    table.Index1 = ((table.Index1 + 1)) >= 0xF9 ? 0x00 : (table.Index1 + 1);
-                    table.Index2 = ((table.Index2 + 1)) >= 0xF9 ? 0x00 : (table.Index2 + 1);
-                }
+            // Crypts stream until it reaches file end
+            while ((b = stream.ReadByte()) > -1)
+            {
+                // PS2 - Code converted from ArkTool v6
+                table.Table[table.Index1] ^= table.Table[table.Index2];
+                stream.Seek(-1, SeekOrigin.Current);
+                stream.WriteByte((byte)(b ^ table.Table[table.Index1]));
+                
+                table.Index1 = ((table.Index1 + 1)) >= 0xF9 ? 0x00 : (table.Index1 + 1);
+                table.Index2 = ((table.Index2 + 1)) >= 0xF9 ? 0x00 : (table.Index2 + 1);
             }
 
             // Goes back to starting position
@@ -72,14 +79,10 @@ namespace Mackiloha
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private static int dtb_xor_x360(int data)
+        private static int X360_XOR(int data)
         {
-            int val1 = (data / 0x1F31D) * 0xB14;
-            int val2 = (data - ((data / 0x1F31D) * 0x1F31D)) * 0x41A7;
-            val2 = val2 - val1;
-            if (val2 <= 0)
-                val2 += 0x7FFFFFFF;
-            return val2;
+            int xorValue = ((data - ((data / 0x1F31D) * 0x1F31D)) * 0x41A7) - ((data / 0x1F31D) * 0xB14);
+            return (xorValue <= 0) ? xorValue + 0x7FFFFFFF : xorValue;
         }
 
         private class CryptTable
@@ -106,6 +109,15 @@ namespace Mackiloha
             public int Index1 { get; set; }
             public int Index2 { get; set; }
             public uint[] Table { get; set; }
+        }
+
+        public static string SHA1Hash(Stream stream)
+        {
+            using (SHA1Managed sha = new SHA1Managed())
+            {
+                byte[] hash = sha.ComputeHash(stream);
+                return string.Join("", hash.Select(b => b.ToString("X2")).ToArray());
+            }
         }
     }
 }

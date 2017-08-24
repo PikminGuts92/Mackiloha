@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Security.AccessControl;
 
 namespace Mackiloha
 {
@@ -39,6 +40,20 @@ namespace Mackiloha
         public static string RemoveExtension(string filePath)
         {
             return $@"{GetDirectory(filePath)}\{GetFileNameWithoutExtension(filePath)}";
+        }
+
+        public static bool HasAccess(string path)
+        {
+            DirectoryInfo info = new DirectoryInfo(path);
+            try
+            {
+                DirectorySecurity dirAC = info.GetAccessControl(AccessControlSections.All);
+                return true;
+            }
+            catch (PrivilegeNotHeldException)
+            {
+                return false;
+            }
         }
     }
 }
