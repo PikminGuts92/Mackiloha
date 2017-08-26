@@ -77,7 +77,10 @@ namespace Mackiloha.Milo
                     for (int i = 0; i < submeshes.Length; i++) submeshes[i] = ar.ReadString();
                 }
 
-                ar.BaseStream.Position += 9;
+                ar.ReadUInt32(); // Always 0?
+                ar.ReadString(); // Camera view?
+                ar.ReadByte(); // Always 0
+                
                 ar.ReadString(); // Reads view
                 //ar.BaseStream.Position += 25;
 
