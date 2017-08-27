@@ -68,6 +68,16 @@ namespace Mackiloha.Milo
                             milo.Entries.Add(entry);
                         }
                         break;
+                    case "View":
+                        using (MemoryStream ms = new MemoryStream(bytes))
+                        {
+                            AbstractEntry entry = View.FromStream(ms);
+                            if (entry == null) goto defaultCase;
+
+                            entry.Name = entryNames[i];
+                            milo.Entries.Add(entry);
+                        }
+                        break;
                     case "Mat":
                         using (MemoryStream ms = new MemoryStream(bytes))
                         {
