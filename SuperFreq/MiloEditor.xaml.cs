@@ -105,7 +105,7 @@ namespace SuperFreq
 
             foreach (char c in path)
             {
-                if ((c >= '0' && c <= 9) || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+                if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
                     newKey.Add(c);
                 else if (c == '.')
                 {
@@ -168,8 +168,6 @@ namespace SuperFreq
             root.Name = "_";
             TreeView_MiloArchive.RegisterName("_", root);
 
-            TreeViewItem tn = root;
-
             var miloEntries = milo.Entries.GroupBy(x => x.Type);
 
             foreach(var entryType in miloEntries)
@@ -190,6 +188,8 @@ namespace SuperFreq
                     RegisterName(entryNode.Name, entryNode);
                     typeNode.Items.Add(entryNode);
                 }
+
+                root.Items.Add(typeNode);
             }
 
             // Sorts nodes

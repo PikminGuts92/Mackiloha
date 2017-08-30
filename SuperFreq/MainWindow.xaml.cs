@@ -142,7 +142,7 @@ namespace SuperFreq
 
             foreach (char c in path)
             {
-                if ((c >= '0' && c <= 9) || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+                if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
                     newKey.Add(c);
                 else if (c == '.')
                 {
