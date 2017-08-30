@@ -31,7 +31,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="200*"/>
-            <RowDefinition Height="75"/>
+            <RowDefinition Height="100"/>
         </Grid.RowDefinitions>
 
         <!--View for 3D models (and textures?)-->
@@ -59,12 +59,39 @@
             </ModelVisual3D>
             <HelixToolkit:GridLinesVisual3D Width="8" Length="8" MinorDistance="1" MajorDistance="1" Thickness="0.01"/>
         </HelixToolkit:HelixViewport3D>
-
+        <!--Drag grid control-->
+        <GridSplitter x:Name="gridSplitter" Background="LightGreen" VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+                          Height="5" Width="50"/>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100"></ColumnDefinition>
+                <ColumnDefinition Width="200"></ColumnDefinition>
                 <ColumnDefinition Width="200*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
+
+            <!--Archive Tree View-->
+            <TreeView x:Name="TreeView_MiloArchive" Background="White" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="0">
+
+                <TreeView.Resources>
+                    <!--Code for node images-->
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <Setter Property="HeaderTemplate">
+                            <Setter.Value>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Name="img"  Width="20" Height="20" Stretch="Fill"
+                                               Source="{Binding RelativeSource={RelativeSource Mode=FindAncestor,
+                                               AncestorType={x:Type TreeViewItem}},
+                                               Path=Tag,
+                                               Converter={x:Static local:HeaderToImageConverter.Instance}}"
+                                               />
+                                        <TextBlock Text="{Binding}" Margin="5,0" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TreeView.Resources>
+            </TreeView>
 
             <!--View for file explorer-->
             <ListView ItemsSource="{Binding}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -86,6 +113,10 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+
+            <!--Drag grid control-->
+            <GridSplitter x:Name="gridSplitter2" Grid.Column="1" Background="LightGreen" VerticalAlignment="Center" HorizontalAlignment="Left"
+                          Height="30" Width="3"/>
         </Grid>
     </Grid>
 </UserControl>

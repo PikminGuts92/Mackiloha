@@ -5,6 +5,7 @@ using System.Windows.Data;
 using System.Windows.Media.Imaging;
 using static System.IO.Path;
 using Mackiloha.Ark;
+using Mackiloha.Milo;
 
 // What a nice guy! :)
 // http://www.codeproject.com/Articles/21248/A-Simple-WPF-Explorer-Tree 
@@ -60,9 +61,36 @@ namespace SuperFreq
                         break;
                 }
             }
+            else if (value is MiloEntry)
+            {
+                // Directory/file entry
+                MiloEntry miloEntry = value as MiloEntry;
+
+                switch (miloEntry.Type)
+                {
+                    case "Tex":
+                        path += "image.png";
+                        break;
+                    //case ArkEntryType.Audio:
+                    //    path += "music.png";
+                    //    break;
+                    //case ArkEntryType.Archive:
+                    //    path += "bricks.png";
+                    //    break;
+                    //case ArkEntryType.Video:
+                    //    path += "film.png";
+                    //    break;
+                    //case ArkEntryType.Midi:
+                    //    path += "page_white_music.png";
+                    //    break;
+                    default:
+                        path += "page_white.png";
+                        break;
+                }
+            }
             else
             {
-                path += "page_white.png";
+                path += "folder_closed.png";
             }
 
             // Returns assigned icon

@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.ComponentModel; // SortDescription
 using Mackiloha;
 using Mackiloha.Ark;
 using Mackiloha.Milo;
@@ -29,6 +30,7 @@ namespace SuperFreq
     /// </summary>
     public partial class MiloEditor : UserControl
     {
+        private MiloFile milo;
         private Archive ark;
         private string arkFilePath;
 
@@ -57,7 +59,7 @@ namespace SuperFreq
             HelixViewport3D.Children.Add(grid);
 
             // Opens input milo file
-            MiloFile milo = MiloFile.FromStream(source);
+            milo = MiloFile.FromStream(source);
             
             foreach (var entry in milo.Entries)
             {
@@ -65,6 +67,162 @@ namespace SuperFreq
                 Mesh mesh = entry as Mesh;
 
                 HelixViewport3D.Children.Add(CreateModel(mesh, milo));
+            }
+
+            RefreshTreeView();
+        }
+
+        private void UnregisterNode(TreeViewItem parent)
+        {
+            foreach (TreeViewItem child in parent.Items)
+            {
+                UnregisterNode(child);
+            }
+
+            // Unregisters name
+            TreeView_MiloArchive.UnregisterName(parent.Name);
+        }
+
+        private void SortNode(TreeViewItem parent)
+        {
+            foreach (TreeViewItem child in parent.Items)
+            {
+                SortNode(child);
+            }
+
+            // Sorts nodes
+            parent.Items.SortDescriptions.Clear();
+            parent.Items.SortDescriptions.Add(new SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending));
+        }
+
+        private string CreateKey(string path, bool folder)
+        {
+            if (path == "") return "_";
+
+            List<char> newKey = new List<char>();
+
+            newKey.Add((folder) ? 'a' : 'b'); // So folders sort first
+
+            foreach (char c in path)
+            {
+                if ((c >= '0' && c <= 9) || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+                    newKey.Add(c);
+                else if (c == '.')
+                {
+                    // So that periods sort before slashes
+                    newKey.Add('_');
+                    newKey.Add('a');
+                }
+                else if (c == '_')
+                {
+                    newKey.Add('_');
+                    newKey.Add('b');
+                }
+                else
+                    newKey.Add('_');
+            }
+
+            // Returns unique key
+            return string.Concat(newKey);
+        }
+
+        private TreeViewItem AddNode(TreeViewItem parent, string currentPath, string text, bool folder)
+        {
+            //node.Items.Cast<TreeViewItem>().
+            string key = CreateKey(currentPath, folder);
+            object needle = TreeView_MiloArchive.FindName(key);
+
+            if (needle != null)
+                return needle as TreeViewItem;
+            else
+            {
+                //TreeFileEntry temp = new TreeFileEntry();
+                TreeViewItem child = new TreeViewItem();
+                child.Header = text;
+                child.Name = key;
+                //temp.Path = currentPath;
+                TreeView_MiloArchive.RegisterName(key, child);
+
+                int returnIdx;
+                returnIdx = parent.Items.Add(child);
+                //child.Tag = new TreeArkEntryInfo(currentPath, folder, key);
+                //SetNodeProperties(child);
+
+
+                return parent.Items[returnIdx] as TreeViewItem;
+            }
+        }
+
+        private void RefreshTreeView()
+        {
+            // Unregisters nodes
+            foreach (TreeViewItem node in TreeView_MiloArchive.Items)
+                UnregisterNode(node);
+
+            this.TreeView_MiloArchive.Items.Clear();
+            if (this.milo == null) return;
+
+            TreeViewItem root = new TreeViewItem();
+            root.Header = "Resources";
+            root.Tag = ark;
+            root.Name = "_";
+            TreeView_MiloArchive.RegisterName("_", root);
+
+            TreeViewItem tn = root;
+
+            var miloEntries = milo.Entries.GroupBy(x => x.Type);
+
+            foreach(var entryType in miloEntries)
+            {
+                TreeViewItem typeNode = new TreeViewItem();
+                typeNode.Header = entryType.Key;
+                typeNode.Name = CreateKey(entryType.Key, true);
+                RegisterName(typeNode.Name, typeNode);
+
+                foreach (var entry in entryType)
+                {
+                    TreeViewItem entryNode = new TreeViewItem();
+                    entryNode.Header = entry.Name;
+                    entryNode.Name = CreateKey(entry.Name, false);
+                    entryNode.Tag = entry;
+                    entryNode.MouseDoubleClick += EntryNode_MouseDoubleClick;
+
+                    RegisterName(entryNode.Name, entryNode);
+                    typeNode.Items.Add(entryNode);
+                }
+            }
+
+            // Sorts nodes
+            SortNode(root);
+            TreeView_MiloArchive.Items.Add(root);
+        }
+
+        private void EntryNode_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            OpenSelectedFile();
+        }
+
+        private void OpenSelectedFile()
+        {
+            if (TreeView_MiloArchive.SelectedItem == null || !(TreeView_MiloArchive.SelectedItem is TreeViewItem)) return;
+
+            TreeViewItem item = TreeView_MiloArchive.SelectedItem as TreeViewItem;
+            if (item.Tag == null || !(item.Tag is MiloEntry)) return;
+
+            MiloEntry miloEntry = item.Tag as MiloEntry;
+
+            switch (miloEntry.Type)
+            {
+                case "Mesh":
+
+                    break;
+                case "View":
+                case "Tex":
+                    return;
+                case "Mat":
+                    break;
+                default:
+                    return;
             }
         }
 
