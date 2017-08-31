@@ -61,12 +61,12 @@ namespace SuperFreq
                         break;
                 }
             }
-            else if (value is MiloEntry)
+            else if (value is AbstractEntry)
             {
                 // Directory/file entry
-                MiloEntry miloEntry = value as MiloEntry;
+                AbstractEntry entry = value as AbstractEntry;
 
-                switch (miloEntry.Type)
+                switch (entry.Type)
                 {
                     case "Tex":
                         path += "image.png";

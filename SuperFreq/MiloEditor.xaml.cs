@@ -37,6 +37,13 @@ namespace SuperFreq
         public MiloEditor()
         {
             InitializeComponent();
+
+            TreeView_MiloArchive.SelectedItemChanged += TreeView_MiloArchive_SelectedItemChanged;
+        }
+
+        private void TreeView_MiloArchive_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            OpenSelectedFile();
         }
 
         public void SetArk(Archive arkInput) => this.ark = arkInput;
@@ -44,8 +51,26 @@ namespace SuperFreq
 
         public void OpenMiloFile(Stream source)
         {
+            ClearTreeView();
             if (source == null) return;
+            
+            // Opens input milo file
+            milo = MiloFile.FromStream(source);
 
+            /*
+            foreach (var entry in milo.Entries)
+            {
+                if (!(entry is Mesh)) continue;
+                Mesh mesh = entry as Mesh;
+
+                HelixViewport3D.Children.Add(CreateModel(mesh, milo));
+            }*/
+
+            RefreshTreeView();
+        }
+
+        private void ClearTreeView()
+        {
             HelixViewport3D.Children.Clear();
             HelixViewport3D.Children.Add(new DefaultLights());
             GridLinesVisual3D grid = new GridLinesVisual3D()
@@ -56,20 +81,8 @@ namespace SuperFreq
                 MajorDistance = 1,
                 Thickness = 0.01f
             };
+
             HelixViewport3D.Children.Add(grid);
-
-            // Opens input milo file
-            milo = MiloFile.FromStream(source);
-            
-            foreach (var entry in milo.Entries)
-            {
-                if (!(entry is Mesh)) continue;
-                Mesh mesh = entry as Mesh;
-
-                HelixViewport3D.Children.Add(CreateModel(mesh, milo));
-            }
-
-            RefreshTreeView();
         }
 
         private void UnregisterNode(TreeViewItem parent)
@@ -204,19 +217,25 @@ namespace SuperFreq
 
         private void OpenSelectedFile()
         {
+            ClearTreeView(); // Clears view
             if (TreeView_MiloArchive.SelectedItem == null || !(TreeView_MiloArchive.SelectedItem is TreeViewItem)) return;
 
             TreeViewItem item = TreeView_MiloArchive.SelectedItem as TreeViewItem;
-            if (item.Tag == null || !(item.Tag is MiloEntry)) return;
+            if (item.Tag == null || !(item.Tag is AbstractEntry)) return;
 
-            MiloEntry miloEntry = item.Tag as MiloEntry;
+            AbstractEntry entry = item.Tag as AbstractEntry;
 
-            switch (miloEntry.Type)
+            switch (entry.Type)
             {
                 case "Mesh":
-
+                    HelixViewport3D.Children.Add(CreateModel((Mesh)entry, milo));
                     break;
                 case "View":
+                    View view = entry as View;
+
+                    var models = CreateModelsFromView(view, milo);
+                    models.ForEach(x => HelixViewport3D.Children.Add(x));
+                    break;
                 case "Tex":
                     return;
                 case "Mat":
@@ -224,6 +243,25 @@ namespace SuperFreq
                 default:
                     return;
             }
+        }
+
+        public List<ModelVisual3D> CreateModelsFromView(View view, MiloFile milo)
+        {
+            List<ModelVisual3D> models = new List<ModelVisual3D>();
+
+            foreach (string name in view.Meshes)
+            {
+                AbstractEntry entry = milo[name];
+                if (entry == null) continue;
+                else if (entry is Mesh)
+                    models.Add(CreateModel(entry as Mesh, milo));
+                else if (entry is View)
+                    models.AddRange(CreateModelsFromView(entry as View, milo));
+                else
+                    throw new Exception("Unknown mesh type?");
+            }
+
+            return models;
         }
 
         public ModelVisual3D CreateModel(Mesh mesh, MiloFile milo)
