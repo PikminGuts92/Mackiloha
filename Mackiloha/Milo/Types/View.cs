@@ -17,9 +17,16 @@ namespace Mackiloha.Milo
         private ViewVersion _version;
         private Matrix _mat1, _mat2;
 
+        private List<string> _bones;
+        private string _transform;
+        private List<string> _meshes;
+
         public View(string name, bool bigEndian = true) : base(name, "View", bigEndian)
         {
-
+            _version = ViewVersion.GH1;
+            _bones = new List<string>();
+            _transform = null;
+            _meshes = new List<string>();
         }
 
         public static View FromFile(string input)
@@ -54,17 +61,21 @@ namespace Mackiloha.Milo
                 {
                     string[] submeshes = new string[ar.ReadUInt32()];
                     for (int i = 0; i < submeshes.Length; i++) submeshes[i] = ar.ReadString();
+
+                    view._meshes = new List<string>(submeshes);
                 }
 
                 // Skips unknown stuff
                 ar.BaseStream.Position += 9;
-                ar.ReadString(); // Reads view
+                view._transform = ar.ReadString(); // Reads view
 
                 // Skipping these other mesh strings
                 ar.BaseStream.Position += 5;
                 uint meshCount = ar.ReadUInt32();
-                for (int i = 0; i < meshCount; i++) ar.ReadString();
-                ar.BaseStream.Position += 16; // Four floats - Quaternions?
+                view._meshes = new List<string>();
+
+                for (int i = 0; i < meshCount; i++) view._meshes.Add(ar.ReadString());
+                ar.BaseStream.Position += 16; // Four floats - Bounding box
 
                 ar.ReadString(); // View (again)
                 ar.ReadInt32();
@@ -104,6 +115,13 @@ namespace Mackiloha.Milo
                     return false;
             }
         }
+
+        public Matrix Mat1 { get { return _mat1; } }
+        public Matrix Mat2 { get { return _mat2; } }
+
+        public List<string> Bones => _bones;
+        public string Transform => _transform;
+        public List<string> Meshes => _meshes;
 
         public override byte[] Data => throw new NotImplementedException();
     }

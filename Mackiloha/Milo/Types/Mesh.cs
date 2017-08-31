@@ -28,9 +28,16 @@ namespace Mackiloha.Milo
         private Vertex[] _vertices;
         private ushort[][] _faces;
 
+        private List<string> _bones;
+        private string _transform;
+        private List<string> _meshes;
+
         public Mesh(string name, bool bigEndian = true) : base(name, "Mesh", bigEndian)
         {
             _version = MeshVersion.GH1;
+            _bones = new List<string>();
+            _transform = null;
+            _meshes = new List<string>();
         }
 
         public static Mesh FromFile(string input)
@@ -75,10 +82,12 @@ namespace Mackiloha.Milo
                 {
                     string[] submeshes = new string[ar.ReadUInt32()];
                     for (int i = 0; i < submeshes.Length; i++) submeshes[i] = ar.ReadString();
+
+                    mesh._meshes = new List<string>(submeshes);
                 }
 
                 ar.ReadUInt32(); // Always 0?
-                ar.ReadString(); // Camera view?
+                mesh._transform = ar.ReadString(); // Camera view?
                 ar.ReadByte(); // Always 0
                 
                 ar.ReadString(); // Reads view
@@ -87,8 +96,10 @@ namespace Mackiloha.Milo
                 // Skipping these other mesh strings
                 ar.BaseStream.Position += 5;
                 uint meshCount = ar.ReadUInt32();
-                for (int i = 0; i < meshCount; i++) ar.ReadString();
-                ar.BaseStream.Position += 16; // Four floats - Quaternions?
+                mesh._meshes = new List<string>();
+
+                for (int i = 0; i < meshCount; i++) mesh._meshes.Add(ar.ReadString());
+                ar.BaseStream.Position += 16; // Four floats - Bounding box
 
                 if (mesh._version == MeshVersion.GDRB) ar.BaseStream.Position += 4;
                 mesh.Material = ar.ReadString(); // Reads material
@@ -317,15 +328,16 @@ namespace Mackiloha.Milo
         }
 
         public MeshVersion Version { get { return _version; } }
-
         public Matrix Mat1 { get { return _mat1; } }
         public Matrix Mat2 { get { return _mat2; } }
         
         public string Material { get; set; }
-
         public Vertex[] Vertices { get { return _vertices; } }
-
         public ushort[][] Faces { get { return _faces; } }
+
+        public List<string> Bones => _bones;
+        public string Transform => _transform;
+        public List<string> Meshes => _meshes;
 
         public override byte[] Data => throw new NotImplementedException();
 
