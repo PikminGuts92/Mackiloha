@@ -87,10 +87,10 @@ namespace Mackiloha.Milo
                 }
 
                 ar.ReadUInt32(); // Always 0?
-                mesh._transform = ar.ReadString(); // Camera view?
+                ar.ReadString(); // Camera view?
                 ar.ReadByte(); // Always 0
-                
-                ar.ReadString(); // Reads view
+
+                mesh._transform = ar.ReadString(); // Reads view
                 //ar.BaseStream.Position += 25;
 
                 // Skipping these other mesh strings
