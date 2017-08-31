@@ -68,6 +68,7 @@ namespace Mackiloha.Ark
         public uint InflatedSize { get; } // 0 = Already inflated
 
         public string FullPath => string.IsNullOrEmpty(this._directoryPath) ? this._filePath : $"{this._directoryPath}/{this._filePath}";
+        public ArkEntryStatus Status => this._status;
 
         public override string ToString() => $"{FullPath} ({Size} bytes)";
     }

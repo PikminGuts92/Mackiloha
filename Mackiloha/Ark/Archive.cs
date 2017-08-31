@@ -92,6 +92,14 @@ namespace Mackiloha.Ark
             return ark;
         }
 
+        private void CommitChanges()
+        {
+            var pending = this._entries.Where(x => x.Status == ArkEntryStatus.PendingChanges);
+            if (pending.Count() <= 0) return;
+
+            // TODO: Add an output log
+        }
+
         private static string[] GetPartNames(string hdrPath, int count)
         {
             string directory = Path.GetDirectoryName(hdrPath).Replace("\\", "/");

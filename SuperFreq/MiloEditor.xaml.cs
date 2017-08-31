@@ -312,8 +312,48 @@ namespace SuperFreq
             geom3d.Material = mat;
             model3d.Content = geom3d;
             geom3d.BackMaterial = mat; // Visibility on both sides
-            
+
+            Matrix3D mat3d;
+
+            if (mesh.Name == mesh.Transform)
+                mat3d = ConvertMatrix(mesh.Mat2);
+            else
+            {
+                AbstractEntry entry = milo[mesh.Transform];
+
+                if (entry is Mesh)
+                    mat3d = ConvertMatrix((entry as Mesh).Mat2);
+                else if (entry is View)
+                    mat3d = ConvertMatrix((entry as View).Mat2);
+                else
+                    throw new Exception("Unknown mesh type");
+            }
+
+            model3d.Transform = new MatrixTransform3D(mat3d);
             return model3d;
+        }
+
+        private Matrix3D ConvertMatrix(Mackiloha.Matrix mat)
+        {
+            Matrix3D mat3d = Matrix3D.Identity;
+
+            mat3d.M11 = mat.RX;
+            mat3d.M12 = mat.RY;
+            mat3d.M13 = mat.RZ;
+
+            mat3d.M21 = mat.UX;
+            mat3d.M22 = mat.UY;
+            mat3d.M23 = mat.UZ;
+
+            mat3d.M31 = mat.FX;
+            mat3d.M32 = mat.FY;
+            mat3d.M33 = mat.FZ;
+
+            mat3d.OffsetX = mat.PX;
+            mat3d.OffsetY = mat.PY;
+            mat3d.OffsetZ = mat.PZ;
+
+            return mat3d;
         }
 
         private Material GetMaterial(string matName, MiloFile milo)
