@@ -35,7 +35,7 @@
         </Grid.RowDefinitions>
 
         <!--View for 3D models (and textures?)-->
-        <HelixToolkit:HelixViewport3D ZoomExtentsWhenLoaded="True" Background="Black" Grid.Row="0" x:Name="HelixViewport3D">
+        <HelixToolkit:HelixViewport3D ZoomExtentsWhenLoaded="True" Background="Black" Grid.Row="0" x:Name="HelixViewport3D" CameraMode="WalkAround">
             <!-- Remember to add light to the scene -->
             <HelixToolkit:DefaultLights/>
             <ModelVisual3D>

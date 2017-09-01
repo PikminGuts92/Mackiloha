@@ -233,7 +233,10 @@ namespace SuperFreq
                 case "View":
                     View view = entry as View;
 
-                    var models = CreateModelsFromView(view, milo);
+                    List<ModelVisual3D> models = CreateModelsFromView(view, milo);
+                    List<View> subviews = view.Views.Select(x => milo[x] as View).ToList();
+                    subviews.ForEach(x => models.AddRange(CreateModelsFromView(x, milo)));
+                    
                     models.ForEach(x => HelixViewport3D.Children.Add(x));
                     break;
                 case "Tex":
@@ -248,6 +251,7 @@ namespace SuperFreq
         public List<ModelVisual3D> CreateModelsFromView(View view, MiloFile milo)
         {
             List<ModelVisual3D> models = new List<ModelVisual3D>();
+            if (view == null || milo == null) return models;
 
             foreach (string name in view.Meshes)
             {
@@ -257,8 +261,8 @@ namespace SuperFreq
                     models.Add(CreateModel(entry as Mesh, milo));
                 else if (entry is View)
                     models.AddRange(CreateModelsFromView(entry as View, milo));
-                else
-                    throw new Exception("Unknown mesh type?");
+                //else
+                    //throw new Exception("Unknown mesh type?");
             }
 
             return models;

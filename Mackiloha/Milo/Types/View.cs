@@ -17,6 +17,7 @@ namespace Mackiloha.Milo
         private ViewVersion _version;
         private Matrix _mat1, _mat2;
 
+        private List<string> _views;
         private List<string> _bones;
         private string _transform;
         private List<string> _meshes;
@@ -24,6 +25,7 @@ namespace Mackiloha.Milo
         public View(string name, bool bigEndian = true) : base(name, "View", bigEndian)
         {
             _version = ViewVersion.GH1;
+            _views = new List<string>();
             _bones = new List<string>();
             _transform = null;
             _meshes = new List<string>();
@@ -48,9 +50,22 @@ namespace Mackiloha.Milo
                 // Guesses endianess
                 ar.BigEndian = DetermineEndianess(ar.ReadBytes(4), out view._version, out valid);
                 if (!valid) return null;
+                
+                ar.BaseStream.Position += 4; // Skips zero'd bytes
 
-                // Skips 12 zero'd bytes + 8 constant
-                ar.BaseStream.Position += 16;
+                uint verts = ar.ReadUInt32();
+                //ar.BaseStream.Position += 12 * verts;
+
+                // Crappy hack right now
+                if (verts == 1) ar.BaseStream.Position += 12;
+                else if (verts == 2) ar.BaseStream.Position += 25;
+
+                // Reads sub views (Usually 0)
+                string[] views = new string[ar.ReadUInt32()];
+                for (int i = 0; i < views.Length; i++) views[i] = ar.ReadString();
+                view._views = new List<string>(views);
+
+                ar.BaseStream.Position += 4; // 8 constant
 
                 // Reads in matrix tables
                 view._mat1 = Matrix.FromStream(ar);
@@ -119,6 +134,7 @@ namespace Mackiloha.Milo
         public Matrix Mat1 { get { return _mat1; } }
         public Matrix Mat2 { get { return _mat2; } }
 
+        public List<string> Views => _views;
         public List<string> Bones => _bones;
         public string Transform => _transform;
         public List<string> Meshes => _meshes;
