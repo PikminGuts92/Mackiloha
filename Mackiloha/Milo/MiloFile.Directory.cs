@@ -32,7 +32,7 @@ namespace Mackiloha.Milo
 
             // TODO: Add component parser (Difficult)
             if (version == MiloVersion.V10)
-                GetExternalResources(ar);
+                milo._externalResources = new List<string>(GetExternalResources(ar));
 
             // Reads each file
             for (int i = 0; i < entryNames.Length; i++)

@@ -16,6 +16,7 @@ namespace Mackiloha.Milo
         private uint _offset;
         private MiloVersion _version;
         private const uint MAX_BLOCK_SIZE = 0x8000; // 2^15
+        private List<string> _externalResources;
 
         public MiloFile() : this("", "")
         {
@@ -355,6 +356,7 @@ namespace Mackiloha.Milo
         }
 
         public List<AbstractEntry> Entries { get; }
+        public List<string> ExternalResources => _externalResources;
         public override byte[] Data => CreateData();
 
         private byte[] CreateData()
