@@ -53,12 +53,12 @@ namespace Mackiloha.Milo
                 
                 ar.BaseStream.Position += 4; // Skips zero'd bytes
 
-                uint verts = ar.ReadUInt32();
-                //ar.BaseStream.Position += 12 * verts;
-
-                // Crappy hack right now
-                if (verts == 1) ar.BaseStream.Position += 12;
-                else if (verts == 2) ar.BaseStream.Position += 25;
+                uint unknownEntries = ar.ReadUInt32();
+                for (int i = 0; i < unknownEntries; i++)
+                {
+                    ar.ReadString(); // Usually 0 or 1 in length
+                    ar.BaseStream.Position += 8; // Two floats (Exactly 0 or close to it)
+                }
 
                 // Reads sub views (Usually 0)
                 string[] views = new string[ar.ReadUInt32()];
