@@ -273,19 +273,7 @@ namespace SuperFreq
             // ----- MESH STUFF -----
             MeshGeometry3D mesh3d = new MeshGeometry3D();
             
-            Point3DCollection positions = new Point3DCollection();
-            Vector3DCollection normals = new Vector3DCollection();
-            PointCollection uvs = new PointCollection();
-            Int32Collection indices = new Int32Collection();
-
-            foreach (Vertex vert in mesh.Vertices)
-                positions.Add(new Point3D(vert.VertX, vert.VertY, vert.VertZ));
-
-            foreach (Vertex vert in mesh.Vertices)
-                normals.Add(new Vector3D(vert.NormX, vert.NormY, vert.NormZ));
-
-            foreach (Vertex vert in mesh.Vertices)
-                uvs.Add(new System.Windows.Point(vert.U, vert.V));
+            Int32Collection indices = new Int32Collection(mesh.Faces.Length);
 
             foreach (ushort[] face in mesh.Faces)
             {
@@ -294,11 +282,12 @@ namespace SuperFreq
                 indices.Add(face[2]);
             }
             
-            mesh3d.Positions = positions;
+            mesh3d.Positions = new Point3DCollection(mesh.Vertices.Select(x => new Point3D(x.VertX, x.VertY, x.VertZ)));
+            mesh3d.Normals = new Vector3DCollection(mesh.Vertices.Select(x => new Vector3D(x.NormX, x.NormY, x.NormZ)));
+            mesh3d.TextureCoordinates = new PointCollection(mesh.Vertices.Select(x => new Point(x.U, x.V)));
             mesh3d.TriangleIndices = indices;
-            mesh3d.Normals = normals;
-            mesh3d.TextureCoordinates = uvs;
-            mesh3d.SetName(mesh.Name);
+
+            //mesh3d.SetName(mesh.Name);
 
             // ----- MATERIAL STUFF -----
             //SolidColorBrush brush = new SolidColorBrush();
@@ -314,8 +303,10 @@ namespace SuperFreq
             
             geom3d.Geometry = mesh3d;
             geom3d.Material = mat;
-            model3d.Content = geom3d;
             geom3d.BackMaterial = mat; // Visibility on both sides
+
+            model3d.Content = geom3d;
+            model3d.SetName(mesh.Name);
 
             Matrix3D mat3d;
 
@@ -332,7 +323,7 @@ namespace SuperFreq
                 else
                     throw new Exception("Unknown mesh type");
             }
-
+            
             model3d.Transform = new MatrixTransform3D(mat3d);
             return model3d;
         }
@@ -380,7 +371,8 @@ namespace SuperFreq
 
                 HMXImage img = (ab as Tex).Image;
                 if (img == null) img = TryOpenExternalImage((ab as Tex).ExternalPath);
-                if (img == null) continue;
+                //if (img == null) continue;
+                if (img == null) throw new Exception("Couldn't find texture...");
 
                 // Converts texture to WPF-acceptable format
                 ImageBrush brush = new ImageBrush();
@@ -399,9 +391,16 @@ namespace SuperFreq
 
         private HMXImage TryOpenExternalImage(string bmpPath)
         {
-            ArkEntry bmpFile = this.ark[GetAbsolutePath(System.IO.Path.GetDirectoryName(this.arkFilePath), bmpPath)];
+            try
+            {
+                ArkEntry bmpFile = this.ark[GetAbsolutePath(System.IO.Path.GetDirectoryName(this.arkFilePath), bmpPath)];
 
-            return HMXImage.FromStream(bmpFile.GetStream());
+                return HMXImage.FromStream(bmpFile.GetStream());
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private string GetAbsolutePath(string absoluteDirectory, string relativeFilePath)
