@@ -236,6 +236,37 @@ namespace Mackiloha.Milo
                     mesh._faces[i][1] = ar.ReadUInt16();
                     mesh._faces[i][2] = ar.ReadUInt16();
                 }
+                
+                byte[] groups = ar.ReadBytes(ar.ReadInt32()); // Sum should equal count of faces
+                //if (groups.Sum(x => x) != mesh._faces.Length) ;
+
+                string[] bones = new string[4];
+                bones[0] = ar.ReadString();
+
+                if (!string.IsNullOrEmpty(bones[0]))
+                {
+                    // Reads rest of strings
+                    bones[1] = ar.ReadString();
+                    bones[2] = ar.ReadString();
+                    bones[3] = ar.ReadString();
+
+                    // TODO: Read transform matrices
+                    ar.BaseStream.Position += 192;
+                }
+
+                if (groups.Length == 0 || groups[0] == 0) return mesh;
+
+                // TODO: Figure out why group data isn't embedded when group count > 0
+                if (ar.BaseStream.Position == ar.BaseStream.Length) return mesh;
+
+                foreach(byte group in groups)
+                {
+                    uint numberCount = ar.ReadUInt32();
+                    uint indexCount = ar.ReadUInt32();
+
+                    // TODO: Parse offsets
+                    ar.BaseStream.Position += (numberCount << 2) + (indexCount << 1);
+                }
             }
 
             return mesh;
