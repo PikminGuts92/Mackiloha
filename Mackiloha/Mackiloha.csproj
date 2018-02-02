@@ -53,6 +53,7 @@
     <Compile Include="Ark\ArkVersion.cs" />
     <Compile Include="AwesomeReader.cs" />
     <Compile Include="AwesomeWriter.cs" />
+    <Compile Include="Chunk\Chunk.cs" />
     <Compile Include="Compression.cs" />
     <Compile Include="Crypt.cs" />
     <Compile Include="DTB\DTAParsing.cs" />
