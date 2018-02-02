@@ -23,6 +23,7 @@ namespace Mackiloha
         {
             if (offset < 0) offset = 0;
             byte[] outBlock;
+            const int MAX_READ_SIZE = 16;
 
             switch(type)
             {
@@ -44,7 +45,17 @@ namespace Mackiloha
                         ZOutputStream outZStream = new ZOutputStream(ms);
                         outZStream.Write(ZLIB_MAGIC, 0, ZLIB_MAGIC.Length); // Required
 
-                        outZStream.Write(inBlock, offset, inBlock.Length - offset);
+                        // Reads in blocks
+                        int readSize;
+                        while (offset < inBlock.Length)
+                        {
+                            readSize = inBlock.Length - offset;
+                            if (readSize > MAX_READ_SIZE) readSize = MAX_READ_SIZE;
+
+                            outZStream.Write(inBlock, offset, readSize);
+                            offset += readSize;
+                        }
+                        
                         outBlock = ms.ToArray();
                         outZStream.Flush();
                     }
