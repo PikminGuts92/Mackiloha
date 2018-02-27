@@ -40,49 +40,52 @@ namespace Mackiloha.Chunk
             Entries = new List<ChunkEntry>();
         }
 
-        public void WriteToFile(string outPath)
+        public void WriteToFile(string outPath, bool noHeader = false)
         {
             using (FileStream fs = File.OpenWrite(outPath))
             {
-                WriteToStream(fs);
+                WriteToStream(fs, noHeader);
             }
         }
 
-        public void WriteToStream(Stream stream)
+        public void WriteToStream(Stream stream, bool noHeader)
         {
             AwesomeWriter aw = new AwesomeWriter(stream, true);
 
-            aw.Write(CHNK_MAGIC);
-            aw.Write((int)255);
-            aw.Write(Entries.Count);
-            aw.Write(Entries.Max(x => x.Data.Length));
-            aw.Write((short)1);
-            aw.Write((short)2);
-
-            int currentIdx = 20 + (Entries.Count << 2);
-
-            // Writes block details
-            foreach(ChunkEntry entry in Entries)
+            if (!noHeader)
             {
-                aw.Write(entry.Data.Length);
-                aw.Write(entry.Data.Length);
+                aw.Write(CHNK_MAGIC);
+                aw.Write((int)255);
+                aw.Write(Entries.Count);
+                aw.Write(Entries.Max(x => x.Data.Length));
+                aw.Write((short)1);
+                aw.Write((short)2);
 
-                aw.Write((int)(entry.Compressed ? 1 : 0));
-                aw.Write(currentIdx);
+                int currentIdx = 20 + (Entries.Count << 2);
 
-                currentIdx += entry.Data.Length;
+                // Writes block details
+                foreach (ChunkEntry entry in Entries)
+                {
+                    aw.Write(entry.Data.Length);
+                    aw.Write(entry.Data.Length);
+
+                    aw.Write((int)(entry.Compressed ? 1 : 0));
+                    aw.Write(currentIdx);
+
+                    currentIdx += entry.Data.Length;
+                }
             }
-
+            
             // Writes blocks
             Entries.ForEach(x => aw.Write(x.Data));
         }
 
-        public static void DecompressChunkFile(string inPath, string outPath)
+        public static void DecompressChunkFile(string inPath, string outPath, bool noHeader)
         {
             using (FileStream fs = File.OpenRead(inPath))
             {
                 Chunk chunk = ReadFromStream(fs);
-                chunk.WriteToFile(outPath);
+                chunk.WriteToFile(outPath, noHeader);
             }
         }
 

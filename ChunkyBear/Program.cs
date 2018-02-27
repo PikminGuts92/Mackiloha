@@ -32,7 +32,7 @@ namespace ChunkyBear
             else
                 output = args[1];
 
-            Chunk.DecompressChunkFile(input, output);
+            Chunk.DecompressChunkFile(input, output, true);
         }
     }
 }
