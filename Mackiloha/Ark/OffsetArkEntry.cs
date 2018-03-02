@@ -7,9 +7,9 @@ using System.IO;
 
 namespace Mackiloha.Ark
 {
-    public class ArkOffsetEntry : ArkEntry
+    public class OffsetArkEntry : ArkEntry
     {
-        internal ArkOffsetEntry(long offset, string fileName, string directory, uint size, uint inflatedSize, int part) : base(fileName, directory)
+        internal OffsetArkEntry(long offset, string fileName, string directory, uint size, uint inflatedSize, int part) : base(fileName, directory)
         {
             Part = part;
 

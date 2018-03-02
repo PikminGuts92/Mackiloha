@@ -98,7 +98,7 @@ namespace SuperFreq
             //root.ContextMenu = TreeView_Archive.Resources["CM_Directory"] as ContextMenu;
 
             TreeViewItem tn = root;
-            List<string> entries = ark.Select(x => x.FullPath).ToList(); // Recursive
+            List<string> entries = ark.Entries.Select(x => x.FullPath).ToList(); // Recursive
             foreach (string entry in entries)
             {
                 tn = root;

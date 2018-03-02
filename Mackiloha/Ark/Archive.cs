@@ -9,16 +9,21 @@ using System.Collections;
 
 namespace Mackiloha.Ark
 {
-    public class Archive : IEnumerable<ArkOffsetEntry>
+    public class Archive
     {
         private ArkVersion _version;
         private bool _encrypted;
         private string[] _arkPaths; // 0 = HDR
-        private ArkOffsetEntry[] _entries;
+        private readonly List<ArkEntry> _offsetEntries;
+        private readonly List<PendingArkEntry> _pendingEntries;
 
         private string _workingDirectory;
 
-        private Archive() { }
+        private Archive()
+        {
+            _offsetEntries = new List<ArkEntry>();
+            _pendingEntries = new List<PendingArkEntry>();
+        }
 
         public static Archive FromFile(string input)
         {
@@ -74,9 +79,9 @@ namespace Mackiloha.Ark
                     stringIndex[i] = ar.ReadInt32();
 
                 // Reads entries
-                ark._entries = new ArkOffsetEntry[ar.ReadUInt32()];
+                uint entryCount = ar.ReadUInt32();
 
-                for (int i = 0; i < ark._entries.Length; i++)
+                for (int i = 0; i < entryCount; i++)
                 {
                     uint entryOffset = ar.ReadUInt32();
                     string filePath = strings[stringIndex[ar.ReadInt32()]];
@@ -85,7 +90,7 @@ namespace Mackiloha.Ark
                     uint inflatedSize = ar.ReadUInt32();
 
                     // TODO: Do some calculation to figure out which ark path to use
-                    ark._entries[i] = new ArkOffsetEntry(entryOffset, filePath, direPath, size, inflatedSize, 1);
+                    ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, inflatedSize, 1));
                 }
             }
 
@@ -104,9 +109,9 @@ namespace Mackiloha.Ark
 
         private byte[] GetArkEntryBytes(ArkEntry entry)
         {
-            if (entry is ArkOffsetEntry)
+            if (entry is OffsetArkEntry)
             {
-                var offEntry = entry as ArkOffsetEntry;
+                var offEntry = entry as OffsetArkEntry;
 
                 string arkPath = ArkPath(offEntry.Part);
                 byte[] data = new byte[offEntry.Size];
@@ -152,25 +157,29 @@ namespace Mackiloha.Ark
             this._workingDirectory = path;
         }
 
-        public ArkOffsetEntry this[string fullPath] => this._entries.FirstOrDefault(x => string.Compare(x.FullPath, fullPath, true) == 0);
+        private ArkEntry GetArkEntry(string fullPath)
+        {
+            var pendingEntry = _pendingEntries.FirstOrDefault(x => string.Compare(x.FullPath, fullPath, true) == 0);
+            if (pendingEntry != null) return pendingEntry;
+
+            return _offsetEntries.FirstOrDefault(x => string.Compare(x.FullPath, fullPath, true) == 0);
+        }
+
+        private List<ArkEntry> GetMergedEntries()
+        {
+            var pending = _pendingEntries.Except(_offsetEntries);
+            return _offsetEntries.Except(pending).OrderBy(x => x.FullPath).ToList();
+        }
+
+        public ArkEntry this[string fullPath] => GetArkEntry(fullPath);
 
         public string DirectoryName => Path.GetDirectoryName(this._arkPaths[0]);
         public string FileName => Path.GetFileName(this._arkPaths[0]);
         public string FullPath => this._arkPaths[0];
 
         internal string ArkPath(int index) => this._arkPaths[index];
-
-        public IEnumerator<ArkOffsetEntry> GetEnumerator()
-        {
-            return ((IEnumerable<ArkOffsetEntry>)_entries).GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return ((IEnumerable<ArkOffsetEntry>)_entries).GetEnumerator();
-        }
-
-        public ReadOnlyCollection<ArkOffsetEntry> Entries => new ReadOnlyCollection<ArkOffsetEntry>(this._entries);
+        
+        public ReadOnlyCollection<ArkEntry> Entries => new ReadOnlyCollection<ArkEntry>(GetMergedEntries());
 
         public bool Encrypted => this._encrypted;
         public ArkVersion Version => this._version;
