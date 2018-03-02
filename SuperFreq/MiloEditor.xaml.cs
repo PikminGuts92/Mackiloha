@@ -393,9 +393,9 @@ namespace SuperFreq
         {
             try
             {
-                ArkEntry bmpFile = this.ark[GetAbsolutePath(System.IO.Path.GetDirectoryName(this.arkFilePath), bmpPath)];
+                ArkEntry bmpFile = ark[GetAbsolutePath(System.IO.Path.GetDirectoryName(this.arkFilePath), bmpPath)];
 
-                return HMXImage.FromStream(bmpFile.GetStream());
+                return HMXImage.FromStream(ark.GetArkEntryFileStream(bmpFile));
             }
             catch
             {

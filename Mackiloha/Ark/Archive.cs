@@ -9,12 +9,12 @@ using System.Collections;
 
 namespace Mackiloha.Ark
 {
-    public class Archive : IEnumerable<ArkEntry>
+    public class Archive : IEnumerable<ArkOffsetEntry>
     {
         private ArkVersion _version;
         private bool _encrypted;
         private string[] _arkPaths; // 0 = HDR
-        private ArkEntry[] _entries;
+        private ArkOffsetEntry[] _entries;
 
         private string _workingDirectory;
 
@@ -74,7 +74,7 @@ namespace Mackiloha.Ark
                     stringIndex[i] = ar.ReadInt32();
 
                 // Reads entries
-                ark._entries = new ArkEntry[ar.ReadUInt32()];
+                ark._entries = new ArkOffsetEntry[ar.ReadUInt32()];
 
                 for (int i = 0; i < ark._entries.Length; i++)
                 {
@@ -85,7 +85,7 @@ namespace Mackiloha.Ark
                     uint inflatedSize = ar.ReadUInt32();
 
                     // TODO: Do some calculation to figure out which ark path to use
-                    ark._entries[i] = new ArkEntry(ark, entryOffset, filePath, direPath, size, inflatedSize, 1);
+                    ark._entries[i] = new ArkOffsetEntry(entryOffset, filePath, direPath, size, inflatedSize, 1);
                 }
             }
 
@@ -94,10 +94,34 @@ namespace Mackiloha.Ark
 
         private void CommitChanges()
         {
-            var pending = this._entries.Where(x => x.Status == ArkEntryStatus.PendingChanges);
-            if (pending.Count() <= 0) return;
+            //var pending = this._entries.Where(x => x.Status == ArkEntryStatus.PendingChanges);
+            //if (pending.Count() <= 0) return;
 
             // TODO: Add an output log
+        }
+
+        public Stream GetArkEntryFileStream(ArkEntry entry) => new MemoryStream(GetArkEntryBytes(entry), false); // Read-only
+
+        private byte[] GetArkEntryBytes(ArkEntry entry)
+        {
+            if (entry is ArkOffsetEntry)
+            {
+                var offEntry = entry as ArkOffsetEntry;
+
+                string arkPath = ArkPath(offEntry.Part);
+                byte[] data = new byte[offEntry.Size];
+
+                using (FileStream fs = File.OpenRead(arkPath))
+                {
+                    fs.Seek(offEntry.Offset, SeekOrigin.Begin);
+                    fs.Read(data, 0, data.Length);
+                }
+
+                return data; // Not very efficient or super smart at the moment
+            }
+            else
+                // TODO: Implement reading from non-archive file on disk
+                throw new Exception();
         }
 
         private static string[] GetPartNames(string hdrPath, int count)
@@ -128,7 +152,7 @@ namespace Mackiloha.Ark
             this._workingDirectory = path;
         }
 
-        public ArkEntry this[string fullPath] => this._entries.FirstOrDefault(x => string.Compare(x.FullPath, fullPath, true) == 0);
+        public ArkOffsetEntry this[string fullPath] => this._entries.FirstOrDefault(x => string.Compare(x.FullPath, fullPath, true) == 0);
 
         public string DirectoryName => Path.GetDirectoryName(this._arkPaths[0]);
         public string FileName => Path.GetFileName(this._arkPaths[0]);
@@ -136,17 +160,17 @@ namespace Mackiloha.Ark
 
         internal string ArkPath(int index) => this._arkPaths[index];
 
-        public IEnumerator<ArkEntry> GetEnumerator()
+        public IEnumerator<ArkOffsetEntry> GetEnumerator()
         {
-            return ((IEnumerable<ArkEntry>)_entries).GetEnumerator();
+            return ((IEnumerable<ArkOffsetEntry>)_entries).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable<ArkEntry>)_entries).GetEnumerator();
+            return ((IEnumerable<ArkOffsetEntry>)_entries).GetEnumerator();
         }
 
-        public ReadOnlyCollection<ArkEntry> Entries => new ReadOnlyCollection<ArkEntry>(this._entries);
+        public ReadOnlyCollection<ArkOffsetEntry> Entries => new ReadOnlyCollection<ArkOffsetEntry>(this._entries);
 
         public bool Encrypted => this._encrypted;
         public ArkVersion Version => this._version;

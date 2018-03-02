@@ -6,8 +6,13 @@ using System.Threading.Tasks;
 
 namespace Mackiloha.Ark
 {
-    public class PendingArkEntry
+    public class PendingArkEntry : ArkEntry
     {
-        
+        public PendingArkEntry(string fileName, string directory) : base(fileName, directory)
+        {
+
+        }
+
+        public string LocalFilePath { get; set; }
     }
 }

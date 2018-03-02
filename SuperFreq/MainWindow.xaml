@@ -30,6 +30,9 @@
                     <MenuItem x:Name="Menu_File_Open" Header="Open" FontSize="15" Background="{DynamicResource Brush_Menu}" Foreground="Black" Click="Menu_File_Open_Click" BorderThickness="0"/>
                     <MenuItem x:Name="Menu_File_Exit" Header="Exit" FontSize="15" Background="{DynamicResource Brush_Menu}" Foreground="Black" Click="Menu_File_Exit_Click" BorderThickness="0"/>
                 </MenuItem>
+                <MenuItem Header="Tools" FontSize="15" Background="{DynamicResource Brush_Menu}" Foreground="Black">
+                    <MenuItem x:Name="Menu_Tools_Options" Header="Options" FontSize="15" Background="{DynamicResource Brush_Menu}" Foreground="Black" Click="Menu_Tools_Options_Click" BorderThickness="0"/>
+                </MenuItem>
                 <MenuItem Header="Help" FontSize="15" Background="{DynamicResource Brush_Menu}" Foreground="Black">
                     <MenuItem x:Name="Menu_Help_About" Header="About" FontSize="15" Background="{DynamicResource Brush_Menu}" Foreground="Black" Click="Menu_File_Open_Click" BorderThickness="0"/>
                 </MenuItem>

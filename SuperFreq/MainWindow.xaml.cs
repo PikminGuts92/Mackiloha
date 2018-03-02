@@ -275,7 +275,7 @@ namespace SuperFreq
                     DTBEditor dtbEdit = dtbTab.Content as DTBEditor;
 
                     // Gets entry from ark
-                    Stream dtbStream = ark[info.InternalPath].GetStream();
+                    Stream dtbStream = ark.GetArkEntryFileStream(ark[info.InternalPath]);
                     
                     try
                     {
@@ -303,7 +303,7 @@ namespace SuperFreq
                     miloEdit.SetFilePath(info.InternalPath);
 
                     // Gets entry from ark
-                    Stream miloStream = ark[info.InternalPath].GetStream();
+                    Stream miloStream = ark.GetArkEntryFileStream(ark[info.InternalPath]);
 
                     miloEdit.OpenMiloFile(miloStream);
                     selectedIdx = TabControl_Files.Items.Add(miloTab);
@@ -365,6 +365,11 @@ namespace SuperFreq
             {
                 mainPanelBorder.Margin = new Thickness(0);
             }
+        }
+
+        private void Menu_Tools_Options_Click(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }
