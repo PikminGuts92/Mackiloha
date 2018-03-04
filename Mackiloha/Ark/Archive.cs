@@ -121,7 +121,7 @@ namespace Mackiloha.Ark
                 aw.Write((uint)size);
 
             // Creates and writes string blob
-            var entries = _offsetEntries.OrderBy(x => x.Directory).ThenBy(x => x.FileName).ToList();
+            var entries = _offsetEntries.OrderBy(x => x.Offset).ToList();
             byte[] blob = CreateBlob(out var strings, entries);
             aw.Write((uint)blob.Length);
             aw.Write(blob);
@@ -150,7 +150,7 @@ namespace Mackiloha.Ark
                 while (stringOffsets[hash] != 0)
                 {
                     hash++;
-                    if (hash >= stringOffsets.Length - 1) hash = 0;
+                    if (hash >= stringOffsets.Length) hash = 0;
                 }
 
                 stringOffsets[hash] = str.Value;
@@ -177,7 +177,7 @@ namespace Mackiloha.Ark
                     yValue = tableOffsets[y.FileName];
                 }
 
-                return yValue - xValue;
+                return xValue - yValue;
             });
 
             aw.Write((uint)entries.Count);
