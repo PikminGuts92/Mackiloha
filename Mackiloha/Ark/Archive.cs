@@ -14,14 +14,14 @@ namespace Mackiloha.Ark
         private ArkVersion _version;
         private bool _encrypted;
         private string[] _arkPaths; // 0 = HDR
-        private readonly List<ArkEntry> _offsetEntries;
+        private readonly List<OffsetArkEntry> _offsetEntries;
         private readonly List<PendingArkEntry> _pendingEntries;
 
         private string _workingDirectory;
 
         private Archive()
         {
-            _offsetEntries = new List<ArkEntry>();
+            _offsetEntries = new List<OffsetArkEntry>();
             _pendingEntries = new List<PendingArkEntry>();
         }
 
@@ -97,6 +97,138 @@ namespace Mackiloha.Ark
             return ark;
         }
 
+        public void WriteHeader(string path)
+        {
+            using (var fs = File.OpenWrite(path))
+                WriteHeader(fs);
+        }
+
+        private void WriteHeader(Stream stream)
+        {
+            // TODO: Check for encryption (and big endian?)
+            AwesomeWriter aw = new AwesomeWriter(stream, false);
+            int arkCount = _arkPaths.Length - 1;
+
+            // Gets lengths of ark files
+            var arkSizes = _arkPaths.Skip(1).Select(x => new FileInfo(x).Length).ToArray();
+
+            aw.Write((int)Version);
+            aw.Write(arkSizes.Length);
+            aw.Write(arkSizes.Length);
+
+            // Writes ark sizes
+            foreach (var size in arkSizes)
+                aw.Write((uint)size);
+
+            // Creates and writes string blob
+            var entries = _offsetEntries.OrderBy(x => x.Directory).ThenBy(x => x.FileName).ToList();
+            byte[] blob = CreateBlob(out var strings, entries);
+            aw.Write((uint)blob.Length);
+            aw.Write(blob);
+
+            // Write string offset table
+            int[] stringOffsets = new int[(entries.Count * 2) + 200];
+            aw.Write(stringOffsets.Length);
+            
+            int CalculateHash(string str, int tableSize)
+            {
+                int hash = 0;
+                foreach (char c in str)
+                {
+                    hash = (hash * 0x7F) + c;
+                    hash -= ((hash / tableSize) * tableSize);
+                }
+                return hash;
+            }
+
+            Dictionary<string, int> tableOffsets = new Dictionary<string, int>();
+            foreach (var str in strings)
+            {
+                int hash = CalculateHash(str.Key, stringOffsets.Length);
+                
+                // Prevents duplicate hashes
+                while (stringOffsets[hash] != 0)
+                {
+                    hash++;
+                    if (hash >= stringOffsets.Length - 1) hash = 0;
+                }
+
+                stringOffsets[hash] = str.Value;
+
+                // Sets previous hash offset
+                tableOffsets.Add(str.Key, hash);
+            }
+
+            // Writes offsets
+            foreach (var offset in stringOffsets)
+                aw.Write((uint)offset);
+
+            // Sort by hash index
+            entries.Sort((x, y) =>
+            {
+                int xValue = tableOffsets[x.Directory];
+                int yValue = tableOffsets[y.Directory];
+
+                // The directories are the same
+                if (xValue == yValue)
+                {
+                    // So compare file names
+                    xValue = tableOffsets[x.FileName];
+                    yValue = tableOffsets[y.FileName];
+                }
+
+                return yValue - xValue;
+            });
+
+            aw.Write((uint)entries.Count);
+            foreach(var entry in entries)
+            {
+                aw.Write((uint)entry.Offset);
+                aw.Write((uint)tableOffsets[entry.FileName]);
+                aw.Write((uint)tableOffsets[entry.Directory]);
+                aw.Write((uint)entry.Size);
+                aw.Write((uint)entry.InflatedSize);
+            }
+        }
+
+        private byte[] CreateBlob(out Dictionary<string, int> offsets, List<OffsetArkEntry> entries)
+        {
+            offsets = new Dictionary<string, int>();
+            byte[] nullByte = { 0x00 };
+            
+            using (MemoryStream ms = new MemoryStream())
+            {
+                // Adds null byte
+                offsets.Add("", 0);
+                ms.Write(nullByte, 0, nullByte.Length);
+
+                foreach (var entry in entries)
+                {
+                    // Writes directory name
+                    if (!offsets.ContainsKey(entry.Directory))
+                    {
+                        offsets.Add(entry.Directory, (int)ms.Position);
+
+                        byte[] data = Encoding.ASCII.GetBytes(entry.Directory);
+                        ms.Write(data, 0, data.Length);
+                        ms.Write(nullByte, 0, nullByte.Length);
+                    }
+
+                    // Writes file name
+                    if (!offsets.ContainsKey(entry.FileName))
+                    {
+                        offsets.Add(entry.FileName, (int)ms.Position);
+
+                        byte[] data = Encoding.ASCII.GetBytes(entry.FileName);
+                        ms.Write(data, 0, data.Length);
+                        ms.Write(nullByte, 0, nullByte.Length);
+                    }
+                }
+
+                return ms.ToArray();
+            }
+        }
+
         private void CommitChanges()
         {
             //var pending = this._entries.Where(x => x.Status == ArkEntryStatus.PendingChanges);
@@ -167,7 +299,7 @@ namespace Mackiloha.Ark
 
         private List<ArkEntry> GetMergedEntries()
         {
-            var pending = _pendingEntries.Except(_offsetEntries);
+            var pending = _pendingEntries.Except<ArkEntry>(_offsetEntries);
             return _offsetEntries.Except(pending).OrderBy(x => x.FullPath).ToList();
         }
 
@@ -180,6 +312,7 @@ namespace Mackiloha.Ark
         internal string ArkPath(int index) => this._arkPaths[index];
         
         public ReadOnlyCollection<ArkEntry> Entries => new ReadOnlyCollection<ArkEntry>(GetMergedEntries());
+        public bool PendingChanges => _pendingEntries.Count > 0;
 
         public bool Encrypted => this._encrypted;
         public ArkVersion Version => this._version;
