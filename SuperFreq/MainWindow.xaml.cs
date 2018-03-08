@@ -326,6 +326,30 @@ namespace SuperFreq
 
         private void ExtractFile_Click(object sender, RoutedEventArgs e)
         {
+            if (TreeView_Archive.SelectedItem == null || !(TreeView_Archive.SelectedItem is TreeViewItem)) return;
+
+            TreeViewItem item = TreeView_Archive.SelectedItem as TreeViewItem;
+            if (item.Tag == null || !(item.Tag is TreeArkEntryInfo)) return;
+
+            TreeArkEntryInfo info = item.Tag as TreeArkEntryInfo;
+
+            var entry = ark.Entries.FirstOrDefault(x => x.FullPath == info.InternalPath);
+            
+            sfd.Filter = $"{entry.Extension.ToUpper()}|*.{entry.Extension}";
+            sfd.FileName = entry.FileName;
+            if (sfd.ShowDialog() == false) return;
+
+            var stream = ark.GetArkEntryFileStream(entry);
+
+            // Copies stream to file
+            using (FileStream fs = File.OpenWrite(sfd.FileName))
+            {
+                stream.CopyTo(fs);
+            }
+        }
+
+        private void ReplaceFile_Click(object sender, RoutedEventArgs e)
+        {
 
         }
 

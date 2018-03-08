@@ -31,6 +31,8 @@ namespace Mackiloha.Ark
 
         public string FullPath => string.IsNullOrEmpty(Directory) ? FileName : $"{Directory}/{FileName}";
 
+        public string Extension => (!FileName.Contains('.')) ? "" : FileName.Remove(0, FileName.LastIndexOf('.') + 1);
+
         public override bool Equals(object obj) => (obj is ArkEntry) && ((obj as ArkEntry) == this);
         public override int GetHashCode() => FullPath.GetHashCode();
         public override string ToString() => $"{FullPath}";

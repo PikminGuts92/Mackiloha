@@ -70,6 +70,7 @@
                 <TreeView.Resources>
                     <ContextMenu x:Key="CM_File" x:Shared="false">
                         <MenuItem x:Name="ExtractFile" Header="Extract File" Click="ExtractFile_Click"></MenuItem>
+                        <MenuItem x:Name="ReplaceFile" Header="Replace File" Click="ReplaceFile_Click"></MenuItem>
                     </ContextMenu>
 
                     <ContextMenu x:Key="CM_Directory">
