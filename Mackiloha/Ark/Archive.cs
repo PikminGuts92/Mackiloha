@@ -289,6 +289,24 @@ namespace Mackiloha.Ark
             this._workingDirectory = path;
         }
 
+        public void AddPendingEntry(PendingArkEntry pending)
+        {
+            // TODO: Check if local file path exists?
+            var entry = GetArkEntry(pending.FullPath);
+
+            if (entry == null || entry is OffsetArkEntry)
+            {
+                // Adds new pending entry
+                _pendingEntries.Add(new PendingArkEntry(pending));
+            }
+            else if (entry is PendingArkEntry)
+            {
+                // Updates pending entry
+                _pendingEntries.Remove(pending);
+                _pendingEntries.Add(new PendingArkEntry(pending));
+            }
+        }
+
         private ArkEntry GetArkEntry(string fullPath)
         {
             var pendingEntry = _pendingEntries.FirstOrDefault(x => string.Compare(x.FullPath, fullPath, true) == 0);

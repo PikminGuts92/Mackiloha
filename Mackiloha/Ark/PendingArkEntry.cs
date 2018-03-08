@@ -13,6 +13,11 @@ namespace Mackiloha.Ark
 
         }
 
+        public PendingArkEntry(PendingArkEntry entry) : this(entry.FileName, entry.Directory)
+        {
+            LocalFilePath = entry.LocalFilePath;
+        }
+
         public string LocalFilePath { get; set; }
     }
 }
