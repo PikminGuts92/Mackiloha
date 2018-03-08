@@ -371,5 +371,15 @@ namespace SuperFreq
         {
             throw new NotImplementedException();
         }
+
+        SaveFileDialog sfd = new SaveFileDialog();
+        private void Menu_ExportHeader_Exit_Click(object sender, RoutedEventArgs e)
+        {
+            sfd.Filter = "HDR|*.hdr";
+            sfd.FileName = ark.FileName;
+            if (sfd.ShowDialog() == false) return;
+
+            ark.WriteHeader(sfd.FileName);
+        }
     }
 }
