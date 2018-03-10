@@ -350,7 +350,24 @@ namespace SuperFreq
 
         private void ReplaceFile_Click(object sender, RoutedEventArgs e)
         {
+            if (TreeView_Archive.SelectedItem == null || !(TreeView_Archive.SelectedItem is TreeViewItem)) return;
 
+            TreeViewItem item = TreeView_Archive.SelectedItem as TreeViewItem;
+            if (item.Tag == null || !(item.Tag is TreeArkEntryInfo)) return;
+
+            TreeArkEntryInfo info = item.Tag as TreeArkEntryInfo;
+
+            var entry = ark.Entries.FirstOrDefault(x => x.FullPath == info.InternalPath);
+
+            ofd.Filter = $"{entry.Extension.ToUpper()}|*.{entry.Extension}";
+            if (ofd.ShowDialog() == false) return;
+
+            var pending = new PendingArkEntry(entry.FileName, entry.Directory)
+            {
+                LocalFilePath = ofd.FileName
+            };
+
+            ark.AddPendingEntry(pending);
         }
 
         private void ExtractDir_Click(object sender, RoutedEventArgs e)
@@ -397,13 +414,18 @@ namespace SuperFreq
         }
 
         SaveFileDialog sfd = new SaveFileDialog();
-        private void Menu_ExportHeader_Exit_Click(object sender, RoutedEventArgs e)
+        private void Menu_ExportHeader_Click(object sender, RoutedEventArgs e)
         {
             sfd.Filter = "HDR|*.hdr";
             sfd.FileName = ark.FileName;
             if (sfd.ShowDialog() == false) return;
 
             ark.WriteHeader(sfd.FileName);
+        }
+
+        private void Menu_SaveChanges_Click(object sender, RoutedEventArgs e)
+        {
+            ark.CommitChanges();
         }
     }
 }

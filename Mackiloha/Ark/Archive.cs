@@ -9,6 +9,18 @@ using System.Collections;
 
 namespace Mackiloha.Ark
 {
+    internal struct EntryOffset
+    {
+        long Offset;
+        int Size;
+
+        public EntryOffset(long offset, int size)
+        {
+            Offset = offset;
+            Size = size;
+        }
+    }
+
     public class Archive
     {
         private ArkVersion _version;
@@ -229,8 +241,45 @@ namespace Mackiloha.Ark
             }
         }
 
-        private void CommitChanges()
+        public void CommitChanges()
         {
+            if (!PendingChanges) return;
+
+            //var entries = Entries;
+
+
+            var remainingOffsetEntries = _offsetEntries.Except<ArkEntry>(_pendingEntries).Select(x => x as OffsetArkEntry).OrderBy(x => x.Offset);
+            List<EntryOffset> gaps = new List<EntryOffset>();
+
+            long previousOffset = 0;
+            
+            foreach (var offsetEntry in remainingOffsetEntries)
+            {
+                if (offsetEntry.Offset - previousOffset == 0)
+                {
+                    // No gap, continues
+                    previousOffset = offsetEntry.Offset + offsetEntry.Size;
+                    continue;
+                }
+
+                // Adds gap to list
+                long gapOffset = previousOffset;
+                int gapSize = (int)(offsetEntry.Offset - previousOffset);
+                gaps.Add(new EntryOffset(gapOffset, gapSize));
+                
+                previousOffset = offsetEntry.Offset + offsetEntry.Size;
+            }
+
+            // TODO: Compare previousOffset to ark file size
+
+            var pendingEntries = _pendingEntries.Select(x => new { Length = new FileInfo(x.LocalFilePath).Length, Entry = x }).OrderBy(x => x.Length);
+            
+
+            foreach (var gap in gaps)
+            {
+
+            }
+
             //var pending = this._entries.Where(x => x.Status == ArkEntryStatus.PendingChanges);
             //if (pending.Count() <= 0) return;
 
@@ -317,8 +366,11 @@ namespace Mackiloha.Ark
 
         private List<ArkEntry> GetMergedEntries()
         {
-            var pending = _pendingEntries.Except<ArkEntry>(_offsetEntries);
-            return _offsetEntries.Except(pending).OrderBy(x => x.FullPath).ToList();
+            var entries = new List<ArkEntry>(_pendingEntries);
+            entries.AddRange(_offsetEntries.Except<ArkEntry>(_pendingEntries));
+            entries.Sort((x, y) => string.Compare(x.FullPath, y.FullPath));
+
+            return entries;
         }
 
         public ArkEntry this[string fullPath] => GetArkEntry(fullPath);

@@ -33,7 +33,7 @@ namespace Mackiloha.Ark
 
         public string Extension => (!FileName.Contains('.')) ? "" : FileName.Remove(0, FileName.LastIndexOf('.') + 1);
 
-        public override bool Equals(object obj) => (obj is ArkEntry) && ((obj as ArkEntry) == this);
+        public override bool Equals(object obj) => (obj is ArkEntry) && ((obj as ArkEntry).FullPath == this.FullPath);
         public override int GetHashCode() => FullPath.GetHashCode();
         public override string ToString() => $"{FullPath}";
     }
