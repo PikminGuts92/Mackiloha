@@ -9,10 +9,10 @@ using System.Collections;
 
 namespace Mackiloha.Ark
 {
-    internal struct EntryOffset
+    internal class EntryOffset
     {
-        long Offset;
-        int Size;
+        public long Offset;
+        public int Size;
 
         public EntryOffset(long offset, int size)
         {
@@ -244,44 +244,99 @@ namespace Mackiloha.Ark
         public void CommitChanges()
         {
             if (!PendingChanges) return;
-
-            //var entries = Entries;
-
-
-            var remainingOffsetEntries = _offsetEntries.Except<ArkEntry>(_pendingEntries).Select(x => x as OffsetArkEntry).OrderBy(x => x.Offset);
-            List<EntryOffset> gaps = new List<EntryOffset>();
-
-            long previousOffset = 0;
             
-            foreach (var offsetEntry in remainingOffsetEntries)
+            var remainingOffsetEntries = _offsetEntries.Except<ArkEntry>(_pendingEntries).Select(x => x as OffsetArkEntry).OrderBy(x => x.Offset).ToList();
+
+            List<EntryOffset> GetGaps()
             {
-                if (offsetEntry.Offset - previousOffset == 0)
+                List<EntryOffset> offsetGaps = new List<EntryOffset>();
+                long previousOffset = 0;
+
+                foreach (var offsetEntry in remainingOffsetEntries)
                 {
-                    // No gap, continues
+                    if (offsetEntry.Offset - previousOffset == 0)
+                    {
+                        // No gap, continues
+                        previousOffset = offsetEntry.Offset + offsetEntry.Size;
+                        continue;
+                    }
+
+                    // Adds gap to list
+                    long gapOffset = previousOffset;
+                    int gapSize = (int)(offsetEntry.Offset - previousOffset);
+                    offsetGaps.Add(new EntryOffset(gapOffset, gapSize));
+
                     previousOffset = offsetEntry.Offset + offsetEntry.Size;
-                    continue;
                 }
 
-                // Adds gap to list
-                long gapOffset = previousOffset;
-                int gapSize = (int)(offsetEntry.Offset - previousOffset);
-                gaps.Add(new EntryOffset(gapOffset, gapSize));
-                
-                previousOffset = offsetEntry.Offset + offsetEntry.Size;
+                return offsetGaps;
+            }
+
+            void CopyToArchive(string arkFile, long arkOffset, string entryFile)
+            {
+                // TODO: Extract out of this
+                using (FileStream fsArk = File.OpenWrite(arkFile))
+                {
+                    fsArk.Seek(arkOffset, SeekOrigin.Begin);
+
+                    using (FileStream fsEntry = File.OpenRead(entryFile))
+                    {
+                        fsEntry.CopyTo(fsArk);
+                    }
+                }
             }
 
             // TODO: Compare previousOffset to ark file size
-
+            List<EntryOffset> gaps = GetGaps();
             var pendingEntries = _pendingEntries.Select(x => new { Length = new FileInfo(x.LocalFilePath).Length, Entry = x }).OrderBy(x => x.Length);
             
-
-            foreach (var gap in gaps)
+            foreach (var pending in pendingEntries)
             {
+                // Looks at smallest gaps first, selects first fit
+                var bestFit = gaps.OrderBy(x => x.Size).FirstOrDefault(x => x.Size >= pending.Length);
+                
+                if (bestFit == null)
+                {
+                    // Adds to end of last archive file
+                    var lastEntry = remainingOffsetEntries.OrderByDescending(x => x.Offset).FirstOrDefault();
+                    long offset = (lastEntry != null) ? lastEntry.Offset + lastEntry.Size : 0;
 
+                    // Copies entry to ark file (TODO: Calculate arkPath beforehand)
+                    CopyToArchive(_arkPaths[1], offset, pending.Entry.LocalFilePath);
+
+                    // Adds ark offset entry
+                    remainingOffsetEntries.Add(new OffsetArkEntry(offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, 0, 1));
+                }
+                else
+                {
+                    // Copies entry to ark file (TODO: Calculate arkPath beforehand)
+                    CopyToArchive(_arkPaths[1], bestFit.Offset, pending.Entry.LocalFilePath);
+
+                    // Adds ark offset entry
+                    remainingOffsetEntries.Add(new OffsetArkEntry(bestFit.Offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, 0, 1));
+
+                    // Updates gap entry
+                    if (bestFit.Size == pending.Length)
+                    {
+                        // Remove gap
+                        gaps.Remove(bestFit);
+                    }
+                    else
+                    {
+                        // Updates values
+                        bestFit.Offset += pending.Length;
+                        bestFit.Size -= (int)pending.Length;
+                    }
+                }
             }
 
-            //var pending = this._entries.Where(x => x.Status == ArkEntryStatus.PendingChanges);
-            //if (pending.Count() <= 0) return;
+            // Updates archive entries
+            _pendingEntries.Clear();
+            _offsetEntries.Clear();
+            _offsetEntries.AddRange(remainingOffsetEntries);
+
+            // Re-writes header file
+            WriteHeader(_arkPaths[0]);
 
             // TODO: Add an output log
         }
