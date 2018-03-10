@@ -29,6 +29,9 @@ namespace Mackiloha.Ark
         private readonly List<OffsetArkEntry> _offsetEntries;
         private readonly List<PendingArkEntry> _pendingEntries;
 
+        private const int MAX_HDR_SIZE = 20 * 0x100000; // 20MB
+        private const int DEFAULT_KEY = 0x295E2D5E;
+
         private string _workingDirectory;
 
         private Archive()
@@ -42,22 +45,45 @@ namespace Mackiloha.Ark
             if (input == null) throw new ArgumentNullException();
             string ext = Path.GetExtension(input).ToLower(); // TODO: Do something with this
 
+            MemoryStream ms = new MemoryStream();
+
             using (FileStream fs = File.OpenRead(input))
             {
-                return ParseHeader(input, fs);
+                if (fs.Length > MAX_HDR_SIZE)
+                    throw new Exception("HDR file is larger than 20MB");
+
+                fs.CopyTo(ms);
             }
+
+            ms.Seek(0, SeekOrigin.Begin);
+            return ParseHeader(input, ms);
         }
 
         private static Archive ParseHeader(string input, Stream stream)
         {
             Archive ark = new Archive();
-            ark._version = ArkVersion.V3;
             ark._encrypted = false;
 
             using (AwesomeReader ar = new AwesomeReader(stream))
             {
-                // TODO: Check version number (Assume V3 for now)
+                // Checks version
                 int version = ar.ReadInt32();
+                
+                if (Enum.IsDefined(typeof(ArkVersion), version))
+                    ark._version = (ArkVersion)version;
+                else
+                {
+                    // Decrypt stream and re-checks version
+                    Crypt.DTBCrypt(ar.BaseStream, version, true);
+                    version = ar.ReadInt32();
+                    ark._encrypted = true;
+
+                    if (!Enum.IsDefined(typeof(ArkVersion), version))
+                        throw new Exception($"Ark version of \'{version}\' is unsupported");
+
+                    ark._version = (ArkVersion)version;
+                }
+
                 uint arkFileCount = ar.ReadUInt32();
                 uint arkFileSizeCount = ar.ReadUInt32(); // Should be same as ark file count
 
@@ -111,15 +137,17 @@ namespace Mackiloha.Ark
 
         public void WriteHeader(string path)
         {
-            using (var fs = File.OpenWrite(path))
+            using (var fs = File.Open(path, FileMode.CreateNew, FileAccess.ReadWrite))
                 WriteHeader(fs);
         }
 
         private void WriteHeader(Stream stream)
         {
-            // TODO: Check for encryption (and big endian?)
             AwesomeWriter aw = new AwesomeWriter(stream, false);
-            int arkCount = _arkPaths.Length - 1;
+
+            // Writes key if encrypted
+            if (_encrypted) aw.Write((int)DEFAULT_KEY);
+            long hdrStart = aw.BaseStream.Position;
 
             // Gets lengths of ark files
             var arkSizes = _arkPaths.Skip(1).Select(x => new FileInfo(x).Length).ToArray();
@@ -200,6 +228,13 @@ namespace Mackiloha.Ark
                 aw.Write((uint)tableOffsets[entry.Directory]);
                 aw.Write((uint)entry.Size);
                 aw.Write((uint)entry.InflatedSize);
+            }
+
+            if (_encrypted)
+            {
+                // Encrypts HDR file
+                aw.BaseStream.Seek(hdrStart, SeekOrigin.Begin);
+                Crypt.DTBCrypt(aw.BaseStream, DEFAULT_KEY, true);
             }
         }
 
