@@ -8,6 +8,12 @@ namespace Mackiloha.Ark
 {
     public enum ArkVersion
     {
-        V3 = 3 // GH1/Amp
+        V3 = 3, // GH1/Amp
+        V4,
+        V5,
+        V6,
+        V7,
+        V9 = 9,
+        V10
     }
 }

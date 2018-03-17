@@ -79,56 +79,182 @@ namespace Mackiloha.Ark
                     ark._encrypted = true;
 
                     if (!Enum.IsDefined(typeof(ArkVersion), version))
-                        throw new Exception($"Ark version of \'{version}\' is unsupported");
+                    {
+                        version = (int)((uint)version ^ 0xFFFFFFFF);
+
+                        // Check one last time
+                        if (!Enum.IsDefined(typeof(ArkVersion), version))
+                            throw new Exception($"Ark version of \'{version}\' is unsupported");
+                        
+                        long start = ar.BaseStream.Position;
+                        int b;
+
+                        // 0xFF xor rest of stream
+                        while ((b = stream.ReadByte()) > -1)
+                        {
+                            stream.Seek(-1, SeekOrigin.Current);
+                            stream.WriteByte((byte)(b ^ 0xFF));
+                        }
+
+                        ar.BaseStream.Seek(start, SeekOrigin.Begin);
+                    }
 
                     ark._version = (ArkVersion)version;
+                }
+
+                if (version >= 6)
+                {
+                    // TODO: Save 16-byte hashes
+                    uint hashCount = ar.ReadUInt32();
+                    ar.BaseStream.Position += hashCount << 4;
                 }
 
                 uint arkFileCount = ar.ReadUInt32();
                 uint arkFileSizeCount = ar.ReadUInt32(); // Should be same as ark file count
 
-                uint[] partSizes = new uint[arkFileSizeCount];
-                ark._arkPaths = GetPartNames(input, partSizes.Length);
-
+                ulong[] partSizes = new ulong[arkFileSizeCount];
+                
                 // Reads ark file sizes
-                for (int i = 0; i < partSizes.Length; i++)
-                    partSizes[i] = ar.ReadUInt32();
+                if (version != 4)
+                    for (int i = 0; i < partSizes.Length; i++)
+                        partSizes[i] = ar.ReadUInt32();
+                else
+                    // Version 4 uses 64-bit sizes
+                    for (int i = 0; i < partSizes.Length; i++)
+                        partSizes[i] = ar.ReadUInt64();
 
                 // TODO: Verify the ark parts exist and the sizes match header listing
-
-                Dictionary<int, string> strings = new Dictionary<int, string>(); // Index, value
-                uint sTableSize = ar.ReadUInt32();
-                int offset = 0;
-                long startPosition = ar.BaseStream.Position;
-
-                // Reads all strings in table
-                while (offset < sTableSize)
+                if (version >= 5)
                 {
-                    string s = ar.ReadNullString();
-                    strings.Add(offset, s);
+                    // Read ark names from hdr
+                    uint arkPathsCount = ar.ReadUInt32();
+                    ark._arkPaths = new string[arkPathsCount + 1];
 
-                    offset = (int)(ar.BaseStream.Position - startPosition);
+                    string directory = Path.GetDirectoryName(input).Replace("\\", "/");
+                    ark._arkPaths[0] = input.Replace("\\", "/");
+                    
+                    for (int i = 0; i < arkPathsCount; i++)
+                    {
+                        ark._arkPaths[i+1] = $"{directory}/{ar.ReadString()}";
+                    }
+                }
+                else
+                    // Make a good guess
+                    ark._arkPaths = GetPartNames(input, partSizes.Length);
+
+                if (version >= 6 && version <= 9)
+                {
+                    // TODO: Save hashes?
+                    uint hash2Count = ar.ReadUInt32();
+                    ar.BaseStream.Position += hash2Count << 2;
                 }
 
-                // Reads string index entries
-                int[] stringIndex = new int[ar.ReadUInt32()];
-
-                for (int i = 0; i < stringIndex.Length; i++)
-                    stringIndex[i] = ar.ReadInt32();
-
-                // Reads entries
-                uint entryCount = ar.ReadUInt32();
-
-                for (int i = 0; i < entryCount; i++)
+                if (version >= 7)
                 {
-                    uint entryOffset = ar.ReadUInt32();
-                    string filePath = strings[stringIndex[ar.ReadInt32()]];
-                    string direPath = strings[stringIndex[ar.ReadInt32()]];
-                    uint size = ar.ReadUInt32();
-                    uint inflatedSize = ar.ReadUInt32();
+                    // TODO: Save file collection paths
+                    uint fileCollectionCount = ar.ReadUInt32();
+                    for (int i = 0; i < fileCollectionCount; i++)
+                    {
+                        uint fileCount = ar.ReadUInt32();
+                        
+                        for (int j = 0; j < fileCount; j++)
+                        {
+                            ar.ReadString();
+                        }
+                    }
+                }
 
-                    // TODO: Do some calculation to figure out which ark path to use
-                    ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, inflatedSize, 1));
+                if (version <= 7)
+                {
+                    Dictionary<int, string> strings = new Dictionary<int, string>(); // Index, value
+                    uint sTableSize = ar.ReadUInt32();
+                    int offset = 0;
+                    long startPosition = ar.BaseStream.Position;
+
+                    // Reads all strings in table
+                    while (offset < sTableSize)
+                    {
+                        string s = ar.ReadNullString();
+                        strings.Add(offset, s);
+
+                        offset = (int)(ar.BaseStream.Position - startPosition);
+                    }
+
+                    // Reads string index entries
+                    int[] stringIndex = new int[ar.ReadUInt32()];
+
+                    for (int i = 0; i < stringIndex.Length; i++)
+                        stringIndex[i] = ar.ReadInt32();
+
+                    // Reads entries
+                    uint entryCount = ar.ReadUInt32();
+
+                    if (version >= 4)   
+                        for (int i = 0; i < entryCount; i++)
+                        {
+                            long entryOffset = ar.ReadInt64();
+                            string filePath = strings[stringIndex[ar.ReadInt32()]];
+                            string direPath = strings[stringIndex[ar.ReadInt32()]];
+                            uint size = ar.ReadUInt32();
+                            uint inflatedSize = ar.ReadUInt32();
+
+                            // TODO: Do some calculation to figure out which ark path to use
+                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, inflatedSize, 1));
+                        }
+                    else
+                        for (int i = 0; i < entryCount; i++)
+                        {
+                            uint entryOffset = ar.ReadUInt32();
+                            string filePath = strings[stringIndex[ar.ReadInt32()]];
+                            string direPath = strings[stringIndex[ar.ReadInt32()]];
+                            uint size = ar.ReadUInt32();
+                            uint inflatedSize = ar.ReadUInt32();
+
+                            // TODO: Do some calculation to figure out which ark path to use
+                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, inflatedSize, 1));
+                        }
+                }
+                else
+                {
+                    uint entryCount = ar.ReadUInt32();
+
+                    // Reads file entries
+                    if (version <= 9)
+                        for (int i = 0; i < entryCount; i++)
+                        {
+                            long entryOffset = ar.ReadInt64();
+                            string fullPath = ar.ReadString();
+                            uint flags = ar.ReadUInt32();
+                            uint size = ar.ReadUInt32();
+                            uint hash = ar.ReadUInt32();
+
+                            int lastIdx = fullPath.LastIndexOf('/');
+                            string filePath = (lastIdx < 0) ? fullPath : fullPath.Remove(0, lastIdx + 1);
+                            string direPath = (lastIdx < 0) ? "" : fullPath.Substring(0, lastIdx);
+
+                            // TODO: Do some calculation to figure out which ark path to use
+                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, 0, 1));
+                        }
+                    else
+                        for (int i = 0; i < entryCount; i++)
+                        {
+                            long entryOffset = ar.ReadInt64();
+                            string fullPath = ar.ReadString();
+                            uint flags = ar.ReadUInt32();
+                            uint size = ar.ReadUInt32();
+
+                            int lastIdx = fullPath.LastIndexOf('/');
+                            string filePath = (lastIdx < 0) ? fullPath : fullPath.Remove(0, lastIdx + 1);
+                            string direPath = (lastIdx < 0) ? "" : fullPath.Substring(0, lastIdx);
+
+                            // TODO: Do some calculation to figure out which ark path to use
+                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, 0, 1));
+                        }
+
+                    // Reads other entries - Path hashes?
+                    // TODO: Save these values
+                    uint entryCount2 = ar.ReadUInt32();
+                    ar.BaseStream.Position += entryCount2 << 2;
                 }
             }
 
