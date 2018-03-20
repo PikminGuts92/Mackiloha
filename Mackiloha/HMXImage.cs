@@ -95,6 +95,8 @@ namespace Mackiloha
             }
         }
 
+        public Bitmap Bitmap => new Bitmap(_bmp); // TODO: Improve this
+
         public IntPtr Hbitmap => new Bitmap(_bmp).GetHbitmap(); // Copies image
 
         public void SaveAs(string path)

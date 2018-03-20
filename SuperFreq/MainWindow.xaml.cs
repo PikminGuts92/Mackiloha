@@ -219,6 +219,15 @@ namespace SuperFreq
                             break;
                         }
                     case ArkEntryType.Texture:
+                        {
+                            MenuItem itemOpen = new MenuItem();
+                            itemOpen.Header = "Open";
+                            itemOpen.Click += ItemOpen_Click;
+
+                            node.MouseDoubleClick += Node_MouseDoubleClick;
+                            node.ContextMenu.Items.Insert(0, itemOpen);
+                            break;
+                        }
                     case ArkEntryType.Audio:
                         break;
                     case ArkEntryType.Archive:
@@ -291,6 +300,29 @@ namespace SuperFreq
                     }
                     break;
                 case ArkEntryType.Texture:
+
+                    // Opens texture file
+                    TabItem textureTab = TabControl_Files.Resources["TabItem_Texture"] as TabItem;
+                    textureTab.Header = GetFileName(info.InternalPath);
+                    TextureEditor texEditor = textureTab.Content as TextureEditor;
+
+
+                    // Gets entry from ark
+                    Stream textureStream = ark.GetArkEntryFileStream(ark[info.InternalPath]);
+
+                    try
+                    {
+                        texEditor.OpenImageFile(textureStream);
+                        selectedIdx = TabControl_Files.Items.Add(textureTab);
+
+                        textureStream.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        textureStream.Close();
+                        return;
+                    }
+                    break;
                 case ArkEntryType.Audio:
                     return;
                 case ArkEntryType.Archive:

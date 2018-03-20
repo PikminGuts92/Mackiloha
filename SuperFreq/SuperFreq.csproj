@@ -42,6 +42,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -66,6 +67,9 @@
     <Compile Include="MiloEditor.xaml.cs">
       <DependentUpon>MiloEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="TextureEditor.xaml.cs">
+      <DependentUpon>TextureEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="TreeArkEntryInfo.cs" />
     <Page Include="DTBEditor.xaml">
       <SubType>Designer</SubType>
@@ -85,6 +89,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="MiloEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TextureEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

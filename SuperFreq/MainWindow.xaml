@@ -112,6 +112,9 @@
                     <TabItem x:Key="TabItem_Milo" x:Shared="false" Header="Milo" Background="{StaticResource Brush_Menu}">
                         <local:MiloEditor x:Name="Milo_Editor" Visibility="Visible" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                     </TabItem>
+                    <TabItem x:Key="TabItem_Texture" x:Shared="false" Header="Texture" Background="{StaticResource Brush_Menu}">
+                        <local:TextureEditor x:Name="Texture_Editor" Visibility="Visible" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    </TabItem>
                 </TabControl.Resources>
             </TabControl>
 
