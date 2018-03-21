@@ -74,7 +74,7 @@ namespace SuperFreq
                 case ".milo_wii":
                 case ".milo_xbox":
                 case ".rnd":
-                case ".rnd.gz":
+                //case ".rnd.gz":
                 case ".rnd_ps2":
                     return ArkEntryType.Archive;
                 case ".bik":
@@ -82,6 +82,13 @@ namespace SuperFreq
                     return ArkEntryType.Video;
                 case ".mid":
                     return ArkEntryType.Midi;
+                case ".gz":
+                    if (path.EndsWith(".rnd.gz", StringComparison.CurrentCultureIgnoreCase))
+                        return ArkEntryType.Archive;
+                    else if (path.EndsWith(".bmp.gz", StringComparison.CurrentCultureIgnoreCase))
+                        return ArkEntryType.Texture;
+                    else
+                        return ArkEntryType.Default;
                 default:
                     return ArkEntryType.Default;
             }

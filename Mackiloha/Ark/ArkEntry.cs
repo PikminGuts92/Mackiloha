@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Mackiloha.Ark
 {
-    public abstract class ArkEntry
+    public class ArkEntry
     {
         private readonly static Regex _directoryRegex = new Regex(@"^[_\-a-zA-Z0-9]|([/][_\-a-zA-Z0-9]+)*$"); // TODO: Consider .. and . directories
         private readonly static Regex _fileRegex = new Regex(@"^[_\-a-zA-Z0-9]+[.]?[_\-a-zA-Z0-9]*$");

@@ -27,7 +27,6 @@ namespace Mackiloha.Ark
         private bool _encrypted;
         private string[] _arkPaths; // 0 = HDR
         private readonly List<OffsetArkEntry> _offsetEntries;
-        
 
         private const int MAX_HDR_SIZE = 20 * 0x100000; // 20MB
         private const int DEFAULT_KEY = 0x295E2D5E;
@@ -572,8 +571,8 @@ namespace Mackiloha.Ark
         }
         
         public string DirectoryName => Path.GetDirectoryName(this._arkPaths[0]);
-        public string FileName => Path.GetFileName(this._arkPaths[0]);
-        public string FullPath => this._arkPaths[0];
+        public override string FileName => Path.GetFileName(this._arkPaths[0]);
+        public override string FullPath => this._arkPaths[0];
 
         internal string ArkPath(int index) => this._arkPaths[index];
         

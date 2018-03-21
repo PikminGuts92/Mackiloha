@@ -53,6 +53,18 @@ namespace Mackiloha
              * INT16 - Bytes Per Line
              * BYTES - 19 bytes of zero'd data
              */
+
+            /* Header size = 16 bytes
+             * ======================
+             * BYTE  - Always 0
+             * BYTE  - Bits Per Pixel - Can be 4, 8, 24, or 32 (But usually either 4 or 8)
+             * BYTE  - Always 0 (Image Format/Encoding)
+             * BYTE  - Awlays 0 MipMaps count
+             * INT16 - Width
+             * INT16 - Height
+             * INT16 - Bytes Per Line
+             * BYTES - 6 bytes of zero'd data
+             */
             if (input.Position == input.Length) return null; // End of stream;
 
             using (AwesomeReader ar = new AwesomeReader(input))
@@ -61,7 +73,11 @@ namespace Mackiloha
                 bool valid;
                 uint bpp, width, height, bpl;
 
-                if (ar.ReadByte() != 0x01) return null; // Should always be 1!
+                byte firstByte = ar.ReadByte();
+
+                if (firstByte != 0 && firstByte != 1)
+                    return null;
+                
                 bpp = ar.ReadByte();
 
                 switch(bpp)
@@ -75,19 +91,30 @@ namespace Mackiloha
                         return null; // Probably should do something else
                 }
 
-                // Guesses endianess
-                ar.BigEndian = DetermineEndianess(ar.ReadBytes(4), out encoding, out valid);
-                if (!valid) return null; // Maybe do something else later
+                if (firstByte == 1)
+                {
+                    // Guesses endianess
+                    ar.BigEndian = DetermineEndianess(ar.ReadBytes(4), out encoding, out valid);
+                    if (!valid) return null; // Maybe do something else later
 
-                // Reads rest of header
-                ar.ReadByte(); // Mipmap count
+                    // Reads rest of header
+                    ar.ReadByte(); // Mipmap count
+                }
+                else
+                {
+                    // Xbox OG texture
+                    encoding = ImageEncoding.BMP;
+                    ar.BaseStream.Position += 2;
+                }
+
                 width = ar.ReadUInt16();
                 height = ar.ReadUInt16();
                 bpl = ar.ReadUInt16();
-                ar.BaseStream.Position += 19;
+                
+                ar.BaseStream.Position += (firstByte == 1) ?  19 : 6;
 
                 // Decodes image
-                Bitmap bmp = Decode(ar, encoding, bpp, width, height, bpl);
+                Bitmap bmp = Decode(ar, encoding, bpp, width, height, bpl, firstByte == 1);
                 HMXImage image = new HMXImage(bmp);
                 image.Encoding = encoding;
 

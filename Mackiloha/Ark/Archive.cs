@@ -46,5 +46,8 @@ namespace Mackiloha.Ark
         public ReadOnlyCollection<ArkEntry> Entries => new ReadOnlyCollection<ArkEntry>(GetMergedEntries());
         public bool PendingChanges => _pendingEntries.Count > 0;
         public string WorkingDirectory => this._workingDirectory;
+
+        public abstract string FileName { get; }
+        public abstract string FullPath { get; }
     }
 }

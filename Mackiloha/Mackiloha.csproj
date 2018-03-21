@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Ark\Archive.cs" />
+    <Compile Include="Ark\ArkFileSystem.cs" />
     <Compile Include="Ark\OffsetArkEntry.cs" />
     <Compile Include="Ark\ArkFile.cs" />
     <Compile Include="Ark\ArkVersion.cs" />
