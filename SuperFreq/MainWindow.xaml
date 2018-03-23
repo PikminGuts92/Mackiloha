@@ -28,6 +28,7 @@
             <Menu Background="Transparent">
                 <MenuItem Header="File" FontSize="15" Background="{DynamicResource Brush_Menu}" Foreground="Black">
                     <MenuItem x:Name="Menu_File_Open" Header="Open" FontSize="15" Background="{DynamicResource Brush_Menu}" Foreground="Black" Click="Menu_File_Open_Click" BorderThickness="0"/>
+                    <MenuItem x:Name="Menu_File_OpenDirectory" Header="Open Directory" FontSize="15" Background="{DynamicResource Brush_Menu}" Foreground="Black" Click="Menu_File_OpenDirectory_Click" BorderThickness="0"/>
                     <MenuItem x:Name="Menu_File_SaveChanges" Header="Save Changes" FontSize="15" Background="{DynamicResource Brush_Menu}" Foreground="Black" Click="Menu_SaveChanges_Click" BorderThickness="0"/>
                     <MenuItem x:Name="Menu_File_ExportHeader" Header="Export Header" FontSize="15" Background="{DynamicResource Brush_Menu}" Foreground="Black" Click="Menu_ExportHeader_Click" BorderThickness="0"/>
                     <MenuItem x:Name="Menu_File_Exit" Header="Exit" FontSize="15" Background="{DynamicResource Brush_Menu}" Foreground="Black" Click="Menu_File_Exit_Click" BorderThickness="0"/>
@@ -60,13 +61,14 @@
                 </DataTemplate>
             </Grid.Resources>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="258*"/>
-                <ColumnDefinition Width="535*"/>
+                <ColumnDefinition Width="8*"/>
+                <ColumnDefinition Width="121*"/>
+                <ColumnDefinition Width="267*"/>
             </Grid.ColumnDefinitions>
 
             <!--Archive Tree View-->
             <TreeView x:Name="TreeView_Archive" Background="White" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="0"
-                      Margin="5" BorderBrush="{StaticResource Brush_Menu}" BorderThickness="5">
+                      Margin="5" BorderBrush="{StaticResource Brush_Menu}" BorderThickness="5" Grid.ColumnSpan="2">
 
                 <TreeView.Resources>
                     <ContextMenu x:Key="CM_File" x:Shared="false">
@@ -102,7 +104,7 @@
                       Margin="5" BorderBrush="{StaticResource Brush_Menu}" BorderThickness="5"> -->
 
             <!--Tab control for managing files-->
-            <TabControl x:Name="TabControl_Files" Background="{StaticResource Brush_Menu}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1"
+            <TabControl x:Name="TabControl_Files" Background="{StaticResource Brush_Menu}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="2"
                         Margin="5" BorderBrush="{StaticResource Brush_Menu}" BorderThickness="5" Visibility="Collapsed" ItemTemplate="{StaticResource CustomHeaderTemplate}">
 
                 <TabControl.Resources>
@@ -119,8 +121,8 @@
             </TabControl>
 
             <!--Drag grid control-->
-            <GridSplitter x:Name="gridSplitter" Grid.Column="1" Background="LightGreen" VerticalAlignment="Center" HorizontalAlignment="Left"
-                          Height="50" Width="5"/>
+            <GridSplitter x:Name="gridSplitter" Grid.Column="2" Background="LightGreen" VerticalAlignment="Center" HorizontalAlignment="Left"
+                          Height="50" Width="5" Margin="0,194,0,195"/>
 
         </Grid>
     </Grid>

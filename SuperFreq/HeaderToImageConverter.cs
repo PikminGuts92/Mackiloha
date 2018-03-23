@@ -23,7 +23,7 @@ namespace SuperFreq
         {
             string path = "pack://application:,,,/Assets/";
 
-            if (value is Archive)
+            if (value is ArkFile)
             {
                 // Root
                 path += "box.png";

@@ -10,7 +10,7 @@ namespace Mackiloha
 {
     public partial class HMXImage
     {
-        private static Bitmap Decode(AwesomeReader ar, ImageEncoding encoding, uint bpp, uint width, uint height, uint bpl)
+        private static Bitmap Decode(AwesomeReader ar, ImageEncoding encoding, uint bpp, uint width, uint height, uint bpl, bool ps2Texture = false)
         {
             // Image starts at bottom left corner
 
@@ -23,14 +23,14 @@ namespace Mackiloha
             return null;
         }
 
-        private static Bitmap DecodeBMP(AwesomeReader ar, uint bpp, uint width, uint height, uint bpl)
+        private static Bitmap DecodeBMP(AwesomeReader ar, uint bpp, uint width, uint height, uint bpl, bool ps2Texture = false)
         {
             Bitmap bmp = new Bitmap((int)width, (int)height, PixelFormat.Format32bppArgb);
 
             if (bpp == 4)
             {
                 // 16 color palette (RGBa)
-                Color[] palette = GetColorPalette(ar, 16); // 2^4 = 16 colors
+                Color[] palette = (ps2Texture) ? GetColorPalette(ar, 16) : GetColorPaletteBGRa(ar, 16); // 2^4 = 16 colors
                 int index, pixel1, pixel2;
                 //return bmp; // Fix later
 
@@ -53,7 +53,7 @@ namespace Mackiloha
             else if (bpp == 8)
             {
                 // 256 color palette (RGBa)
-                Color[] palette = GetColorPalette(ar, 256); // 2^8 = 256 colors
+                Color[] palette = (ps2Texture) ? GetColorPalette(ar, 256) : GetColorPaletteBGRa(ar, 256); // 2^8 = 256 colors
                 int index, bit3, bit4;
 
                 for (int h = 0; h < height; h++)
@@ -62,11 +62,14 @@ namespace Mackiloha
                     {
                         index = ar.ReadByte();
 
-                        // Swaps bits 3 and 4 with eachother
-                        // Ex: 0110 1011 -> 0111 0011
-                        bit3 = (index & 0x10) >> 1;
-                        bit4 = (index & 0x08) << 1;
-                        index = (0xE7 & index) | (bit4 | bit3);
+                        if (ps2Texture)
+                        {
+                            // Swaps bits 3 and 4 with eachother
+                            // Ex: 0110 1011 -> 0111 0011
+                            bit3 = (index & 0x10) >> 1;
+                            bit4 = (index & 0x08) << 1;
+                            index = (0xE7 & index) | (bit4 | bit3);
+                        }
 
                         bmp.SetPixel(w, h, palette[index]);
                     }
@@ -115,6 +118,30 @@ namespace Mackiloha
             }
 
             return bmp;
+        }
+
+        private static Color[] GetColorPaletteBGRa(AwesomeReader ar, uint count)
+        {
+            Color[] colors = new Color[count];
+            byte R, G, B, a;
+
+            for (int i = 0; i < count; i++)
+            {
+                // Reads color
+                B = ar.ReadByte();
+                G = ar.ReadByte();
+                R = ar.ReadByte();
+                a = ar.ReadByte();
+
+                if (a == 0x80) a = 0xFF;
+                else if (a > 0x80) Console.WriteLine("Alpha channel has value of {0}", a);
+                else a = (byte)(a << 1);
+
+                // Sets color
+                colors[i] = Color.FromArgb(a, R, G, B);
+            }
+
+            return colors;
         }
 
         private static Color[] GetColorPalette(AwesomeReader ar, uint count, byte? alpha = null)

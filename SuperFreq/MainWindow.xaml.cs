@@ -35,7 +35,7 @@ namespace SuperFreq
             InitializeComponent();
 
             string[] args = Environment.GetCommandLineArgs();
-            if (args != null && args.Length > 1 && System.IO.File.Exists(args[1]))
+            if (args != null && args.Length > 1)
             {
                 OpenArchive(args[1]);
             }
@@ -45,7 +45,15 @@ namespace SuperFreq
         {
             try
             {
-                ark = Archive.FromFile(path);
+                FileAttributes att = File.GetAttributes(path);
+
+                if (att.HasFlag(FileAttributes.Directory))
+                    ark = ArkFileSystem.FromDirectory(path);
+                else
+                {
+                    if (!System.IO.File.Exists(path)) return;
+                    ark = ArkFile.FromFile(path);
+                }
             }
             catch
             {
@@ -410,7 +418,16 @@ namespace SuperFreq
         OpenFileDialog ofd = new OpenFileDialog();
         private void Menu_File_Open_Click(object sender, RoutedEventArgs e)
         {
+            ofd.Title = "Select HDR file";
             ofd.Filter = "HDR|*.hdr";
+            if (ofd.ShowDialog() == false) return;
+
+            OpenArchive(ofd.FileName);
+        }
+
+        private void Menu_File_OpenDirectory_Click(object sender, RoutedEventArgs e)
+        {
+            ofd.Title = "Select folder";
             if (ofd.ShowDialog() == false) return;
 
             OpenArchive(ofd.FileName);
@@ -448,11 +465,15 @@ namespace SuperFreq
         SaveFileDialog sfd = new SaveFileDialog();
         private void Menu_ExportHeader_Click(object sender, RoutedEventArgs e)
         {
+            if (!(ark is ArkFile)) return;
+
+            var arkFile = ark as ArkFile;
+
             sfd.Filter = "HDR|*.hdr";
             sfd.FileName = ark.FileName;
             if (sfd.ShowDialog() == false) return;
 
-            ark.WriteHeader(sfd.FileName);
+            arkFile.WriteHeader(sfd.FileName);
         }
 
         private void Menu_SaveChanges_Click(object sender, RoutedEventArgs e)
