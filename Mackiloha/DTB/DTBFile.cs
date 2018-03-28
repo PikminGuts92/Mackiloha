@@ -97,7 +97,7 @@ namespace Mackiloha.DTB
 
             DTBFile dtb = new DTBFile();
 
-            if (encoding == DTBEncoding.Fantasia)
+            if (encoding == DTBEncoding.FME)
                 ar.ReadInt32(); // Always 0
 
             if (encoding != DTBEncoding.RBVR)

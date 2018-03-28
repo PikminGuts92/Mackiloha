@@ -23,7 +23,7 @@ namespace Mackiloha
             return null;
         }
 
-        private static Bitmap DecodeBMP(AwesomeReader ar, uint bpp, uint width, uint height, uint bpl, bool ps2Texture = false)
+        private static Bitmap DecodeBMP(AwesomeReader ar, uint bpp, uint width, uint height, uint bpl, bool ps2Texture = true)
         {
             Bitmap bmp = new Bitmap((int)width, (int)height, PixelFormat.Format32bppArgb);
 

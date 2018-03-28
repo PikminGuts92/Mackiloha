@@ -8,8 +8,9 @@ namespace Mackiloha.DTB
 {
     public enum DTBEncoding
     {
+        KR,
         Classic,
-        Fantasia,
+        FME,
         RBVR
     }
 }
