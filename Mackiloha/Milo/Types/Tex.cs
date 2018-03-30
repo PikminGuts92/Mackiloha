@@ -38,6 +38,10 @@ namespace Mackiloha.Milo
                 
                 // Parses tex header
                 ar.BaseStream.Position += 12; // Skips duplicate width, height, bpp info
+
+                if (version >= 10)
+                    ar.BaseStream.Position += 9;
+
                 tex.ExternalPath = ar.ReadString(); // Relative path
 
                 if (version != 5)
@@ -81,6 +85,7 @@ namespace Mackiloha.Milo
             {
                 case 5: // PS2 - Amp
                 case 8: // PS2 - GH1
+                case 10: // PS2 - GH2
                     return true;
                 default:
                     return false;

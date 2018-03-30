@@ -91,17 +91,23 @@ namespace Mackiloha.Milo
                 ar.ReadByte(); // Always 0
 
                 mesh._transform = ar.ReadString(); // Reads view
-                //ar.BaseStream.Position += 25;
 
-                // Skipping these other mesh strings
-                ar.BaseStream.Position += 5;
-                uint meshCount = ar.ReadUInt32();
-                mesh._meshes = new List<string>();
+                if (mesh._version <= MeshVersion.GH1)
+                {
+                    // Skipping these other mesh strings
+                    ar.BaseStream.Position += 5;
+                    uint meshCount = ar.ReadUInt32();
+                    mesh._meshes = new List<string>();
 
-                for (int i = 0; i < meshCount; i++) mesh._meshes.Add(ar.ReadString());
-                ar.BaseStream.Position += 16; // Four floats - Bounding box
-
-                if (mesh._version == MeshVersion.GDRB) ar.BaseStream.Position += 4;
+                    for (int i = 0; i < meshCount; i++) mesh._meshes.Add(ar.ReadString());
+                    ar.BaseStream.Position += 16; // Four floats - Bounding box
+                }
+                else
+                {
+                    ar.BaseStream.Position += 25;
+                    if (mesh._version == MeshVersion.GDRB) ar.BaseStream.Position += 4;
+                }
+                
                 mesh.Material = ar.ReadString(); // Reads material
                 ar.ReadString(); // Reads mesh name
                 ar.BaseStream.Position += 9;
@@ -297,6 +303,7 @@ namespace Mackiloha.Milo
             switch (version)
             {
                 case MeshVersion.GH1: // PS2 - GH1
+                case MeshVersion.GH2:
                     return true;
                 default:
                     return false;

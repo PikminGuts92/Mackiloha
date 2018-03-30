@@ -100,6 +100,74 @@ namespace Mackiloha.Milo
             return view;
         }
 
+        public static View FromStreamAsGroup(Stream input)
+        {
+            // TODO: Delete this
+            // HACKY GH2 FIX!!!
+            View view = new View("");
+
+            using (AwesomeReader ar = new AwesomeReader(input))
+            {
+                // Guesses endianess
+                view._version = (ViewVersion)ar.ReadInt32(); // Should be 12
+                ar.BigEndian = false;
+
+                ar.BaseStream.Position += 4; // Skips zero'd bytes
+
+                uint unknownEntries = ar.ReadUInt32();
+                for (int i = 0; i < unknownEntries; i++)
+                {
+                    ar.ReadString(); // Usually 0 or 1 in length
+                    ar.BaseStream.Position += 8; // Two floats (Exactly 0 or close to it)
+                }
+
+                /*
+                // Reads sub views (Usually 0)
+                string[] views = new string[ar.ReadUInt32()];
+                for (int i = 0; i < views.Length; i++) views[i] = ar.ReadString();
+                view._views = new List<string>(views);
+                */
+
+                ar.BaseStream.Position += 5; // 1 byte + 4 constant
+
+                // Reads in matrix tables
+                view._mat1 = Matrix.FromStream(ar);
+                view._mat2 = Matrix.FromStream(ar);
+
+                /*
+                // Reads sub mesh strings
+                if (view._version == ViewVersion.GH1)
+                {
+                    string[] submeshes = new string[ar.ReadUInt32()];
+                    for (int i = 0; i < submeshes.Length; i++) submeshes[i] = ar.ReadString();
+
+                    view._meshes = new List<string>(submeshes);
+                }
+
+                // Skips unknown stuff
+                ar.BaseStream.Position += 9;
+                view._transform = ar.ReadString(); // Reads view
+
+                // Skipping these other mesh strings
+                ar.BaseStream.Position += 5;
+                */
+
+                ar.BaseStream.Position += 50;
+
+                uint meshCount = ar.ReadUInt32();
+                view._meshes = new List<string>();
+
+                for (int i = 0; i < meshCount; i++) view._meshes.Add(ar.ReadString());
+                //ar.BaseStream.Position += 16; // Four floats - Bounding box
+
+                ar.ReadString(); // View (again)
+                ar.ReadInt32();
+                ar.ReadInt32();
+            }
+
+            return view;
+        }
+
         private static bool DetermineEndianess(byte[] head, out ViewVersion version, out bool valid)
         {
             bool bigEndian = false;

@@ -33,7 +33,13 @@ namespace Mackiloha.Milo
             // TODO: Add component parser (Difficult)
             if (version == MiloVersion.V10)
                 milo._externalResources = new List<string>(GetExternalResources(ar));
-
+            else if (version == MiloVersion.V24)
+            {
+                // Skips unknown stuff for now
+                ar.FindNext(ADDE_PADDING);
+                ar.BaseStream.Position += 4;
+            }
+            
             // Reads each file
             for (int i = 0; i < entryNames.Length; i++)
             {
@@ -72,6 +78,16 @@ namespace Mackiloha.Milo
                         using (MemoryStream ms = new MemoryStream(bytes))
                         {
                             AbstractEntry entry = View.FromStream(ms);
+                            if (entry == null) goto defaultCase;
+
+                            entry.Name = entryNames[i];
+                            milo.Entries.Add(entry);
+                        }
+                        break;
+                    case "Group":
+                        using (MemoryStream ms = new MemoryStream(bytes))
+                        {
+                            AbstractEntry entry = View.FromStreamAsGroup(ms);
                             if (entry == null) goto defaultCase;
 
                             entry.Name = entryNames[i];

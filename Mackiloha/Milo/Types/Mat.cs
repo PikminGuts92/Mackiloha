@@ -32,21 +32,33 @@ namespace Mackiloha.Milo
                 // Guesses endianess
                 ar.BigEndian = DetermineEndianess(ar.ReadBytes(4), out version, out valid);
                 if (!valid) return null; // Probably do something else later
-
-                int textureCount = ar.ReadInt32(); // Usually between 0-2
-
-                for (int i = 0; i < textureCount; i++)
+                
+                if (version < 27)
                 {
-                    // INT32 - Unknown (2)
-                    // INT32 - Unknown (0, 5)
-                    // MATRIX
-                    //      1.0 0.0 0.0 0.0
-                    //      1.0 0.0 0.0 0.0
-                    //      1.0 0.0 0.0 0.0
-                    // INT32 - Either 0 or 1
-                    // \____ 60 bytes ____/
-                    ar.BaseStream.Position += 60;
-                    mat.Textures.Add(ar.ReadString());
+                    int textureCount = ar.ReadInt32(); // Usually between 0-2
+
+                    for (int i = 0; i < textureCount; i++)
+                    {
+                        // INT32 - Unknown (2)
+                        // INT32 - Unknown (0, 5)
+                        // MATRIX
+                        //      1.0 0.0 0.0 0.0
+                        //      1.0 0.0 0.0 0.0
+                        //      1.0 0.0 0.0 0.0
+                        // INT32 - Either 0 or 1
+                        // \____ 60 bytes ____/
+                        ar.BaseStream.Position += 60;
+                        mat.Textures.Add(ar.ReadString());
+                    }
+                }
+                else
+                {
+                    // Just reads first texture
+                    ar.BaseStream.Position += 93;
+                    string name = ar.ReadString();
+
+                    if (!string.IsNullOrEmpty(name))
+                        mat.Textures.Add(name);
                 }
 
                 // INT32 - Always 3
@@ -85,6 +97,7 @@ namespace Mackiloha.Milo
             switch (version)
             {
                 case 21: // PS2 - GH1
+                case 27: // PS2 - GH2
                     return true;
                 default:
                     return false;
