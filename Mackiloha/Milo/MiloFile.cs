@@ -293,10 +293,17 @@ namespace Mackiloha.Milo
                     string fullEntryPath = $@"{extractPath}\{entryPath}.json";
                     FileHelper.CreateDirectoryIfNotExists(fullEntryPath);
 
-                    // Exports entry
-                    IExportable export = entry as IExportable;
-                    export.Export(fullEntryPath);
-                    jsonEntry.Exported = true;
+                    try
+                    {
+                        // Exports entry
+                        IExportable export = entry as IExportable;
+                        export.Export(fullEntryPath);
+                        jsonEntry.Exported = true;
+                    }
+                    catch
+                    {
+                        continue;
+                    }
                 }
                 else
                 {

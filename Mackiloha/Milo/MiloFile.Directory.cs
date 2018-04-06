@@ -35,6 +35,33 @@ namespace Mackiloha.Milo
                 milo._externalResources = new List<string>(GetExternalResources(ar));
             else if (version == MiloVersion.V24)
             {
+                if (dirName == "alterna1") // Hacky fix, please remove!
+                {
+                    ar.BaseStream.Position += 117;
+                    Trans tran = new Trans(dirName);
+
+                    // Reads view matrices
+                    tran.Mat1 = Matrix.FromStream(ar);
+                    ar.BaseStream.Position += 4;
+                    tran.Mat2 = Matrix.FromStream(ar);
+                    ar.BaseStream.Position += 4;
+
+                    milo.Entries.Add(tran);
+                }
+                else if (dirName == "dancer1") // Hacky fix, please remove!
+                {
+                    ar.BaseStream.Position += 31;
+                    Trans tran = new Trans(dirName);
+
+                    // Reads view matrices
+                    tran.Mat1 = Matrix.FromStream(ar);
+                    ar.BaseStream.Position += 4;
+                    tran.Mat2 = Matrix.FromStream(ar);
+                    ar.BaseStream.Position += 4;
+
+                    milo.Entries.Add(tran);
+                }
+
                 // Skips unknown stuff for now
                 ar.FindNext(ADDE_PADDING);
                 ar.BaseStream.Position += 4;
@@ -98,6 +125,16 @@ namespace Mackiloha.Milo
                         using (MemoryStream ms = new MemoryStream(bytes))
                         {
                             AbstractEntry entry = Mat.FromStream(ms);
+                            if (entry == null) goto defaultCase;
+
+                            entry.Name = entryNames[i];
+                            milo.Entries.Add(entry);
+                        }
+                        break;
+                    case "Trans":
+                        using (MemoryStream ms = new MemoryStream(bytes))
+                        {
+                            AbstractEntry entry = Trans.FromStream(ms);
                             if (entry == null) goto defaultCase;
 
                             entry.Name = entryNames[i];

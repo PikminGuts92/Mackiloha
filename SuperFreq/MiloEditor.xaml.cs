@@ -315,12 +315,14 @@ namespace SuperFreq
             else
             {
                 AbstractEntry entry = milo[mesh.Transform];
-                
+
                 if (entry is Mesh)
                     mat3d = ConvertMatrix((entry as Mesh).Mat2);
                 else if (entry is View)
                     mat3d = ConvertMatrix((entry as View).Mat2);
-                else if (entry == null || entry.Type == "Trans")
+                else if (entry is Trans)
+                    mat3d = ConvertMatrix((entry as Trans).Mat2);
+                else if (entry == null)
                     // TODO: Update this!
                     // Hotfix until parsing of gh2 directory is complete
                     mat3d = ConvertMatrix(Mackiloha.Matrix.Identity());
