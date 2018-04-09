@@ -33,7 +33,7 @@ namespace Mackiloha.Milo
                 ar.BigEndian = DetermineEndianess(ar.ReadBytes(4), out version, out valid);
                 if (!valid) return null; // Probably do something else later
                 
-                if (version < 27)
+                if (version < 25)
                 {
                     int textureCount = ar.ReadInt32(); // Usually between 0-2
 
@@ -97,6 +97,7 @@ namespace Mackiloha.Milo
             switch (version)
             {
                 case 21: // PS2 - GH1
+                case 25: // PS2 - GH2 (OPM demo)
                 case 27: // PS2 - GH2
                     return true;
                 default:
