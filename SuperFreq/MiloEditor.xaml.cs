@@ -246,6 +246,18 @@ namespace SuperFreq
                 default:
                     return;
             }
+            
+            /*
+            ObjExporter ex = new ObjExporter();
+            //ex.ExportNormals = true;
+            ex.MaterialsFile = "test.mtl";
+            ex.TextureFolder = "textures";
+
+            using (FileStream fs = File.OpenWrite("test.obj"))
+            {
+                ex.Export(HelixViewport3D.Viewport, fs);
+            }
+            */
         }
 
         public List<ModelVisual3D> CreateModelsFromView(View view, MiloFile milo)
@@ -256,6 +268,7 @@ namespace SuperFreq
             foreach (string name in view.Meshes)
             {
                 AbstractEntry entry = milo[name];
+
                 if (entry == null) continue;
                 else if (entry is Mesh)
                     models.Add(CreateModel(entry as Mesh, milo));
@@ -267,14 +280,14 @@ namespace SuperFreq
 
             return models;
         }
-
+        
         public ModelVisual3D CreateModel(Mesh mesh, MiloFile milo)
         {
             // ----- MESH STUFF -----
             MeshGeometry3D mesh3d = new MeshGeometry3D();
             
-            Int32Collection indices = new Int32Collection(mesh.Faces.Length);
-
+            Int32Collection indices = new Int32Collection(mesh.Faces.Length * 3);
+            
             foreach (ushort[] face in mesh.Faces)
             {
                 indices.Add(face[0]);
@@ -331,6 +344,8 @@ namespace SuperFreq
             }
             
             model3d.Transform = new MatrixTransform3D(mat3d);
+            model3d.SetName(mesh.Name);
+            
             return model3d;
         }
 
@@ -357,12 +372,18 @@ namespace SuperFreq
             return mat3d;
         }
 
+        private Dictionary<string, Material> _materials = new Dictionary<string, Material>();
+        
         private Material GetMaterial(string matName, MiloFile milo)
         {
+            Material material;
+
+            if (_materials.TryGetValue(matName, out material))
+                return material;
+
             // Materials can have multiple textures
             MaterialGroup group = new MaterialGroup();
             group.SetName(matName);
-
             
             AbstractEntry ab = milo[matName];
             if (ab == null || !(ab is Mat)) return null;
@@ -371,28 +392,50 @@ namespace SuperFreq
             foreach(string texName in (ab as Mat).Textures)
             {
                 DiffuseMaterial mat = new DiffuseMaterial();
-
-                ab = milo[texName];
-                if (ab == null || !(ab is Tex)) continue;
-
-                HMXImage img = (ab as Tex).Image;
-                if (img == null) img = TryOpenExternalImage((ab as Tex).ExternalPath);
-                //if (img == null) continue;
-                if (img == null) throw new Exception("Couldn't find texture...");
-
+                
                 // Converts texture to WPF-acceptable format
-                ImageBrush brush = new ImageBrush();
-                brush.ImageSource = Imaging.CreateBitmapSourceFromHBitmap(img.Hbitmap, // Don't forget to dispose
-                                    IntPtr.Zero,
-                                    Int32Rect.Empty,
-                                    BitmapSizeOptions.FromEmptyOptions());
-                brush.ViewportUnits = BrushMappingMode.Absolute;
+                ImageBrush brush = GetImage(texName, milo);
+                if (brush == null) continue;
 
                 mat.Brush = brush;
                 group.Children.Add(mat);
             }
 
-            return (group.Children.Count > 0) ? group : null;
+            if (group.Children.Count <= 0) return null;
+
+            _materials.Add(matName, group);
+            return group;
+        }
+
+        private Dictionary<string, ImageBrush> _images = new Dictionary<string, ImageBrush>();
+
+        private ImageBrush GetImage(string texName, MiloFile milo)
+        {
+            ImageBrush imageBrush;
+
+            if (_images.TryGetValue(texName, out imageBrush))
+                return imageBrush;
+
+            AbstractEntry ab = milo[texName];
+            if (ab == null || !(ab is Tex)) return null;
+
+            HMXImage img = (ab as Tex).Image;
+            if (img == null) img = TryOpenExternalImage((ab as Tex).ExternalPath);
+            //if (img == null) continue;
+            if (img == null) throw new Exception("Couldn't find texture...");
+
+            // Converts texture to WPF-acceptable format
+            ImageBrush brush = new ImageBrush();
+            brush.ImageSource = Imaging.CreateBitmapSourceFromHBitmap(img.Hbitmap, // Don't forget to dispose
+                                IntPtr.Zero,
+                                Int32Rect.Empty,
+                                BitmapSizeOptions.FromEmptyOptions());
+            brush.ViewportUnits = BrushMappingMode.Absolute;
+            
+            brush.SetName(texName);
+            _images.Add(texName, brush);
+
+            return brush;
         }
 
         private HMXImage TryOpenExternalImage(string bmpPath)
