@@ -65,7 +65,7 @@ namespace Mackiloha.Milo
                 for (int i = 0; i < views.Length; i++) views[i] = ar.ReadString();
                 view._views = new List<string>(views);
 
-                ar.BaseStream.Position += 4; // 8 constant
+                uint unknownConstant = ar.ReadUInt32(); // 8 = GH, 7 = KR
 
                 // Reads in matrix tables
                 view._mat1 = Matrix.FromStream(ar);
@@ -81,7 +81,11 @@ namespace Mackiloha.Milo
                 }
 
                 // Skips unknown stuff
-                ar.BaseStream.Position += 9;
+                if (unknownConstant == 7)
+                    ar.BaseStream.Position += 25;
+                else
+                    ar.BaseStream.Position += 9;
+                
                 view._transform = ar.ReadString(); // Reads view
 
                 // Skipping these other mesh strings
@@ -90,7 +94,9 @@ namespace Mackiloha.Milo
                 view._meshes = new List<string>();
 
                 for (int i = 0; i < meshCount; i++) view._meshes.Add(ar.ReadString());
-                ar.BaseStream.Position += 16; // Four floats - Bounding box
+
+                if (unknownConstant != 7)
+                    ar.BaseStream.Position += 16; // Four floats - Bounding box
 
                 ar.ReadString(); // View (again)
                 ar.ReadInt32();
