@@ -93,5 +93,16 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Mackiloha.Wpf\Mackiloha.Wpf.csproj">
+      <Project>{d7aace79-4eed-4f0e-a22f-2efc6610845f}</Project>
+      <Name>Mackiloha.Wpf</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Mackiloha\Mackiloha.csproj">
+      <Project>{6f65b855-4191-45bd-956c-6d1513afdadb}</Project>
+      <Name>Mackiloha</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
