@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChunkyBear", "ChunkyBear\Ch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiloStardust", "MiloStardust\MiloStardust.csproj", "{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mackiloha.Wpf", "Mackiloha.Wpf\Mackiloha.Wpf.csproj", "{D7AACE79-4EED-4F0E-A22F-2EFC6610845F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7AACE79-4EED-4F0E-A22F-2EFC6610845F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7AACE79-4EED-4F0E-A22F-2EFC6610845F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7AACE79-4EED-4F0E-A22F-2EFC6610845F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7AACE79-4EED-4F0E-A22F-2EFC6610845F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
