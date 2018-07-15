@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFreq", "SuperFreq\Supe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChunkyBear", "ChunkyBear\ChunkyBear.csproj", "{907246A3-C743-4F93-942D-7F9C405A0737}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiloStardust", "MiloStardust\MiloStardust.csproj", "{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{907246A3-C743-4F93-942D-7F9C405A0737}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{907246A3-C743-4F93-942D-7F9C405A0737}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{907246A3-C743-4F93-942D-7F9C405A0737}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
