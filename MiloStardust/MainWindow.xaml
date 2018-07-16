@@ -32,7 +32,7 @@
             </Menu>
         </ToolBar>
 
-        <MackControls:MiloEditor Grid.Row="1">
+        <MackControls:MiloEditor x:Name="Milo_Editor" Grid.Row="1">
         </MackControls:MiloEditor>
     </Grid>
 </Window>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32; // OpenFileDialog
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Mackiloha.Milo2;
 
 namespace MiloStardust
 {
@@ -20,9 +22,18 @@ namespace MiloStardust
     /// </summary>
     public partial class MainWindow : Window
     {
+        OpenFileDialog ofd = new OpenFileDialog();
+
         public MainWindow()
         {
             InitializeComponent();
+
+            var args = Environment.GetCommandLineArgs();
+
+            if (args != null && args.Length > 1)
+            {
+                Milo_Editor.Milo = MiloFile.ReadFromFile(args[1]);
+            }
         }
 
         private void ToolBar_Loaded(object sender, RoutedEventArgs e)
@@ -46,7 +57,12 @@ namespace MiloStardust
 
         private void Menu_File_Open_Click(object sender, RoutedEventArgs e)
         {
+            ofd.Title = "Select MILO file";
+            ofd.Filter = "MILO|*.milo_ps2;*.milo_ps3;*.milo_xbox";
 
+            if (ofd.ShowDialog() == false) return;
+
+            Milo_Editor.Milo = MiloFile.ReadFromFile(ofd.FileName);
         }
 
         private void Menu_File_SaveAs_Click(object sender, RoutedEventArgs e)
