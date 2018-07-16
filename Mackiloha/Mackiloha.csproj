@@ -74,6 +74,11 @@
     </Compile>
     <Compile Include="IExportable.cs" />
     <Compile Include="Matrix.cs" />
+    <Compile Include="Milo2\BlockStructure.cs" />
+    <Compile Include="Milo2\IMiloEntry.cs" />
+    <Compile Include="Milo2\MiloEntry.cs" />
+    <Compile Include="Milo2\MiloFile.cs" />
+    <Compile Include="Milo2\MiloVersion.cs" />
     <Compile Include="Milo\AbstractEntry.cs" />
     <Compile Include="Milo\BlockStructure.cs" />
     <Compile Include="Milo\MiloFile.cs" />
