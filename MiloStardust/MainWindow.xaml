@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:MiloStardust"
         xmlns:MackControls="clr-namespace:Mackiloha.Wpf.UserControls;assembly=Mackiloha.Wpf"
         mc:Ignorable="d"
-        Title="Milo Stardust v1.0" Height="500" Width="800">
+        Title="Milo Stardust v1.0" Height="500" Width="800"
+        WindowState="Maximized">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
@@ -32,7 +33,6 @@
             </Menu>
         </ToolBar>
 
-        <MackControls:MiloEditor x:Name="Milo_Editor" Grid.Row="1">
-        </MackControls:MiloEditor>
+        <MackControls:MiloEditor x:Name="Milo_Editor" Grid.Row="1"/>
     </Grid>
 </Window>

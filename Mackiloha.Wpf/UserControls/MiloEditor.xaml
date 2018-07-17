@@ -9,6 +9,14 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <milo:MiloFile x:Name="Milo" x:Key="Milo"/>
+
+        <ContextMenu x:Name="ContextMenu_MiloEntry" x:Key="ContextMenu_MiloEntry" x:Shared="false">
+            <MenuItem Header="Extract" Click="MenuItem_MiloEntry_Extract_Click"/>
+            <MenuItem Header="Replace" Click="MenuItem_MiloEntry_Replace_Click"/>
+            <MenuItem Header="Rename" Click="MenuItem_MiloEntry_Rename_Click"/>
+            <Separator/>
+            <MenuItem Header="Delete" Click="MenuItem_MiloEntry_Delete_Click"/>
+        </ContextMenu>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -22,7 +30,7 @@
 
         <TabControl Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Background="Beige">
             <TabItem Header="Scene">
-                
+                <Grid Background="Black"></Grid>
             </TabItem>
         </TabControl>
 
@@ -49,6 +57,11 @@
                         <GridViewColumn Header="Size" Width="100"/>
                     </GridView>
                 </ListView.View>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="{x:Type ListViewItem}">
+                        <Setter Property="ContextMenu" Value="{StaticResource ContextMenu_MiloEntry}"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
             </ListView>
 
             <ItemsControl Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Background="AliceBlue" x:Name="ItemsControl_MiloEntries" Visibility="Hidden">
@@ -59,13 +72,16 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Button Content="{Binding Name}" Margin="5"></Button>
+                        <Button Content="{Binding Name}" Margin="5" ContextMenu="{StaticResource ContextMenu_MiloEntry}"></Button>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-            
+
             <RadioButton x:Name="RadioButton_Detailed" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True" Click="RadioButton_Click"/>
             <RadioButton x:Name="RadioButton_Image" Grid.Column="2" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="False" Click="RadioButton_Click"/>
         </Grid>
+
+        <GridSplitter Grid.Column="0" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" Width="3" Height="Auto" Margin="-1.5"/>
+        <GridSplitter Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Background="Transparent" Width="Auto" Height="3" Margin="-1.5"/>
     </Grid>
 </UserControl>

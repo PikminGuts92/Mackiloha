@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.Win32; // OpenFileDialog
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,6 +25,8 @@ namespace Mackiloha.Wpf.UserControls
     public partial class MiloEditor : UserControl
     {
         private string _selectedType;
+        OpenFileDialog ofd = new OpenFileDialog();
+        SaveFileDialog sfd = new SaveFileDialog();
 
         public MiloEditor()
         {
@@ -94,6 +98,56 @@ namespace Mackiloha.Wpf.UserControls
             
             this.ListView_MiloEntries.Visibility = RadioButton_Detailed.IsChecked.Value ? Visibility.Visible : Visibility.Hidden;
             this.ItemsControl_MiloEntries.Visibility = RadioButton_Image.IsChecked.Value ? Visibility.Visible : Visibility.Hidden;
+        }
+
+        private void MenuItem_MiloEntry_Extract_Click(object sender, RoutedEventArgs e)
+        {
+            var context = (sender as MenuItem).DataContext;
+            if (!(context is MiloEntry)) return;
+
+            var entry = context as MiloEntry;
+            var type = entry.Type.ToUpper();
+            var ext = entry.Extension();
+
+            sfd.Title = $"Save {type} file";
+            sfd.Filter = $"{type}|*{ext}";
+            sfd.FileName = entry.Name;
+
+            if (sfd.ShowDialog() == false) return;
+
+            File.WriteAllBytes(sfd.FileName, entry.Data);
+            MessageBox.Show($"Successfully saved {sfd.SafeFileName}");
+        }
+        
+        private void MenuItem_MiloEntry_Replace_Click(object sender, RoutedEventArgs e)
+        {
+            var context = (sender as MenuItem).DataContext;
+            if (!(context is MiloEntry)) return;
+
+            var entry = context as MiloEntry;
+            var type = entry.Type.ToUpper();
+            var ext = entry.Extension();
+
+            ofd.Title = $"Open {type} file";
+            ofd.Filter = $"{type}|*{ext}";
+
+            if (ofd.ShowDialog() == false) return;
+
+            var data = File.ReadAllBytes(ofd.FileName);
+            entry.Data = data;
+        }
+
+        private void MenuItem_MiloEntry_Rename_Click(object sender, RoutedEventArgs e)
+        {
+            var context = (sender as MenuItem).DataContext;
+            if (!(context is MiloEntry)) return;
+
+            var entry = context as MiloEntry;
+        }
+
+        private void MenuItem_MiloEntry_Delete_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
