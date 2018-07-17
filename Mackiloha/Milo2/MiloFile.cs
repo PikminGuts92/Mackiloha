@@ -9,12 +9,14 @@ namespace Mackiloha.Milo2
 {
     public class MiloFile
     {
-        private const uint MAX_BLOCK_SIZE = 0x8000; // 2^15
+        private const uint MAX_BLOCK_SIZE = 0x20000;
         private const uint ADDE_PADDING = 0xADDEADDE;
+        private static readonly byte[] ADDE_PADDING_BYTES = { 0xAD, 0xDE, 0xAD, 0xDE };
 
         private BlockStructure _structure;
         private uint _offset;
         private MiloVersion _version;
+        private bool _bigEndian;
         private MiloEntry _directoryEntry;
         
         public MiloFile()
@@ -22,6 +24,7 @@ namespace Mackiloha.Milo2
             _structure = BlockStructure.MILO_B;
             _offset = 2064;
             _version = MiloVersion.V24;
+            _bigEndian = true;
             Entries = new List<IMiloEntry>();
         }
 
@@ -46,7 +49,7 @@ namespace Mackiloha.Milo2
             //if (structureType != BlockStructure.MILO_A)
             //    throw new Exception("Unsupported milo compression");
 
-            int offset = ar.ReadInt32(); // Start of blocks
+            uint offset = ar.ReadUInt32(); // Start of blocks
             int blockCount = ar.ReadInt32();
             int maxBlockSize = ar.ReadInt32(); // Skips max uncompressed size
 
@@ -55,7 +58,7 @@ namespace Mackiloha.Milo2
 
             // Jumps to first block offset
             ar.BaseStream.Position = startingOffset + offset;
-
+            
             using (var ms = new MemoryStream())
             {
                 foreach (var size in sizes)
@@ -86,12 +89,15 @@ namespace Mackiloha.Milo2
 
                     ms.Write(block, 0, block.Length);
                 }
-
                 
                 // Copies raw milo data
                 //ar.BaseStream.CopyTo(ms, totalSize);
                 ms.Seek(0, SeekOrigin.Begin);
-                return ParseDirectory(new AwesomeReader(ms));
+
+                var milo = ParseDirectory(new AwesomeReader(ms));
+                milo._offset = offset;
+                milo._structure = structureType;
+                return milo;
             }
         }
 
@@ -159,7 +165,8 @@ namespace Mackiloha.Milo2
             MiloFile milo = new MiloFile()
             {
                 _version = (MiloVersion)version,
-                _directoryEntry = new MiloEntry(dirName, dirType, dirData)
+                _directoryEntry = new MiloEntry(dirName, dirType, dirData),
+                _bigEndian = ar.BigEndian
             };
             
             // Reads each file
@@ -174,6 +181,153 @@ namespace Mackiloha.Milo2
             }
 
             return milo;
+        }
+
+        public void WriteToFile(string path)
+        {
+            using (var fs = File.OpenWrite(path))
+            {
+                WriteBlockedMiloToStream(fs);
+            }
+        }
+
+        public void WriteBlockedMiloToStream(Stream stream)
+        {
+            using (var ms = new MemoryStream())
+            {
+                WriteMiloToStream(new AwesomeWriter(ms, _bigEndian), out List<int> blockSizes);
+                ms.Seek(0, SeekOrigin.Begin);
+                //ms.CopyTo(stream);
+
+                if (_structure == BlockStructure.NONE || _structure == BlockStructure.GZIP)
+                {
+                    // TODO: Implement GZIP compression
+                    ms.CopyTo(stream);
+                    return;
+                }
+
+                // Classic milo block structure
+                using (var aw = new AwesomeWriter(stream, false))
+                {
+                    // Calculates offset for start of block data, defaults to max 512 blocks if a larger offset is needed
+                    var maxBlocks = (_offset - 16) / 4;
+                    var offset = (maxBlocks < blockSizes.Count) ? Math.Max(512, blockSizes.Count) : (int)maxBlocks;
+                    offset = (offset * 4) + 16;
+                    
+                    aw.Write((int)_structure);
+                    aw.Write(offset);
+                    aw.Write(blockSizes.Count);
+                    aw.Write(blockSizes.Max());
+                    
+                    if (_structure == BlockStructure.MILO_A)
+                    {
+                        // No compression, just write the whole thing and be done with it
+                        blockSizes.ForEach(x => aw.Write(x));
+                        aw.BaseStream.Seek(offset, SeekOrigin.Begin);
+                        ms.CopyTo(aw.BaseStream);
+                        return;
+                    }
+
+                    var comType = (_structure == BlockStructure.MILO_C) ? CompressionType.GZIP : CompressionType.ZLIB;
+                    var writeSize = _structure == BlockStructure.MILO_D;
+                    aw.BaseStream.Seek(offset, SeekOrigin.Begin);
+
+                    for (int i = 0; i < blockSizes.Count; i++)
+                    {
+                        // Compresses block
+                        byte[] data = new byte[blockSizes[i]];
+                        ms.Read(data, 0, data.Length);
+                        data = Compression.DeflateBlock(data, comType);
+
+                        // Writes block (+ uncompressed size if required)
+                        if (writeSize)
+                        {
+                            aw.Write(blockSizes[i]);
+                            aw.Write(data);
+                            blockSizes[i] = data.Length + 4;
+                        }
+                        else
+                        {
+                            aw.Write(data);
+                            blockSizes[i] = data.Length;
+                        }
+                    }
+
+                    // Writes block sizes
+                    aw.BaseStream.Seek(16, SeekOrigin.Begin);
+                    blockSizes.ForEach(x => aw.Write(x));
+                }
+            }
+        }
+
+        private void WriteMiloToStream(AwesomeWriter aw, out List<int> blockSizes)
+        {
+            var prevOffset = aw.BaseStream.Position;
+            blockSizes = new List<int>();
+            WriteDirectoryInfo(aw);
+
+            foreach (var ientry in Entries)
+            {
+                if (!(ientry is MiloEntry)) continue; // TODO: Handle directory entries
+
+                var currentSize = aw.BaseStream.Position - prevOffset;
+                if (currentSize > MAX_BLOCK_SIZE)
+                {
+                    blockSizes.Add((int)currentSize);
+                    prevOffset = aw.BaseStream.Position;
+                }
+
+                var entry = ientry as MiloEntry;
+
+                aw.Write(entry.Data);
+                aw.Write(ADDE_PADDING_BYTES);
+            }
+
+            // Adds last block size
+            blockSizes.Add((int)(aw.BaseStream.Position - prevOffset));
+        }
+
+        private void WriteDirectoryInfo(AwesomeWriter aw)
+        {
+            var version = (int)_version;
+
+            aw.Write(version);
+
+            if (version >= 24)
+            {
+                aw.Write(_directoryEntry?.Type ?? "");
+                aw.Write(_directoryEntry?.Name ?? "");
+
+                // Name/type count for entries and directory
+                aw.Write((Entries.Count * 2) + 2);
+
+                // Name count and lengths for entries and directory
+                aw.Write(1 + (_directoryEntry?.Name ?? "").Length + Entries.Count + Entries.Select(x => (x.Name ?? "").Length).Sum());
+            }
+
+            aw.Write(Entries.Count);
+
+            foreach (var entry in Entries)
+            {
+                aw.Write(entry.Type);
+                aw.Write(entry.Name);
+            }
+
+            if (version == 10)
+            {
+                // TODO: Parse textures to get external paths
+                var externalResources = Entries.Where(x => x.Type.Equals("Tex", StringComparison.CurrentCultureIgnoreCase)).ToArray();
+
+                aw.Write(externalResources.Length);
+                aw.BaseStream.Position += externalResources.Length * sizeof(int);
+            }
+            else if (version >= 24)
+            {
+                if (_directoryEntry?.Data != null)
+                    aw.Write(_directoryEntry.Data);
+
+                aw.Write(ADDE_PADDING_BYTES);
+            }
         }
 
         private static bool DetermineEndianess(byte[] head, out MiloVersion version, out bool valid)

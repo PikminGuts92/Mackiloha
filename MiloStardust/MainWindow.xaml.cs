@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32; // OpenFileDialog
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
+//using System.Windows.Shapes;
 using Mackiloha.Milo2;
 
 namespace MiloStardust
@@ -23,6 +24,9 @@ namespace MiloStardust
     public partial class MainWindow : Window
     {
         OpenFileDialog ofd = new OpenFileDialog();
+        SaveFileDialog sfd = new SaveFileDialog();
+
+        string miloPath;
 
         public MainWindow()
         {
@@ -33,6 +37,7 @@ namespace MiloStardust
             if (args != null && args.Length > 1)
             {
                 Milo_Editor.Milo = MiloFile.ReadFromFile(args[1]);
+                miloPath = args[1];
             }
         }
 
@@ -57,17 +62,27 @@ namespace MiloStardust
 
         private void Menu_File_Open_Click(object sender, RoutedEventArgs e)
         {
-            ofd.Title = "Select MILO file";
+            ofd.Title = "Open MILO file";
             ofd.Filter = "MILO|*.milo_ps2;*.milo_ps3;*.milo_xbox";
 
             if (ofd.ShowDialog() == false) return;
 
             Milo_Editor.Milo = MiloFile.ReadFromFile(ofd.FileName);
+            miloPath = ofd.FileName;
         }
 
         private void Menu_File_SaveAs_Click(object sender, RoutedEventArgs e)
         {
+            var ext = Path.GetExtension(miloPath);
 
+            sfd.Title = $"Save MILO file";
+            sfd.Filter = $"{ext.Remove(0, 1).ToUpper()}|*{ext}";
+            sfd.FileName = Path.GetFileName(miloPath);
+
+            if (sfd.ShowDialog() == false) return;
+
+            Milo_Editor.Milo.WriteToFile(sfd.FileName);
+            MessageBox.Show($"Successfully saved {sfd.SafeFileName}");
         }
 
         private void Menu_File_Exit_Click(object sender, RoutedEventArgs e)
