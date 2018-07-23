@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiloStardust", "MiloStardus
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mackiloha.Wpf", "Mackiloha.Wpf\Mackiloha.Wpf.csproj", "{D7AACE79-4EED-4F0E-A22F-2EFC6610845F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GLTFTools", "GLTFTools\GLTFTools.csproj", "{DA9AA7F3-6D6A-46F6-A692-C630CC4D1CB2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{D7AACE79-4EED-4F0E-A22F-2EFC6610845F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7AACE79-4EED-4F0E-A22F-2EFC6610845F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7AACE79-4EED-4F0E-A22F-2EFC6610845F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA9AA7F3-6D6A-46F6-A692-C630CC4D1CB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA9AA7F3-6D6A-46F6-A692-C630CC4D1CB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA9AA7F3-6D6A-46F6-A692-C630CC4D1CB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA9AA7F3-6D6A-46F6-A692-C630CC4D1CB2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
