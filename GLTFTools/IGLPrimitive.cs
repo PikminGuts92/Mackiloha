@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GLTFTools
 {
-    public abstract class GLPrimitive
+    internal interface IGLPrimitive
     {
     }
 }

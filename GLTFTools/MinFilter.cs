@@ -7,22 +7,18 @@ using Newtonsoft.Json;
 
 namespace GLTFTools
 {
-    [JsonConverter(typeof(Vector2Converter))]
-    public struct Vector2<T> : IGLPrimitive where T : IComparable<T>
+    [JsonConverter(typeof(MinFilterConverter))]
+    public enum MinFilter : int
     {
-        public T X;
-        public T Y;
-        
-        public Vector2(T x) : this(x, x) { }
-
-        public Vector2(T x, T y)
-        {
-            X = x;
-            Y = y;
-        }
+        Nearest = 9728,
+        Linear,
+        NearestMipMapNearest = 9984,
+        LinearMipMapNearest,
+        NearestMipMapLinear,
+        LinearMipMapLinear
     }
 
-    internal class Vector2Converter : JsonConverter
+    internal class MinFilterConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {

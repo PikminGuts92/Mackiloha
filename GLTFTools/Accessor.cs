@@ -38,13 +38,13 @@ namespace GLTFTools
         /// Minimum value of each component in this attribute
         /// </summary>
         [JsonProperty("min")]
-        public GLPrimitive Min { get; set; }
+        public IGLPrimitive Min { get; set; }
 
         /// <summary>
         /// Maximum value of each component in this attribute.
         /// </summary>
         [JsonProperty("max")]
-        public GLPrimitive Max { get; set; }
+        public IGLPrimitive Max { get; set; }
 
         /// <summary>
         /// Specifies if the attribute is a scalar, vector, or matrix

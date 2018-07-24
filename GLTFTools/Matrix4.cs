@@ -7,22 +7,19 @@ using Newtonsoft.Json;
 
 namespace GLTFTools
 {
-    [JsonConverter(typeof(Vector2Converter))]
-    public struct Vector2<T> : IGLPrimitive where T : IComparable<T>
+    [JsonConverter(typeof(Matrix4Converter))]
+    public struct Matrix4<T> : IGLPrimitive where T : IComparable<T>
     {
-        public T X;
-        public T Y;
-        
-        public Vector2(T x) : this(x, x) { }
+        public T M11, M12, M13, M14;
+        public T M21, M22, M23, M24;
+        public T M31, M32, M33, M34;
+        public T M41, M42, M43, M44;
 
-        public Vector2(T x, T y)
-        {
-            X = x;
-            Y = y;
-        }
+        public static Matrix4<float> Identity() =>
+            new Matrix4<float>() { M11 = 1.0f, M22 = 1.0f, M33 = 1.0f, M44 = 1.0f };
     }
 
-    internal class Vector2Converter : JsonConverter
+    internal class Matrix4Converter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {

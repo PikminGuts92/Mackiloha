@@ -7,22 +7,15 @@ using Newtonsoft.Json;
 
 namespace GLTFTools
 {
-    [JsonConverter(typeof(Vector2Converter))]
-    public struct Vector2<T> : IGLPrimitive where T : IComparable<T>
+    [JsonConverter(typeof(WrapModeConverter))]
+    public enum WrapMode : int
     {
-        public T X;
-        public T Y;
-        
-        public Vector2(T x) : this(x, x) { }
-
-        public Vector2(T x, T y)
-        {
-            X = x;
-            Y = y;
-        }
+        ClampToEdge = 33071,
+        MirroredRepeat = 33648,
+        Repeat = 10497
     }
 
-    internal class Vector2Converter : JsonConverter
+    internal class WrapModeConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {

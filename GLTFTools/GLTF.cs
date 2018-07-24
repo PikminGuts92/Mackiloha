@@ -38,5 +38,35 @@ namespace GLTFTools
         /// </summary>
         [JsonProperty("images")]
         public Image[] Images { get; set; }
+
+        /// <summary>
+        /// An array of nodes
+        /// </summary>
+        [JsonProperty("nodes")]
+        public Node[] Nodes { get; set; }
+
+        /// <summary>
+        /// An array of samplers
+        /// </summary>
+        [JsonProperty("samplers")]
+        public Sampler[] Samplers { get; set; }
+
+        /// <summary>
+        /// The index of the default scene
+        /// </summary>
+        [JsonProperty("scene")]
+        public int Scene { get; set; }
+
+        /// <summary>
+        /// An array of scenes
+        /// </summary>
+        [JsonProperty("scenes")]
+        public Scene[] Scenes { get; set; }
+
+        /// <summary>
+        /// An array of textures
+        /// </summary>
+        [JsonProperty("textures")]
+        public Texture[] Textures { get; set; }
     }
 }

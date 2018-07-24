@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace GLTFTools
 {
-    public class Scalar<T> : GLPrimitive where T : IComparable<T>
+    [JsonConverter(typeof(ScalarConverter))]
+    public struct Scalar<T> : IGLPrimitive where T : IComparable<T>
     {
         public T Value;
-
-        public Scalar() : this(default(T)) { }
-
+        
         public Scalar(T value)
         {
             Value = value;
@@ -20,5 +20,23 @@ namespace GLTFTools
         public static implicit operator Scalar<T>(T value) => new Scalar<T>(value);
 
         public static implicit operator T(Scalar<T> t) => t.Value;
+    }
+
+    internal class ScalarConverter : JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
