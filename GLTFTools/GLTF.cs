@@ -40,6 +40,12 @@ namespace GLTFTools
         public Image[] Images { get; set; }
 
         /// <summary>
+        /// An array of meshes
+        /// </summary>
+        [JsonProperty("meshes")]
+        public Mesh[] Meshes { get; set; }
+
+        /// <summary>
         /// An array of nodes
         /// </summary>
         [JsonProperty("nodes")]
