@@ -28,8 +28,64 @@ namespace GLTFTools
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            // SCALAR, VEC2, VEC3, VEC4, MAT2, MAT3, MAT4
-            throw new NotImplementedException();
+            if (reader.TokenType != JsonToken.String)
+                throw new JsonReaderException($"\'{reader.Path}\': Value must be a string!");
+            
+            return Parse((string)reader.Value, reader.Path);
+        }
+
+        public static GLType Parse(string value, string readerPath = "")
+        {
+            switch (value.ToUpper())
+            {
+                case "SCALAR":
+                    return GLType.Scalar;
+                case "VEC2":
+                    return GLType.Vector2;
+                case "VEC3":
+                    return GLType.Vector3;
+                case "VEC4":
+                    return GLType.Vector4;
+                case "MAT2":
+                    return GLType.Matrix2;
+                case "MAT3":
+                    return GLType.Matrix3;
+                case "MAT4":
+                    return GLType.Matrix4;
+            }
+
+            throw new JsonReaderException($"\'{readerPath}\': Value of \'{value}\' is not supported!");
+        }
+
+        public static bool TryParse(string value, out GLType type)
+        {
+            switch (value.ToUpper())
+            {
+                case "SCALAR":
+                    type = GLType.Scalar;
+                    return true;
+                case "VEC2":
+                    type = GLType.Vector2;
+                    return true;
+                case "VEC3":
+                    type = GLType.Vector3;
+                    return true;
+                case "VEC4":
+                    type = GLType.Vector4;
+                    return true;
+                case "MAT2":
+                    type = GLType.Matrix2;
+                    return true;
+                case "MAT3":
+                    type = GLType.Matrix3;
+                    return true;
+                case "MAT4":
+                    type = GLType.Matrix4;
+                    return true;
+                default:
+                    type = GLType.Scalar;
+                    return false;
+            }
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)

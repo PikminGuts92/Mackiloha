@@ -23,8 +23,18 @@ namespace GLTFTools
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            // image/jpeg, image/png
-            throw new NotImplementedException();
+            if (reader.TokenType != JsonToken.String)
+                throw new JsonReaderException($"\'{reader.Path}\' must be a string!");
+
+            switch (((string)reader.Value).ToLower())
+            {
+                case "image/jpeg":
+                    return MimeType.Image_Jpeg;
+                case "image/png":
+                    return MimeType.Image_Png;
+            }
+
+            throw new JsonReaderException($"\'{reader.Path}\': Value of \'{reader.Value}\' is not supported!");
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)

@@ -27,7 +27,28 @@ namespace GLTFTools
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (reader.TokenType != JsonToken.String)
+                throw new JsonReaderException($"\'{reader.Path}\': Value must be a string!");
+
+            switch (((string)reader.Value).ToUpper())
+            {
+                case "POINTS":
+                    return RenderMode.Points;
+                case "LINES":
+                    return RenderMode.Lines;
+                case "LINE_LOOP":
+                    return RenderMode.LineLoop;
+                case "LINE_STRIP":
+                    return RenderMode.LineStrip;
+                case "TRIANGLES":
+                    return RenderMode.Triangles;
+                case "TRIANGLE_STRIP":
+                    return RenderMode.TriangleStrip;
+                case "TRIANGLE_FAN":
+                    return RenderMode.TriangleStrip;
+            }
+
+            throw new JsonReaderException($"\'{reader.Path}\': Value of \'{reader.Value}\' is not supported!");
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)

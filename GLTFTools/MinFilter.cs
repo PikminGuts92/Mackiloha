@@ -27,7 +27,14 @@ namespace GLTFTools
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (reader.TokenType != JsonToken.Integer)
+                throw new JsonReaderException($"\'{reader.Path}\': Value must be a number!");
+
+            var value = Convert.ToInt32(reader.Value);
+            if (!Enum.IsDefined(typeof(MinFilter), value))
+                throw new JsonReaderException($"\'{reader.Path}\': Value of \'{value}\' is not supported!");
+
+            return value;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)

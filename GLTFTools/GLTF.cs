@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,16 @@ namespace GLTFTools
 {
     public class GLTF
     {
+        public static GLTF FromFile(string path)
+        {
+            using (var sr = new StreamReader(path, Encoding.UTF8))
+            {
+                return JsonConvert.DeserializeObject<GLTF>(sr.ReadToEnd());
+            }
+        }
+
+        public string ToJson() => JsonConvert.SerializeObject(this);
+
         /// <summary>
         /// An array of accessors
         /// </summary>
@@ -38,6 +49,12 @@ namespace GLTFTools
         /// </summary>
         [JsonProperty("images")]
         public Image[] Images { get; set; }
+
+        /// <summary>
+        /// An array of materials
+        /// </summary>
+        [JsonProperty("materials")]
+        public Material[] Materials { get; set; }
 
         /// <summary>
         /// An array of meshes

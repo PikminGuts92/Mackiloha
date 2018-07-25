@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace GLTFTools
 {
@@ -38,13 +39,13 @@ namespace GLTFTools
         /// Minimum value of each component in this attribute
         /// </summary>
         [JsonProperty("min")]
-        public IGLPrimitive Min { get; set; }
+        public double[] Min { get; set; }
 
         /// <summary>
         /// Maximum value of each component in this attribute.
         /// </summary>
         [JsonProperty("max")]
-        public IGLPrimitive Max { get; set; }
+        public double[] Max { get; set; }
 
         /// <summary>
         /// Specifies if the attribute is a scalar, vector, or matrix
@@ -66,6 +67,79 @@ namespace GLTFTools
         {
             get => _byteOffset;
             set => _byteOffset = (value > 0) ? value : 0;
+        }
+    }
+
+    internal class AccessorConverter : JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            JObject obj = JObject.Load(reader);
+            Accessor accessor = new Accessor();
+            
+            if (obj["name"] != null)
+                accessor.Name = obj["name"].Value<string>();
+
+            if (obj["bufferView"] != null)
+                accessor.BufferView = obj["bufferView"].Value<int>();
+
+            if (obj["byteOffset"] != null)
+                accessor.BufferView = obj["byteOffset"].Value<int>();
+
+            // Should all be in json
+            accessor.ComponentType = ComponentTypeConverter.Parse(obj["componentType"].Value<int>());
+            accessor.Type = GLTypeConverter.Parse(obj["type"].Value<string>());
+            accessor.Count = obj["count"].Value<int>();
+            
+            IGLPrimitive GetPrimitive(string propName, ComponentType primitiveType, GLType arrayType)
+            {
+                var kids = obj[propName].Children();
+
+                if (arrayType == GLType.Scalar)
+                {
+                    switch(primitiveType)
+                    {
+                        default:
+                            return new Scalar<float>(kids[0].Value<float>());
+                        case ComponentType.Byte:
+                            return new Scalar<sbyte>(kids[0].Value<sbyte>());
+                        case ComponentType.UnsignedByte:
+                            return new Scalar<byte>(kids[0].Value<byte>());
+                        case ComponentType.Short:
+                            return new Scalar<short>(kids[0].Value<short>());
+                        case ComponentType.UnsignedShort:
+                            return new Scalar<ushort>(kids[0].Value<ushort>());
+                        case ComponentType.UnsignedInt:
+                            return new Scalar<uint>(kids[0].Value<uint>());
+                        case ComponentType.Float:
+                            return new Scalar<float>(kids[0].Value<float>());
+                    }
+                }
+
+                return null;
+            }
+
+            //var castType = ComponentTypeConverter.GetType(accessor.ComponentType);
+            //var minArray = obj["min"].Children().Select(x => Convert.ChangeType(x, castType)).ToArray();
+            //accessor.Min = (Vector3<float>)minArray;
+
+            //var arr = new int[] { 0, 1, 2 };
+            //Vector3<int> vec = arr;
+
+            //var min = obj["min"].Children().ToArray();
+            //var max = obj["max"];
+            
+            return accessor;
+        }
+        
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -53,6 +53,7 @@
     <Compile Include="GLType.cs" />
     <Compile Include="Image.cs" />
     <Compile Include="MagFilter.cs" />
+    <Compile Include="Material.cs" />
     <Compile Include="Matrix2.cs" />
     <Compile Include="Matrix3.cs" />
     <Compile Include="Matrix4.cs" />
