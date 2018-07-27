@@ -19,12 +19,12 @@ namespace GLTFTools
         /// The index of the sampler used by this texture. When undefined, a sampler with repeat wrapping and auto filtering should be used
         /// </summary>
         [JsonProperty("sampler")]
-        public int Sampler { get; set; }
+        public int? Sampler { get; set; }
 
         /// <summary>
         /// The index of the image used by this texture
         /// </summary>
         [JsonProperty("source")]
-        public int Source { get; set; }
+        public int? Source { get; set; }
     }
 }

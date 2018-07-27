@@ -24,7 +24,7 @@ namespace GLTFTools
         /// An array of primitives, each defining geometry to be rendered with a material
         /// </summary>
         [JsonProperty("primitives")]
-        public MeshPrimitive[] Primitives { get; set; }
+        public MeshPrimitive[] Primitives { get; set; } // TODO: Force write (as empty array?)
 
         /// <summary>
         /// Array of weights to be applied to the Morph Targets

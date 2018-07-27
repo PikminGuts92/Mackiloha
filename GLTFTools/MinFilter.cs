@@ -34,7 +34,7 @@ namespace GLTFTools
             if (!Enum.IsDefined(typeof(MinFilter), value))
                 throw new JsonReaderException($"\'{reader.Path}\': Value of \'{value}\' is not supported!");
 
-            return value;
+            return (MinFilter)value;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)

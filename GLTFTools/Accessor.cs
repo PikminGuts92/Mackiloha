@@ -10,7 +10,7 @@ namespace GLTFTools
 {
     public class Accessor
     {
-        private int _byteOffset = 0;
+        private int? _byteOffset = null;
 
         /// <summary>
         /// A typed view into a buffer view. A buffer view contains raw binary data. An accessor provides a typed view into a buffer view or a subset of a buffer view similar to how WebGL's `vertexAttribPointer()` defines an attribute in a buffer
@@ -57,16 +57,22 @@ namespace GLTFTools
         /// The index of the buffer view
         /// </summary>
         [JsonProperty("bufferView")]
-        public int BufferView { get; set; }
+        public int? BufferView { get; set; }
         
         /// <summary>
         /// The offset relative to the start of the buffer view in bytes
         /// </summary>
         [JsonProperty("byteOffset")]
-        public int ByteOffset
+        public int? ByteOffset
         {
             get => _byteOffset;
-            set => _byteOffset = (value > 0) ? value : 0;
+            set
+            {
+                if (!value.HasValue)
+                    _byteOffset = value;
+                else
+                    _byteOffset = value.Value > 0 ? value : 0;
+            } 
         }
     }
 

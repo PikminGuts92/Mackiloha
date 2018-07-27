@@ -19,18 +19,18 @@ namespace GLTFTools
         /// The uri of the image
         /// </summary>
         [JsonProperty("uri")]
-        public string Uri { get; set; }
+        public string Uri { get; set; } // TODO: Force write
 
         /// <summary>
         /// The image's MIME type
         /// </summary>
         [JsonProperty("mimeType")]
-        public MimeType MimeType { get; set; }
+        public MimeType? MimeType { get; set; }
 
         /// <summary>
         /// The index of the bufferView that contains the image. Use this instead of the image's uri property
         /// </summary>
         [JsonProperty("bufferView")]
-        public int BufferView { get; set; }
+        public int BufferView { get; set; } // TODO: Force write
     }
 }

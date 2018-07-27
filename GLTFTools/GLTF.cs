@@ -10,7 +10,7 @@ namespace GLTFTools
 {
     public class GLTF
     {
-        private static JsonSerializerSettings _jsonSettings = new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore };
+        private static JsonSerializerSettings _jsonSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented, NullValueHandling = NullValueHandling.Ignore };
 
         public static GLTF FromFile(string path)
         {

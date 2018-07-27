@@ -11,7 +11,7 @@ namespace GLTFTools
     {
         private const int STRIDE_MULTIPLE = 4;
 
-        private int _byteOffset = 0;
+        private int? _byteOffset = null;
         private int _byteLength = 1;
         private int _byteStride = 4;
 
@@ -31,10 +31,16 @@ namespace GLTFTools
         /// The offset into the buffer in bytes
         /// </summary>
         [JsonProperty("byteOffset")]
-        public int ByteOffset
+        public int? ByteOffset
         {
             get => _byteOffset;
-            set => _byteOffset = (value > 0) ? value : 0;
+            set
+            {
+                if (!value.HasValue)
+                    _byteOffset = value;
+                else
+                    _byteOffset = value.Value > 0 ? value : 0;
+            }
         }
 
         /// <summary>

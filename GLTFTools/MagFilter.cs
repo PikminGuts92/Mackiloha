@@ -30,7 +30,7 @@ namespace GLTFTools
             if (!Enum.IsDefined(typeof(MagFilter), value))
                 throw new JsonReaderException($"\'{reader.Path}\': Value of \'{value}\' is not supported!");
 
-            return value;
+            return (MagFilter)value;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)

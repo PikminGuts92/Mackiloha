@@ -18,24 +18,24 @@ namespace GLTFTools
         /// Magnification filter
         /// </summary>
         [JsonProperty("magFilter")]
-        public MagFilter MagFilter { get; set; }
+        public MagFilter? MagFilter { get; set; }
 
         /// <summary>
         /// Minification filter
         /// </summary>
         [JsonProperty("minFilter")]
-        public MinFilter MinFilter { get; set; }
+        public MinFilter? MinFilter { get; set; }
 
         /// <summary>
         /// S wrapping mode
         /// </summary>
         [JsonProperty("wrapS")]
-        public WrapMode WrapS { get; set; } = WrapMode.Repeat;
+        public WrapMode? WrapS { get; set; } = WrapMode.Repeat;
 
         /// <summary>
         /// T wrapping mode
         /// </summary>
         [JsonProperty("wrapT")]
-        public WrapMode WrapT { get; set; } = WrapMode.Repeat;
+        public WrapMode? WrapT { get; set; } = WrapMode.Repeat;
     }
 }
