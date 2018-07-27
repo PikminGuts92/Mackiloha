@@ -10,6 +10,11 @@
     <UserControl.Resources>
         <milo:MiloFile x:Name="Milo" x:Key="Milo"/>
 
+        <ContextMenu x:Name="ContextMenu_RootScene" x:Key="ContextMenu_RootScene" x:Shared="false">
+            <MenuItem Header="Import" Click="MenuItem_RootScene_Import_Click"/>
+            <MenuItem Header="Export" Click="MenuItem_RootScene_Extract_Click"/>
+        </ContextMenu>
+
         <ContextMenu x:Name="ContextMenu_MiloEntry" x:Key="ContextMenu_MiloEntry" x:Shared="false">
             <MenuItem Header="Extract" Click="MenuItem_MiloEntry_Extract_Click"/>
             <MenuItem Header="Replace" Click="MenuItem_MiloEntry_Replace_Click"/>

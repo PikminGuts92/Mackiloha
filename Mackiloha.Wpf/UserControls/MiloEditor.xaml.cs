@@ -16,6 +16,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Mackiloha.Milo2;
 using Mackiloha.Wpf.Extensions;
+using GLTFTools;
 
 namespace Mackiloha.Wpf.UserControls
 {
@@ -41,7 +42,8 @@ namespace Mackiloha.Wpf.UserControls
 
             var root = new TreeViewItem()
             {
-                Header = "Root"
+                Header = "Root",
+                ContextMenu = this.Resources["ContextMenu_RootScene"] as ContextMenu
             };
 
             var types = milo.Entries.Select(x => x.Type).Distinct().OrderBy(x => x);
@@ -55,7 +57,7 @@ namespace Mackiloha.Wpf.UserControls
 
                 root.Items.Add(itemType);
             }
-
+            
             TreeView_MiloTypes.Items.Add(root);
         }
 
@@ -148,6 +150,32 @@ namespace Mackiloha.Wpf.UserControls
         private void MenuItem_MiloEntry_Delete_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void MenuItem_RootScene_Import_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Get milo from sender item
+            var milo = this.Milo;
+
+            ofd.Title = $"Open GLTF file";
+            ofd.Filter = $"GLTF|*.gltf";
+
+            if (ofd.ShowDialog() == false) return;
+
+            var scene = GLTF.FromFile(ofd.FileName);
+            var json = scene.ToJson();
+        }
+
+        private void MenuItem_RootScene_Extract_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Get milo from sender item
+            var milo = this.Milo;
+
+            sfd.Title = $"Save GLTF file";
+            sfd.Filter = $"GLTF|*.gltf";
+            sfd.FileName = "output.gltf";
+
+            if (sfd.ShowDialog() == false) return;
         }
     }
 }

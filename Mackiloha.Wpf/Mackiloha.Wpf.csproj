@@ -51,6 +51,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GLTFTools\GLTFTools.csproj">
+      <Project>{da9aa7f3-6d6a-46f6-a692-c630cc4d1cb2}</Project>
+      <Name>GLTFTools</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Mackiloha\Mackiloha.csproj">
       <Project>{6f65b855-4191-45bd-956c-6d1513afdadb}</Project>
       <Name>Mackiloha</Name>
