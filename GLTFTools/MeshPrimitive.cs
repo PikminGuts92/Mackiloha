@@ -18,25 +18,25 @@ namespace GLTFTools
         /// Attributes of mesh primitive
         /// </summary>
         [JsonProperty("attributes")]
-        public MeshPrimitiveAttributes Attributes { get; set; }
+        public MeshPrimitiveAttributes Attributes { get; set; } // TODO: Handle serialization when null
 
         /// <summary>
         /// The index of the accessor that contains the indices
         /// </summary>
         [JsonProperty("indicies")]
-        public int Indicies { get; set; }
+        public int? Indicies { get; set; }
 
         /// <summary>
         /// The index of the material to apply to this primitive when rendering
         /// </summary>
         [JsonProperty("material")]
-        public int Material { get; set; }
+        public int? Material { get; set; }
 
         /// <summary>
         /// The type of primitives to render
         /// </summary>
         [JsonProperty("mode")]
-        public RenderMode Mode { get; set; } = RenderMode.Triangles;
+        public RenderMode Mode { get; set; } = RenderMode.Triangles; // TODO: Don't serialize when = 4
 
         // TODO: Add Targets property
     }

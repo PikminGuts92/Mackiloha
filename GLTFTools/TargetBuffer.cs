@@ -26,16 +26,22 @@ namespace GLTFTools
             if (reader.TokenType != JsonToken.Integer)
                 throw new JsonReaderException($"\'{reader.Path}\': Value must be a number!");
 
-            var value = Convert.ToInt32(reader.Value);
+            int value = Convert.ToInt32(reader.Value);
             if (!Enum.IsDefined(typeof(TargetBuffer), value))
                 throw new JsonReaderException($"\'{reader.Path}\': Value of \'{value}\' is not supported!");
 
-            return value;
+            return (TargetBuffer?)value;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (value.GetType() != typeof(TargetBuffer))
+                throw new JsonWriterException($"\'{writer.Path}\': Value must be a TargetBuffer!");
+
+            if (!Enum.IsDefined(typeof(TargetBuffer), value))
+                throw new JsonWriterException($"\'{writer.Path}\': Value of \'{value}\' is not supported!");
+
+            writer.WriteValue((int)value);
         }
     }
 }

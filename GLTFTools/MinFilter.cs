@@ -39,7 +39,13 @@ namespace GLTFTools
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (value.GetType() != typeof(MinFilter))
+                throw new JsonWriterException($"\'{writer.Path}\': Value must be a MinFilter!");
+
+            if (!Enum.IsDefined(typeof(MinFilter), value))
+                throw new JsonWriterException($"\'{writer.Path}\': Value of \'{value}\' is not supported!");
+
+            writer.WriteValue((int)value);
         }
     }
 }

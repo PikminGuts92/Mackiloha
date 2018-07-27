@@ -39,7 +39,23 @@ namespace GLTFTools
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (value.GetType() != typeof(MimeType))
+                throw new JsonWriterException($"\'{writer.Path}\': Value must be a MimeType!");
+
+            string strValue;
+            switch ((MimeType)value)
+            {
+                case MimeType.Image_Jpeg:
+                    strValue = "image/jpeg";
+                    break;
+                case MimeType.Image_Png:
+                    strValue = "image/png";
+                    break;
+                default:
+                    throw new JsonWriterException($"\'{writer.Path}\': Value of \'{value}\' is not supported!");
+            }
+
+            writer.WriteValue(strValue);
         }
     }
 }

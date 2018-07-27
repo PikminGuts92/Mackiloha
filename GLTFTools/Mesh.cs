@@ -30,6 +30,6 @@ namespace GLTFTools
         /// Array of weights to be applied to the Morph Targets
         /// </summary>
         [JsonProperty("weights")]
-        public float Weights { get; set; }
+        public float[] Weights { get; set; }
     }
 }

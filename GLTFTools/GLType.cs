@@ -90,7 +90,38 @@ namespace GLTFTools
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (value.GetType() != typeof(GLType))
+                throw new JsonWriterException($"\'{writer.Path}\': Value must be a GLType!");
+
+            string strValue;
+            switch((GLType)value)
+            {
+                case GLType.Scalar:
+                    strValue = "SCALAR";
+                    break;
+                case GLType.Vector2:
+                    strValue = "VEC2";
+                    break;
+                case GLType.Vector3:
+                    strValue = "VEC3";
+                    break;
+                case GLType.Vector4:
+                    strValue = "VEC4";
+                    break;
+                case GLType.Matrix2:
+                    strValue = "MAT2";
+                    break;
+                case GLType.Matrix3:
+                    strValue = "MAT3";
+                    break;
+                case GLType.Matrix4:
+                    strValue = "MAT4";
+                    break;
+                default:
+                    throw new JsonWriterException($"\'{writer.Path}\': Value of \'{value}\' is not supported!");
+            }
+
+            writer.WriteValue(strValue);
         }
     }
 }

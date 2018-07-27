@@ -44,7 +44,13 @@ namespace GLTFTools
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            var vec = (value as dynamic); // TODO: Don't use dynamic?
+
+            writer.WriteStartArray();
+            writer.WriteValue(vec.X);
+            writer.WriteValue(vec.Y);
+            writer.WriteValue(vec.Z);
+            writer.WriteEndArray();
         }
     }
 }

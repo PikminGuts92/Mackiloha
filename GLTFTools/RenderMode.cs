@@ -45,7 +45,7 @@ namespace GLTFTools
                 case "TRIANGLE_STRIP":
                     return RenderMode.TriangleStrip;
                 case "TRIANGLE_FAN":
-                    return RenderMode.TriangleStrip;
+                    return RenderMode.TriangleFan;
             }
 
             throw new JsonReaderException($"\'{reader.Path}\': Value of \'{reader.Value}\' is not supported!");
@@ -53,7 +53,38 @@ namespace GLTFTools
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (value.GetType() != typeof(RenderMode))
+                throw new JsonWriterException($"\'{writer.Path}\': Value must be a RenderMode!");
+
+            string strValue;
+            switch ((RenderMode)value)
+            {
+                case RenderMode.Points:
+                    strValue = "POINTS";
+                    break;
+                case RenderMode.Lines:
+                    strValue = "LINES";
+                    break;
+                case RenderMode.LineLoop:
+                    strValue = "LINE_LOOP";
+                    break;
+                case RenderMode.LineStrip:
+                    strValue = "LINE_STRIP";
+                    break;
+                case RenderMode.Triangles:
+                    strValue = "TRIANGLES";
+                    break;
+                case RenderMode.TriangleStrip:
+                    strValue = "TRIANGLE_STRIP";
+                    break;
+                case RenderMode.TriangleFan:
+                    strValue = "TRIANGLE_FAN";
+                    break;
+                default:
+                    throw new JsonWriterException($"\'{writer.Path}\': Value of \'{value}\' is not supported!");
+            }
+
+            writer.WriteValue(strValue);
         }
     }
 }

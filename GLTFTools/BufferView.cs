@@ -51,7 +51,7 @@ namespace GLTFTools
         /// The stride, in bytes, between vertex buffers. Multiple of 4 (Min = 4, Max = 252)
         /// </summary>
         [JsonProperty("byteStride")]
-        public int ByteStride
+        public int ByteStride // TODO: Don't serialize when = 4?
         {
             get => _byteStride;
             set
@@ -68,6 +68,6 @@ namespace GLTFTools
         /// The target that the GPU buffer should be bound to
         /// </summary>
         [JsonProperty("target")]
-        public TargetBuffer Target { get; set; }
+        public TargetBuffer? Target { get; set; }
     }
 }

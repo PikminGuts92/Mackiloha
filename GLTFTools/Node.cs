@@ -9,6 +9,8 @@ namespace GLTFTools
 {
     public class Node
     {
+        // TODO: Don't serialize default values
+
         /// <summary>
         /// A node in the node hierarchy
         /// </summary>

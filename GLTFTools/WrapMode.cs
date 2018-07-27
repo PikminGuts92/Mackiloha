@@ -36,7 +36,13 @@ namespace GLTFTools
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (value.GetType() != typeof(WrapMode))
+                throw new JsonWriterException($"\'{writer.Path}\': Value must be a WrapMode!");
+
+            if (!Enum.IsDefined(typeof(WrapMode), value))
+                throw new JsonWriterException($"\'{writer.Path}\': Value of \'{value}\' is not supported!");
+
+            writer.WriteValue((int)value);
         }
     }
 }

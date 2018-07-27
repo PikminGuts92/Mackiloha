@@ -10,15 +10,17 @@ namespace GLTFTools
 {
     public class GLTF
     {
+        private static JsonSerializerSettings _jsonSettings = new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore };
+
         public static GLTF FromFile(string path)
         {
             using (var sr = new StreamReader(path, Encoding.UTF8))
             {
-                return JsonConvert.DeserializeObject<GLTF>(sr.ReadToEnd());
+                return JsonConvert.DeserializeObject<GLTF>(sr.ReadToEnd(), _jsonSettings);
             }
         }
 
-        public string ToJson() => JsonConvert.SerializeObject(this);
+        public string ToJson() => JsonConvert.SerializeObject(this, _jsonSettings);
 
         /// <summary>
         /// An array of accessors
