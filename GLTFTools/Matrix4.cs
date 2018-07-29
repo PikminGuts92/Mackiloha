@@ -30,17 +30,37 @@ namespace GLTFTools
                 new T[] { this.M11, this.M12, this.M13, this.M14 },
                 new T[] { this.M21, this.M22, this.M23, this.M24 },
                 new T[] { this.M31, this.M32, this.M33, this.M34 },
-                new T[] { this.M41, this.M42, this.M43, this.M44 },
+                new T[] { this.M41, this.M42, this.M43, this.M44 }
             };
 
         public static Matrix4<float> Identity() =>
             new Matrix4<float>() { M11 = 1.0f, M22 = 1.0f, M33 = 1.0f, M44 = 1.0f };
-        
-        public static implicit operator Matrix4<T>(T[][] arr)
-        {
-            int[][] mat = new int[][] { new int[] { 0 } };
 
-            // TODO: Add length check
+        public static implicit operator Matrix4<T>(T[] arr)
+        {
+            return new Matrix4<T>()
+            {
+                M11 = arr[ 0],
+                M12 = arr[ 1],
+                M13 = arr[ 2],
+                M14 = arr[ 3],
+                M21 = arr[ 4],
+                M22 = arr[ 5],
+                M23 = arr[ 6],
+                M24 = arr[ 7],
+                M31 = arr[ 8],
+                M32 = arr[ 9],
+                M33 = arr[10],
+                M34 = arr[11],
+                M41 = arr[12],
+                M42 = arr[13],
+                M43 = arr[14],
+                M44 = arr[15]
+            };
+        }
+
+        public static implicit operator Matrix4<T> (T[][] arr)
+        {
             return new Matrix4<T>()
             {
                 M11 = arr[0][0],
@@ -58,27 +78,13 @@ namespace GLTFTools
                 M41 = arr[3][0],
                 M42 = arr[3][1],
                 M43 = arr[3][2],
-                M44 = arr[3][3],
+                M44 = arr[3][3]
             };
         }
 
-        public static implicit operator T[] (Matrix4<T> mat) =>
-            new T[]
-            {
-                mat.M11, mat.M12, mat.M13, mat.M14,
-                mat.M21, mat.M22, mat.M23, mat.M24,
-                mat.M31, mat.M32, mat.M33, mat.M34,
-                mat.M41, mat.M42, mat.M43, mat.M44
-            };
+        public static implicit operator T[] (Matrix4<T> mat) => mat.ToArray();
 
-        public static implicit operator T[][](Matrix4<T> mat) =>
-            new T[][]
-            {
-                new T[] { mat.M11, mat.M12, mat.M13, mat.M14 },
-                new T[] { mat.M21, mat.M22, mat.M23, mat.M24 },
-                new T[] { mat.M31, mat.M32, mat.M33, mat.M34 },
-                new T[] { mat.M41, mat.M42, mat.M43, mat.M44 },
-            };
+        public static implicit operator T[][] (Matrix4<T> mat) => mat.ToArray2D();
     }
 
     internal class Matrix4Converter : JsonConverter

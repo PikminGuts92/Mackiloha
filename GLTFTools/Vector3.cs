@@ -23,11 +23,11 @@ namespace GLTFTools
             Z = z;
         }
 
-        public static implicit operator Vector3<T>(T[] arr)
-        {
-            // TODO: Add length check
-            return new Vector3<T>(arr[0], arr[1], arr[2]);
-        }
+        public T[] ToArray() => new T[] { X, Y, Z };
+
+        public static implicit operator T[] (Vector3<T> vec) => vec.ToArray();
+
+        public static implicit operator Vector3<T> (T[] arr) => new Vector3<T>(arr[0], arr[1], arr[2]);
     }
 
     internal class Vector3Converter : JsonConverter

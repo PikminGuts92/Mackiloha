@@ -20,6 +20,12 @@ namespace GLTFTools
             X = x;
             Y = y;
         }
+
+        public T[] ToArray() => new T[] { X, Y };
+
+        public static implicit operator T[] (Vector2<T> vec) => vec.ToArray();
+
+        public static implicit operator Vector2<T> (T[] arr) => new Vector2<T>(arr[0], arr[1]);
     }
 
     internal class Vector2Converter : JsonConverter
