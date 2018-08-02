@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Accessor.cs" />
+    <Compile Include="AlphaMode.cs" />
     <Compile Include="Asset.cs" />
     <Compile Include="Buffer.cs" />
     <Compile Include="BufferView.cs" />

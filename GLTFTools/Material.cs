@@ -14,5 +14,37 @@ namespace GLTFTools
         /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
+
+        /*
+        /// <summary>
+        /// A set of parameter values that are used to define the metallic-roughness material model from Physically-Based Rendering (PBR) methodology
+        /// </summary>
+        [JsonProperty("pbrMetallicRoughness")]
+        public string PbrMetallicRoughness { get; set; }
+        */
+
+        /// <summary>
+        /// The emissive color of the material
+        /// </summary>
+        [JsonProperty("emissiveFactor")]
+        public Vector3<double> EmissiveFactor { get; set; }
+
+        /// <summary>
+        /// The alpha rendering mode of the material
+        /// </summary>
+        [JsonProperty("alphaMode")]
+        public AlphaMode AlphaMode { get; set; } = AlphaMode.Opaque;
+
+        /// <summary>
+        /// The alpha cutoff value of the material
+        /// </summary>
+        [JsonProperty("alphaCuttoff")]
+        public double AlphaCutOff { get; set; } = 0.5f;
+
+        /// <summary>
+        /// Specifies whether the material is double sided
+        /// </summary>
+        [JsonProperty("doubleSided")]
+        public bool DoubleSided { get; set; }
     }
 }

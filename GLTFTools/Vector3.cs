@@ -39,7 +39,16 @@ namespace GLTFTools
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (reader.TokenType != JsonToken.StartArray)
+                throw new JsonReaderException($"\'{reader.Path}\': Value must be an array!");
+
+            Vector3<double> vec = new Vector3<double>();
+            vec.X = reader.ReadAsDouble().Value;
+            vec.Y = reader.ReadAsDouble().Value;
+            vec.Z = reader.ReadAsDouble().Value;
+            reader.Read();
+
+            return vec;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
