@@ -31,6 +31,6 @@ namespace GLTFTools
         /// The index of the bufferView that contains the image. Use this instead of the image's uri property
         /// </summary>
         [JsonProperty("bufferView")]
-        public int BufferView { get; set; } // TODO: Force write
+        public int? BufferView { get; set; } // TODO: Force write
     }
 }

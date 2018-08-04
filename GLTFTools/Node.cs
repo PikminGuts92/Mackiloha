@@ -45,7 +45,7 @@ namespace GLTFTools
         /// A floating-point 4x4 transformation matrix stored in column-major order
         /// </summary>
         [JsonProperty("matrix")]
-        public Matrix4<float>? Matrix { get; set; } = Matrix4<float>.Identity();
+        public Matrix4<float>? Matrix { get; set; } //= Matrix4<float>.Identity();
 
         /// <summary>
         /// The index of the mesh in this node
@@ -57,13 +57,13 @@ namespace GLTFTools
         /// The node's unit quaternion rotation in the order (x, y, z, w), where w is the scalar
         /// </summary>
         [JsonProperty("rotation")]
-        public Vector4<float>? Roatation { get; set; } = new Vector4<float>(0.0f, 0.0f, 0.0f, 1.0f);
+        public Vector4<float>? Roatation { get; set; } //= new Vector4<float>(0.0f, 0.0f, 0.0f, 1.0f);
 
         /// <summary>
         /// The node's non-uniform scale, given as the scaling factors along the x, y, and z axes
         /// </summary>
         [JsonProperty("scale")]
-        public Vector3<float>? Scale { get; set; } = new Vector3<float>(1.0f, 1.0f, 1.0f);
+        public Vector3<float>? Scale { get; set; } //= new Vector3<float>(1.0f, 1.0f, 1.0f);
 
         /// <summary>
         /// The node's translation along the x, y, and z axes

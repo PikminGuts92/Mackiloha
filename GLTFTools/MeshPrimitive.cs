@@ -23,8 +23,8 @@ namespace GLTFTools
         /// <summary>
         /// The index of the accessor that contains the indices
         /// </summary>
-        [JsonProperty("indicies")]
-        public int? Indicies { get; set; }
+        [JsonProperty("indices")]
+        public int? Indices { get; set; }
 
         /// <summary>
         /// The index of the material to apply to this primitive when rendering

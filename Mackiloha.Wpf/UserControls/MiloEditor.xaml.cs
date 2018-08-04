@@ -176,6 +176,9 @@ namespace Mackiloha.Wpf.UserControls
             sfd.FileName = "output.gltf";
 
             if (sfd.ShowDialog() == false) return;
+
+            milo.ExportToGLTF(sfd.FileName);
+            MessageBox.Show($"Successfully saved {sfd.SafeFileName}");
         }
     }
 }
