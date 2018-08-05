@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Mackiloha;
 using Mackiloha.Milo2;
 using MiloOG = Mackiloha.Milo;
 using GLTFTools;
@@ -50,7 +51,25 @@ namespace Mackiloha.Wpf.Extensions
                     mesh.Name = y.Name;
                     return mesh;
                 }).Where(z => !string.IsNullOrEmpty(z.Material)).ToList();
-            
+
+            var transforms = milo.Entries
+                .Where(x => x.Type.Equals("Trans", StringComparison.CurrentCultureIgnoreCase))
+                .Select(y =>
+                {
+                    var trans = MiloOG.Trans.FromStream(new MemoryStream((y as MiloEntry).Data));
+                    trans.Name = y.Name;
+                    return trans;
+                }).ToList();
+
+            var views = milo.Entries
+                .Where(x => x.Type.Equals("View", StringComparison.CurrentCultureIgnoreCase))
+                .Select(y =>
+                {
+                    var view = MiloOG.View.FromStream(new MemoryStream((y as MiloEntry).Data));
+                    view.Name = y.Name;
+                    return view;
+                }).ToList();
+
             var scene = new GLTF()
             {
                 Asset = new Asset()
@@ -287,7 +306,7 @@ namespace Mackiloha.Wpf.Extensions
             };
 
             var meshOffset = 0;
-            scene.Materials = materials.Select(x => new Material()
+            scene.Materials =materials.Select(x => new Material()
             {
                 Name = Path.GetFileNameWithoutExtension(x.Name),
                 PbrMetallicRoughness = new PbrMetallicRoughness()
@@ -308,11 +327,52 @@ namespace Mackiloha.Wpf.Extensions
             scene.Meshes = sceneMeshes.ToArray();
 
             meshOffset = 0;
-            scene.Nodes = scene.Meshes.Select(x => new Node()
+            scene.Nodes = new Node[]
             {
-                Name = x.Name,
-                Mesh = meshOffset++
-            }).ToArray();
+                new Node()
+                {
+                    Children = Enumerable.Range(1, scene.Meshes.Length).ToArray(),
+                    //Matrix = Matrix4<float>.Identity()
+                    Matrix = new Matrix4<float>()
+                    {
+                        M11 = 1.0f,
+                        M23 = 1.0f,
+                        M32 = 1.0f,
+                        M44 = 1.0f
+                    }
+                }
+            }.Concat(scene.Meshes.Select(x =>
+            {
+                var node = new Node()
+                {
+                    Name = x.Name,
+                    Mesh = meshOffset++,
+                };
+
+                var nodeMesh = meshes.First(y => y.Name == x.Name + ".mesh");
+                var transEntry = milo.Entries.FirstOrDefault(y => y.Name == nodeMesh.Transform);
+                if (transEntry == null) return node;
+                
+                switch (transEntry.Type)
+                {
+                    case "Mesh":
+                        var mesh = meshes.First(y => y.Name == transEntry.Name);
+                        node.Matrix = mesh.Mat2.ToGLMatrix();
+                        break;
+                    case "Trans":
+                        var trans = transforms.First(y => y.Name == transEntry.Name);
+                        node.Matrix = trans.Mat2.ToGLMatrix();
+                        break;
+                    case "View":
+                        var view = views.First(y => y.Name == transEntry.Name);
+                        node.Matrix = view.Mat2.ToGLMatrix();
+                        break;
+                    default:
+                        break;
+                }
+
+                return node;
+            })).ToArray();
 
             scene.Samplers = new Sampler[]
             {
@@ -329,7 +389,8 @@ namespace Mackiloha.Wpf.Extensions
             {
                 new Scene()
                 {
-                    Nodes = scene.Nodes.Select(x => x.Mesh.Value).ToArray()
+                    //Nodes = scene.Nodes.Select(x => x.Mesh.Value).ToArray()
+                    Nodes = new int[1]
                 }
             };
 
@@ -352,5 +413,29 @@ namespace Mackiloha.Wpf.Extensions
             var json = scene.ToJson();
             File.WriteAllText(path, json);
         }
+
+        public static Matrix4<float> ToGLMatrix(this Matrix miloMatrix) =>
+            new Matrix4<float>()
+            {
+                M11 = miloMatrix.RX,
+                M12 = miloMatrix.RY,
+                M13 = miloMatrix.RZ,
+                M14 = miloMatrix.RW,
+
+                M21 = miloMatrix.UX,
+                M22 = miloMatrix.UY,
+                M23 = miloMatrix.UZ,
+                M24 = miloMatrix.UW,
+
+                M31 = miloMatrix.FX,
+                M32 = miloMatrix.FY,
+                M33 = miloMatrix.FZ,
+                M34 = miloMatrix.FW,
+
+                M41 = miloMatrix.PX,
+                M42 = miloMatrix.PY,
+                M43 = miloMatrix.PZ,
+                M44 = miloMatrix.PW
+            };
     }
 }
