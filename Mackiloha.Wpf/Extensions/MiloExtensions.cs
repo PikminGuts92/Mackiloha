@@ -368,6 +368,7 @@ namespace Mackiloha.Wpf.Extensions
                         node.Matrix = view.Mat2.ToGLMatrix();
                         break;
                     default:
+                        node.Matrix = nodeMesh.Mat2.ToGLMatrix();
                         break;
                 }
 
@@ -417,25 +418,25 @@ namespace Mackiloha.Wpf.Extensions
         public static Matrix4<float> ToGLMatrix(this Matrix miloMatrix) =>
             new Matrix4<float>()
             {
-                M11 = miloMatrix.RX,
-                M12 = miloMatrix.RY,
-                M13 = miloMatrix.RZ,
-                M14 = miloMatrix.RW,
+                M11 = miloMatrix.M11,
+                M12 = miloMatrix.M12,
+                M13 = miloMatrix.M13,
+                M14 = miloMatrix.M14,
 
-                M21 = miloMatrix.UX,
-                M22 = miloMatrix.UY,
-                M23 = miloMatrix.UZ,
-                M24 = miloMatrix.UW,
+                M21 = miloMatrix.M21,
+                M22 = miloMatrix.M22,
+                M23 = miloMatrix.M23,
+                M24 = miloMatrix.M24,
 
-                M31 = miloMatrix.FX,
-                M32 = miloMatrix.FY,
-                M33 = miloMatrix.FZ,
-                M34 = miloMatrix.FW,
+                M31 = miloMatrix.M31,
+                M32 = miloMatrix.M32,
+                M33 = miloMatrix.M33,
+                M34 = miloMatrix.M34,
 
-                M41 = miloMatrix.PX,
-                M42 = miloMatrix.PY,
-                M43 = miloMatrix.PZ,
-                M44 = miloMatrix.PW
+                M41 = miloMatrix.M41,
+                M42 = miloMatrix.M42,
+                M43 = miloMatrix.M43,
+                M44 = miloMatrix.M44
             };
     }
 }

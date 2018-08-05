@@ -353,21 +353,21 @@ namespace SuperFreq
         {
             Matrix3D mat3d = Matrix3D.Identity;
 
-            mat3d.M11 = mat.RX;
-            mat3d.M12 = mat.RY;
-            mat3d.M13 = mat.RZ;
+            mat3d.M11 = mat.M11;
+            mat3d.M12 = mat.M12;
+            mat3d.M13 = mat.M13;
 
-            mat3d.M21 = mat.UX;
-            mat3d.M22 = mat.UY;
-            mat3d.M23 = mat.UZ;
+            mat3d.M21 = mat.M21;
+            mat3d.M22 = mat.M22;
+            mat3d.M23 = mat.M23;
 
-            mat3d.M31 = mat.FX;
-            mat3d.M32 = mat.FY;
-            mat3d.M33 = mat.FZ;
+            mat3d.M31 = mat.M31;
+            mat3d.M32 = mat.M32;
+            mat3d.M33 = mat.M33;
 
-            mat3d.OffsetX = mat.PX;
-            mat3d.OffsetY = mat.PY;
-            mat3d.OffsetZ = mat.PZ;
+            mat3d.OffsetX = mat.M41;
+            mat3d.OffsetY = mat.M42;
+            mat3d.OffsetZ = mat.M43;
 
             return mat3d;
         }
