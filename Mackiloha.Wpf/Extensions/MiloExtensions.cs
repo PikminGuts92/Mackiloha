@@ -136,10 +136,13 @@ namespace Mackiloha.Wpf.Extensions
             int buffer4Offset = scene.BufferViews[2].ByteOffset.Value;
 
             var bw = new BinaryWriter(new MemoryStream(new byte[bufferSize12 + bufferSize8 + bufferSize4]));
-            
+            Dictionary<string, int> meshIndex = new Dictionary<string, int>();
+            var currentOffset = 0;
+
             foreach (var mesh in meshes)
             {
                 if (mesh.Vertices.Length <= 0 || mesh.Faces.Length <= 0) continue;
+                meshIndex.Add(mesh.Name, currentOffset++);
 
                 // Finds related material + texture
                 var mat = materials.First(x => x.Name.Equals(mesh.Material, StringComparison.CurrentCultureIgnoreCase));
@@ -305,7 +308,7 @@ namespace Mackiloha.Wpf.Extensions
                 }
             };
 
-            var meshOffset = 0;
+            currentOffset = 0;
             scene.Materials =materials.Select(x => new Material()
             {
                 Name = Path.GetFileNameWithoutExtension(x.Name),
@@ -313,7 +316,7 @@ namespace Mackiloha.Wpf.Extensions
                 {
                     BaseColorTexture = new BaseColorTexture()
                     {
-                        Index = meshOffset++
+                        Index = currentOffset++
                     },
                     BaseColorFactor = new Vector4<double>(1.0f),
                     MetallicFactor = 0,
@@ -325,55 +328,175 @@ namespace Mackiloha.Wpf.Extensions
             }).ToArray();
 
             scene.Meshes = sceneMeshes.ToArray();
+            
+            var nodes = new List<Node>();
+            var nodeIndex = new Dictionary<string, int>();
 
-            meshOffset = 0;
-            scene.Nodes = new Node[]
+            // TODO: Make milo objects with transforms data
+            MiloOG.AbstractEntry GetAbstractEntry(string name)
             {
-                new Node()
+                var entry = milo.Entries.FirstOrDefault(x => x.Name == name);
+                if (entry == null) return null;
+
+                switch (entry.Type)
                 {
-                    Children = Enumerable.Range(1, scene.Meshes.Length).ToArray(),
-                    //Matrix = Matrix4<float>.Identity()
-                    Matrix = new Matrix4<float>()
-                    {
-                        M11 = 1.0f,
-                        M23 = 1.0f,
-                        M32 = 1.0f,
-                        M44 = 1.0f
-                    }
+                    case "Mesh":
+                        return meshes.First(y => y.Name == entry.Name);
+                    case "Trans":
+                        return transforms.First(y => y.Name == entry.Name);
+                    case "View":
+                        return views.First(y => y.Name == entry.Name);
+                    default:
+                        return null;
                 }
-            }.Concat(scene.Meshes.Select(x =>
-            {
-                var node = new Node()
-                {
-                    Name = x.Name,
-                    Mesh = meshOffset++,
-                };
+            }
 
-                var nodeMesh = meshes.First(y => y.Name == x.Name + ".mesh");
-                var transEntry = milo.Entries.FirstOrDefault(y => y.Name == nodeMesh.Transform);
-                if (transEntry == null) return node;
-                
+            Matrix4<float>? GetTransform(string transform)
+            {
+                var transEntry = milo.Entries.FirstOrDefault(y => y.Name == transform);
+                if (transEntry == null) return null;
+
                 switch (transEntry.Type)
                 {
                     case "Mesh":
                         var mesh = meshes.First(y => y.Name == transEntry.Name);
-                        node.Matrix = mesh.Mat2.ToGLMatrix();
-                        break;
+                        return mesh.Mat2.ToGLMatrix();
                     case "Trans":
                         var trans = transforms.First(y => y.Name == transEntry.Name);
-                        node.Matrix = trans.Mat2.ToGLMatrix();
-                        break;
+                        return trans.Mat2.ToGLMatrix();
                     case "View":
-                        var view = views.First(y => y.Name == transEntry.Name);
-                        node.Matrix = view.Mat2.ToGLMatrix();
-                        break;
+                        var view2 = views.First(y => y.Name == transEntry.Name);
+                        return view2.Mat2.ToGLMatrix();
                     default:
-                        node.Matrix = nodeMesh.Mat2.ToGLMatrix();
-                        break;
+                        return null;
                 }
+            }
 
-                return node;
-            })).ToArray();
+            string GetTransformName(MiloOG.AbstractEntry entry)
+            {
+                switch (entry.Type)
+                {
+                    case "Mesh":
+                        var mesh = meshes.First(y => y.Name == entry.Name);
+                        return mesh.Transform;
+                    case "Trans":
+                        var trans = transforms.First(y => y.Name == entry.Name);
+                        return trans.Name;
+                    case "View":
+                        var view = views.First(y => y.Name == entry.Name);
+                        return view.Transform;
+                    default:
+                        return null;
+                }
+            }
+
+            var children = new Dictionary<string, List<string>>();
+            foreach (var entry in meshes.Union<MiloOG.AbstractEntry>(views).Union<MiloOG.AbstractEntry>(transforms))
+            {
+                var trans = GetTransformName(entry);
+                if (trans == null) continue;
+
+                if (!children.ContainsKey(trans))
+                    children.Add(trans, new List<string>(new string[] { entry.Name }));
+                else if (!children[trans].Contains(entry.Name))
+                    children[trans].Add(entry.Name);
+            }
+
+
+            var rootIndex = new List<int>();
+            foreach (var key in children.Keys)
+            {
+                rootIndex.Add(nodes.Count);
+
+                dynamic entry = GetAbstractEntry(key);
+
+                var node = new Node()
+                {
+                    Name = "Root_" + entry.Name,
+                    //Mesh = meshIndex.ContainsKey(key) ? (int?)meshIndex[key] : null,
+                    Matrix = ToGLMatrix(entry.Mat2),
+                    Children = Enumerable.Range(nodes.Count + 1, children[key].Count).ToArray()
+                };
+                nodes.Add(node);
+
+                foreach (var child in children[key])
+                {
+                    dynamic subEntry = GetAbstractEntry(child);
+
+                    var subNode = new Node()
+                    {
+                        Name = subEntry.Name,
+                        Mesh = meshIndex.ContainsKey(subEntry.Name) ? (int?)meshIndex[subEntry.Name] : null,
+                        //Matrix = ToGLMatrix(subEntry.Mat1)
+                    };
+                    nodeIndex.Add(child, rootIndex.Last());
+                    nodes.Add(subNode);
+                }
+            }
+
+            int CreateNode(string name) // Returns index of node
+            {
+                if (nodeIndex.ContainsKey(name))
+                    return nodeIndex[name];
+                
+                dynamic entry = GetAbstractEntry(name);
+                dynamic transformEntry = GetAbstractEntry(entry.Transform);
+                List<string> subNodes = entry.Meshes;
+
+                var node = new Node()
+                {
+                    Name = name,
+                    Mesh = meshIndex.ContainsKey(name) ? (int?)meshIndex[name] : null,
+                    Matrix = ToGLMatrix(entry.Mat1),
+                    //Matrix = GetTransform(entry.Transform),
+                    Children = (subNodes.Count > 0) ? subNodes.Select(x => CreateNode(x)).ToArray() : null
+                };
+
+                nodeIndex.Add(name, nodes.Count);
+                nodes.Add(node);
+                return nodeIndex[name];
+            }
+
+            /*
+            foreach (var n in meshes.Union<MiloOG.AbstractEntry>(views).Union<MiloOG.AbstractEntry>(transforms)) CreateNode(n.Name);
+
+            scene.Scene = 0;
+            scene.Scenes = new Scene[] { new Scene() { Nodes = Enumerable.Range(0, nodes.Count).ToArray() } };
+            */
+
+            /*
+            foreach (var view in views) CreateNode(view.Name);
+            
+            // Finds root node
+            var childrenNodes = nodes.SelectMany(x => x.Children ?? new int[0]).Distinct();
+            var parentNodes = Enumerable.Range(0, nodes.Count);
+            var rootIdx = parentNodes.Except(childrenNodes).Single();
+
+            scene.Scene = 0;
+            scene.Scenes = new Scene[] { new Scene() { Nodes = new int[] { rootIdx } } };
+            */
+
+            List<string> GetAllSubs(MiloOG.AbstractEntry aEntry)
+            {
+                dynamic entry = aEntry;
+                List<string> subsEntriesNames = entry.Meshes;
+                dynamic subEntries = subsEntriesNames.Select(x => GetAbstractEntry(x)).ToList();
+
+                foreach (var subEntry in subEntries)
+                    subsEntriesNames.AddRange(GetAllSubs(subEntry));
+
+                return subsEntriesNames;
+            }
+
+            scene.Scene = 0;
+            //scene.Scenes = new Scene[] { new Scene() { Nodes = rootIndex.ToArray() } };
+
+            scene.Scenes = views.Select(x => new Scene()
+            {
+                Nodes = GetAllSubs(x).Select(y => nodeIndex[y]).Distinct().ToArray()
+            }).ToArray();
+
+            scene.Nodes = nodes.ToArray();
 
             scene.Samplers = new Sampler[]
             {
@@ -385,22 +508,13 @@ namespace Mackiloha.Wpf.Extensions
                     WrapT = WrapMode.Repeat
                 }
             };
-
-            scene.Scenes = new Scene[]
-            {
-                new Scene()
-                {
-                    //Nodes = scene.Nodes.Select(x => x.Mesh.Value).ToArray()
-                    Nodes = new int[1]
-                }
-            };
-
-            meshOffset = 0;
+            
+            currentOffset = 0;
             scene.Textures = scene.Images.Select(x => new Texture()
             {
                 Name = x.Name,
                 Sampler = 0,
-                Source = meshOffset++
+                Source = currentOffset++
             }).ToArray();
 
             using (var fs = File.OpenWrite(Path.Combine(pathDirectory, scene.Buffers[0].Uri)))
@@ -438,5 +552,129 @@ namespace Mackiloha.Wpf.Extensions
                 M43 = miloMatrix.M43,
                 M44 = miloMatrix.M44
             };
+
+        public static void WriteTree(this MiloFile milo, string path)
+        {
+            using (StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8))
+            {
+                foreach (var view in milo.Entries.Where(x => x.Type == "View"))
+                    WriteTree(milo, view.Name, sw, 0);
+            }
+        }
+
+        public static void WriteTree2(this MiloFile milo, string path)
+        {
+            MiloOG.AbstractEntry GetOGEntry(string name)
+            {
+                var e = milo.Entries.First(x => x.Name == name) as MiloEntry;
+
+                switch (e.Type)
+                {
+                    case "Mesh":
+                        var mesh = MiloOG.Mesh.FromStream(new MemoryStream(e.Data));
+                        mesh.Name = e.Name;
+                        return mesh;
+                    case "Trans":
+                        var trans = MiloOG.Trans.FromStream(new MemoryStream(e.Data));
+                        trans.Name = e.Name;
+                        return trans;
+                    case "View":
+                        var view = MiloOG.View.FromStream(new MemoryStream(e.Data));
+                        view.Name = e.Name;
+                        return view;
+                    default:
+                        return null;
+                }
+            }
+
+            string GetTransformName(string name)
+            {
+                var e = milo.Entries.First(x => x.Name == name) as MiloEntry;
+
+                switch (e.Type)
+                {
+                    case "Mesh":
+                        var mesh = MiloOG.Mesh.FromStream(new MemoryStream(e.Data));
+                        mesh.Name = e.Name;
+                        return mesh.Transform;
+                    case "Trans":
+                        var trans = MiloOG.Trans.FromStream(new MemoryStream(e.Data));
+                        trans.Name = e.Name;
+                        return trans.Name;
+                    case "View":
+                        var view = MiloOG.View.FromStream(new MemoryStream(e.Data));
+                        view.Name = e.Name;
+                        return view.Transform;
+                    default:
+                        return null;
+                }
+            }
+
+            using (StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8))
+            {
+                var children = new Dictionary<string, List<string>>();
+                
+                foreach (var entry in milo.Entries)
+                {
+                    /*
+                    if (!children.ContainsKey(entry.Name))
+                        children.Add(entry.Name, new List<string>());
+                    */
+
+                    var trans = GetTransformName(entry.Name);
+                    if (trans == null || trans == entry.Name) continue;
+
+                    if (!children.ContainsKey(trans))
+                        children.Add(trans, new List<string>(new string[] { entry.Name }));
+                    else if (!children[trans].Contains(entry.Name))
+                        children[trans].Add(entry.Name);
+
+                    //WriteTree(milo, view.Name, sw, 0);
+                }
+            }
+        }
+
+        private static void WriteTree(MiloFile milo, string entry, StreamWriter sw, int depth, bool bone = false)
+        {
+            MiloOG.AbstractEntry GetOGEntry(string name)
+            {
+                var e = milo.Entries.First(x => x.Name == name) as MiloEntry;
+
+                switch (e.Type)
+                {
+                    case "Mesh":
+                        var mesh = MiloOG.Mesh.FromStream(new MemoryStream(e.Data));
+                        mesh.Name = e.Name;
+                        return mesh;
+                    case "Trans":
+                        var trans = MiloOG.Trans.FromStream(new MemoryStream(e.Data));
+                        trans.Name = e.Name;
+                        return trans;
+                    case "View":
+                        var view = MiloOG.View.FromStream(new MemoryStream(e.Data));
+                        view.Name = e.Name;
+                        return view;
+                    default:
+                        return null;
+                }
+            }
+
+            dynamic transEntry = GetOGEntry(entry);
+            List<string> subBones = transEntry.Meshes;
+            List<string> subEntries = transEntry.Meshes;
+            string type = bone ? "Bone" : "Mesh";
+
+            sw.WriteLine($"{new string('\t', depth)}{type}: {transEntry.Name} ({transEntry.Transform})");
+
+            foreach (var sub in subBones)
+            {
+                WriteTree(milo, sub, sw, depth + 1, true);
+            }
+
+            foreach (var sub in subEntries)
+            {
+                WriteTree(milo, sub, sw, depth + 1);
+            }
+        }
     }
 }

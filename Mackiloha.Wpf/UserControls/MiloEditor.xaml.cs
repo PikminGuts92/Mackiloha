@@ -178,6 +178,8 @@ namespace Mackiloha.Wpf.UserControls
             if (sfd.ShowDialog() == false) return;
 
             milo.ExportToGLTF(sfd.FileName);
+            //milo.WriteTree(sfd.FileName);
+            //milo.WriteTree2(sfd.FileName);
             MessageBox.Show($"Successfully saved {sfd.SafeFileName}");
         }
     }
