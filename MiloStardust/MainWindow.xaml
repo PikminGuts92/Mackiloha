@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="Milo Stardust v1.0" Height="500" Width="800"
         WindowState="Maximized">
-    <Grid>
+    <Grid AllowDrop="True" Drop="Grid_Drop">
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
             <RowDefinition Height="433*"/>

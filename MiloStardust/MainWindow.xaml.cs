@@ -99,5 +99,17 @@ namespace MiloStardust
         {
 
         }
+
+        private void Grid_Drop(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop))
+                return;
+
+            var files = e.Data.GetData(DataFormats.FileDrop) as string[];
+            var firstFile = files.First();
+
+            Milo_Editor.Milo = MiloFile.ReadFromFile(firstFile);
+            miloPath = firstFile;
+        }
     }
 }
