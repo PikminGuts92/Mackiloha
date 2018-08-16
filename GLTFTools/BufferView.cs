@@ -13,7 +13,7 @@ namespace GLTFTools
 
         private int? _byteOffset = null;
         private int _byteLength = 1;
-        private int _byteStride = 4;
+        private int? _byteStride = 4;
 
         /// <summary>
         /// That name of the buffer view
@@ -57,13 +57,12 @@ namespace GLTFTools
         /// The stride, in bytes, between vertex buffers. Multiple of 4 (Min = 4, Max = 252)
         /// </summary>
         [JsonProperty("byteStride")]
-        public int ByteStride // TODO: Don't serialize when = 4?
+        public int? ByteStride // TODO: Don't serialize when = 4?
         {
             get => _byteStride;
             set
             {
-                if (value < 4) _byteStride = 4;
-                else if (value > 252) _byteStride = 252;
+                if (value == null || value < 4 || value > 252) _byteStride = null;
                 else _byteStride = ((value % STRIDE_MULTIPLE) > 0)
                         ? (value + STRIDE_MULTIPLE - (value % STRIDE_MULTIPLE))
                         : value;

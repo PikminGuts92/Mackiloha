@@ -127,7 +127,7 @@ namespace Mackiloha.Wpf.Extensions
                     Name = "faces",
                     ByteLength = bufferSize4,
                     ByteOffset = bufferSize12 + bufferSize8,
-                    ByteStride = 4
+                    ByteStride = null
                 }
             };
 
@@ -297,19 +297,8 @@ namespace Mackiloha.Wpf.Extensions
             
             scene.Accessors = accessors.ToArray();
             
-            scene.Materials = new Material[]
-            {
-                new Material()
-                {
-                    Name = "Default",
-                    EmissiveFactor = new Vector3<double>(),
-                    AlphaMode = AlphaMode.Opaque,
-                    DoubleSided = false
-                }
-            };
-
             currentOffset = 0;
-            scene.Materials =materials.Select(x => new Material()
+            scene.Materials = materials.Select(x => new Material()
             {
                 Name = Path.GetFileNameWithoutExtension(x.Name),
                 PbrMetallicRoughness = new PbrMetallicRoughness()
@@ -324,7 +313,7 @@ namespace Mackiloha.Wpf.Extensions
                 },
                 EmissiveFactor = new Vector3<double>(),
                 AlphaMode = AlphaMode.Opaque,
-                DoubleSided = false
+                DoubleSided = true
             }).ToArray();
 
             scene.Meshes = sceneMeshes.ToArray();
@@ -350,7 +339,7 @@ namespace Mackiloha.Wpf.Extensions
                         return null;
                 }
             }
-
+            
             Matrix4<float>? GetTransform(string transform)
             {
                 var transEntry = milo.Entries.FirstOrDefault(y => y.Name == transform);
@@ -532,24 +521,25 @@ namespace Mackiloha.Wpf.Extensions
         public static Matrix4<float> ToGLMatrix(this Matrix miloMatrix) =>
             new Matrix4<float>()
             {
+                // Swaps x and y values (columns 2 and 3)
                 M11 = miloMatrix.M11,
-                M12 = miloMatrix.M12,
-                M13 = miloMatrix.M13,
+                M12 = miloMatrix.M13,
+                M13 = miloMatrix.M12,
                 M14 = miloMatrix.M14,
 
                 M21 = miloMatrix.M21,
-                M22 = miloMatrix.M22,
-                M23 = miloMatrix.M23,
+                M22 = miloMatrix.M23,
+                M23 = miloMatrix.M22,
                 M24 = miloMatrix.M24,
 
                 M31 = miloMatrix.M31,
-                M32 = miloMatrix.M32,
-                M33 = miloMatrix.M33,
+                M32 = miloMatrix.M33,
+                M33 = miloMatrix.M32,
                 M34 = miloMatrix.M34,
 
                 M41 = miloMatrix.M41,
-                M42 = miloMatrix.M42,
-                M43 = miloMatrix.M43,
+                M42 = miloMatrix.M43,
+                M43 = miloMatrix.M42,
                 M44 = miloMatrix.M44
             };
 

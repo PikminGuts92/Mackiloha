@@ -15,7 +15,7 @@ namespace Mackiloha
          *  |       0       0       1       0   Forward
          *  |       0       0       0       1   Position
          */
-
+        
         public static Matrix Identity()
         {
             return new Matrix()
@@ -26,6 +26,29 @@ namespace Mackiloha
                 M44 = 1.0f
             };
         }
+
+        public Matrix Transpose() => new Matrix()
+        {
+            M11 = this.M11,
+            M12 = this.M21,
+            M13 = this.M31,
+            M14 = this.M41,
+
+            M21 = this.M12,
+            M22 = this.M22,
+            M23 = this.M32,
+            M24 = this.M42,
+
+            M31 = this.M13,
+            M32 = this.M23,
+            M33 = this.M33,
+            M34 = this.M43,
+
+            M41 = this.M14,
+            M42 = this.M24,
+            M43 = this.M34,
+            M44 = this.M44
+        };
 
         public float[,] GetRawMatrix => new float[,]
         {
