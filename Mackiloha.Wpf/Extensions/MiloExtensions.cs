@@ -522,22 +522,22 @@ namespace Mackiloha.Wpf.Extensions
             new Matrix4<float>()
             {
                 // Swaps x and y values (columns 2 and 3)
-                M11 = miloMatrix.M11,
+                M11 = -miloMatrix.M11,
                 M12 = miloMatrix.M13,
                 M13 = miloMatrix.M12,
                 M14 = miloMatrix.M14,
 
-                M21 = miloMatrix.M21,
+                M21 = -miloMatrix.M21,
                 M22 = miloMatrix.M23,
                 M23 = miloMatrix.M22,
                 M24 = miloMatrix.M24,
 
-                M31 = miloMatrix.M31,
+                M31 = -miloMatrix.M31,
                 M32 = miloMatrix.M33,
                 M33 = miloMatrix.M32,
                 M34 = miloMatrix.M34,
 
-                M41 = miloMatrix.M41,
+                M41 = -miloMatrix.M41,
                 M42 = miloMatrix.M43,
                 M43 = miloMatrix.M42,
                 M44 = miloMatrix.M44
