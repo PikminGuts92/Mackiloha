@@ -78,11 +78,49 @@ namespace Mackiloha.Wpf.Extensions
                 },
                 Images = textures.Select(x => new Image()
                 {
-                    Name = Path.GetFileNameWithoutExtension(x.Name),
+                    Name = Path.GetFileNameWithoutExtension(x.Name) + ".png",
                     Uri = Path.GetFileNameWithoutExtension(x.Name) + ".png"
                 }).ToArray(),
+                Samplers = new Sampler[]
+                {
+                    new Sampler()
+                    {
+                        MagFilter = MagFilter.Linear,
+                        MinFilter = MinFilter.Nearest,
+                        WrapS = WrapMode.Repeat,
+                        WrapT = WrapMode.Repeat
+                    }
+                },
                 Scene = 0
             };
+
+            var currentOffset = 0;
+            scene.Textures = textures.Select(x => new Texture()
+            {
+                Name = x.Name,
+                Sampler = 0,
+                Source = currentOffset++
+            }).ToArray();
+            
+            var keyIdxPairs = Enumerable.Range(0, textures.Count).ToDictionary(x => textures[x].Name);
+            scene.Materials = materials.Select(x => new Material()
+            {
+                Name = x.Name,
+                PbrMetallicRoughness = new PbrMetallicRoughness()
+                {
+                    BaseColorTexture = x.Textures.Count > 0 ? new BaseColorTexture()
+                    {
+                        // TODO: Figure out how to map multiple textures to single material
+                        Index = keyIdxPairs[x.Textures.First()]
+                    } : null,
+                    BaseColorFactor = new Vector4<double>(x.BaseColorR, x.BaseColorG, x.BaseColorB, x.BaseColorA),
+                    MetallicFactor = (x.Mode2 == 2) ? 1 : 0,
+                    RoughnessFactor = (x.Mode2 == 2) ? 0 : 1
+                },
+                EmissiveFactor = new Vector3<double>(),
+                AlphaMode = x.BlendFactor == 2 ? AlphaMode.Blend : AlphaMode.Opaque,
+                DoubleSided = true
+            }).ToArray();
 
             // Saves textures
             for (int i = 0; i < textures.Count; i++)
@@ -137,7 +175,9 @@ namespace Mackiloha.Wpf.Extensions
 
             var bw = new BinaryWriter(new MemoryStream(new byte[bufferSize12 + bufferSize8 + bufferSize4]));
             Dictionary<string, int> meshIndex = new Dictionary<string, int>();
-            var currentOffset = 0;
+            currentOffset = 0;
+
+            keyIdxPairs = Enumerable.Range(0, materials.Count).ToDictionary(x => materials[x].Name);
 
             foreach (var mesh in meshes)
             {
@@ -146,20 +186,10 @@ namespace Mackiloha.Wpf.Extensions
 
                 // Finds related material + texture
                 var mat = materials.First(x => x.Name.Equals(mesh.Material, StringComparison.CurrentCultureIgnoreCase));
-                var tex = textures.First(x => x.Name.Equals(mat.Textures[0], StringComparison.CurrentCultureIgnoreCase));
-
-                var texIdx = 0;
-                while (texIdx < scene.Images.Length)
-                {
-                    if (scene.Images[texIdx].Name == Path.GetFileNameWithoutExtension(tex.Name))
-                        break;
-
-                    texIdx++;
-                }
-
+                
                 sceneMeshes.Add(new Mesh()
                 {
-                    Name = Path.GetFileNameWithoutExtension(mesh.Name),
+                    Name = mesh.Name,
                     Primitives = new MeshPrimitive[]
                     {
                         new MeshPrimitive()
@@ -171,7 +201,7 @@ namespace Mackiloha.Wpf.Extensions
                                 TextureCoordinate0 = accessors.Count + 2
                             },
                             Indices = accessors.Count + 3,
-                            Material = texIdx,
+                            Material = keyIdxPairs[mesh.Material],
                             Mode = RenderMode.Triangles
                         }
                     }
@@ -180,7 +210,7 @@ namespace Mackiloha.Wpf.Extensions
                 // Vertices
                 accessors.Add(new Accessor()
                 {
-                    Name = Path.GetFileNameWithoutExtension(mesh.Name) + "_positions",
+                    Name = mesh.Name + "_positions",
                     ComponentType = ComponentType.Float,
                     Count = mesh.Vertices.Length,
                     Min = new double[]
@@ -211,7 +241,7 @@ namespace Mackiloha.Wpf.Extensions
                 // Normals
                 accessors.Add(new Accessor()
                 {
-                    Name = Path.GetFileNameWithoutExtension(mesh.Name) + "_normals",
+                    Name = mesh.Name + "_normals",
                     ComponentType = ComponentType.Float,
                     Count = mesh.Vertices.Length,
                     Min = new double[]
@@ -242,7 +272,7 @@ namespace Mackiloha.Wpf.Extensions
                 // UV coordinates
                 accessors.Add(new Accessor()
                 {
-                    Name = Path.GetFileNameWithoutExtension(mesh.Name) + "_texcoords",
+                    Name = mesh.Name + "_texcoords",
                     ComponentType = ComponentType.Float,
                     Count = mesh.Vertices.Length,
                     Min = new double[]
@@ -270,7 +300,7 @@ namespace Mackiloha.Wpf.Extensions
                 // Faces
                 accessors.Add(new Accessor()
                 {
-                    Name = Path.GetFileNameWithoutExtension(mesh.Name) + "_indicies",
+                    Name = mesh.Name + "_indicies",
                     ComponentType = ComponentType.UnsignedShort,
                     Count = mesh.Faces.Length * 3,
                     Min = new double[]
@@ -296,26 +326,6 @@ namespace Mackiloha.Wpf.Extensions
             }
             
             scene.Accessors = accessors.ToArray();
-            
-            currentOffset = 0;
-            scene.Materials = materials.Select(x => new Material()
-            {
-                Name = Path.GetFileNameWithoutExtension(x.Name),
-                PbrMetallicRoughness = new PbrMetallicRoughness()
-                {
-                    BaseColorTexture = new BaseColorTexture()
-                    {
-                        Index = currentOffset++
-                    },
-                    BaseColorFactor = new Vector4<double>(1.0f),
-                    MetallicFactor = 0,
-                    RoughnessFactor = 1
-                },
-                EmissiveFactor = new Vector3<double>(),
-                AlphaMode = AlphaMode.Opaque,
-                DoubleSided = true
-            }).ToArray();
-
             scene.Meshes = sceneMeshes.ToArray();
             
             var nodes = new List<Node>();
@@ -486,26 +496,7 @@ namespace Mackiloha.Wpf.Extensions
             }).ToArray();
 
             scene.Nodes = nodes.ToArray();
-
-            scene.Samplers = new Sampler[]
-            {
-                new Sampler()
-                {
-                    MagFilter = MagFilter.Linear,
-                    MinFilter = MinFilter.Nearest,
-                    WrapS = WrapMode.Repeat,
-                    WrapT = WrapMode.Repeat
-                }
-            };
             
-            currentOffset = 0;
-            scene.Textures = scene.Images.Select(x => new Texture()
-            {
-                Name = x.Name,
-                Sampler = 0,
-                Source = currentOffset++
-            }).ToArray();
-
             using (var fs = File.OpenWrite(Path.Combine(pathDirectory, scene.Buffers[0].Uri)))
             {
                 // Copies stream to file

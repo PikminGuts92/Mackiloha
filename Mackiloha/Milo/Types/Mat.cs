@@ -21,6 +21,7 @@ namespace Mackiloha.Milo
                 return FromStream(fs);
             }
         }
+
         public static Mat FromStream(Stream input)
         {
             using (AwesomeReader ar = new AwesomeReader(input))
@@ -47,7 +48,12 @@ namespace Mackiloha.Milo
                         //      1.0 0.0 0.0 0.0
                         // INT32 - Either 0 or 1
                         // \____ 60 bytes ____/
-                        ar.BaseStream.Position += 60;
+
+                        // TODO: Set per texture, not material
+                        mat.Mode1 = ar.ReadInt32();
+                        mat.Mode2 = ar.ReadInt32();
+
+                        ar.BaseStream.Position += 52;
                         mat.Textures.Add(ar.ReadString());
                     }
                 }
@@ -66,7 +72,19 @@ namespace Mackiloha.Milo
                 // FLOAT -   |
                 // FLOAT -   |
                 // FLOAT -  /
-                // BYTES(13)
+                // BYTES(15)
+
+                if (version == 21) // GH1
+                {
+                    ar.BaseStream.Position += 4;
+                    mat.BaseColorR = ar.ReadSingle();
+                    mat.BaseColorG = ar.ReadSingle();
+                    mat.BaseColorB = ar.ReadSingle();
+                    mat.BaseColorA = ar.ReadSingle();
+
+                    ar.BaseStream.Position += 9; // Skips unknown junk
+                    mat.BlendFactor = ar.ReadInt32();
+                }
 
                 return mat;
             }
@@ -116,6 +134,15 @@ namespace Mackiloha.Milo
         }
 
         public List<string> Textures { get; } = new List<string>();
+
+        public int Mode1 { get; set; } = 2;
+        public int Mode2 { get; set; } = 0; // 2 == reflective?
+
+        public float BaseColorR { get; set; } = 1.0f;
+        public float BaseColorG { get; set; } = 1.0f;
+        public float BaseColorB { get; set; } = 1.0f;
+        public float BaseColorA { get; set; } = 1.0f;
+        public int BlendFactor { get; set; } = 1; // TODO: Switch to enum
 
         public override byte[] Data => throw new NotImplementedException();
 
