@@ -240,5 +240,60 @@ namespace Mackiloha.Wpf.UserControls
             
             this.SelectedEntry = (sender as ListView).SelectedItem as MiloEntry;
         }
+        
+        private void ContextMenu_MiloEntry_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            var menu = sender as ContextMenu;
+            if (menu == null) return;
+
+            var entry = menu.DataContext as MiloEntry;
+            if (entry == null || !entry.Type.Equals("Tex", StringComparison.CurrentCultureIgnoreCase)) return;
+
+            var texItem = new MenuItem()
+            {
+                Header = "Tex Options"
+            };
+
+            var exportTexItem = new MenuItem() { Header = "Export as PNG" };
+            exportTexItem.Click += ExportTexItem_Click;
+            var importTexItem = new MenuItem() { Header = "Import as PNG" };
+            importTexItem.Click += ImportTexItem_Click;
+            
+            texItem.Items.Add(exportTexItem);
+            texItem.Items.Add(importTexItem);
+            
+            var idx = menu.Items.Add(texItem);
+        }
+
+        private void ExportTexItem_Click(object sender, RoutedEventArgs e)
+        {
+            var elm = sender as FrameworkElement;
+            if (elm == null) return;
+
+            var entry = elm.DataContext as MiloEntry;
+            if (entry == null || !entry.Type.Equals("Tex", StringComparison.CurrentCultureIgnoreCase)) return;
+
+            sfd.Title = $"Save PNG file";
+            sfd.Filter = $"PNG|*.png";
+            sfd.FileName = $"{System.IO.Path.GetFileNameWithoutExtension(entry.Name)}.png";
+
+            if (sfd.ShowDialog() == false) return;
+            
+            try
+            {
+                var tex = MiloOG.Tex.FromStream(new MemoryStream(entry.Data));
+                tex.Image.SaveAs(sfd.FileName);
+                MessageBox.Show($"Successfully saved {sfd.SafeFileName}");
+            }
+            catch
+            {
+                MessageBox.Show($"Oops. There were issues saving {sfd.SafeFileName}");
+            }
+        }
+
+        private void ImportTexItem_Click(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -15,7 +15,7 @@
             <MenuItem Header="Export" Click="MenuItem_RootScene_Extract_Click"/>
         </ContextMenu>
 
-        <ContextMenu x:Name="ContextMenu_MiloEntry" x:Key="ContextMenu_MiloEntry" x:Shared="false">
+        <ContextMenu x:Name="ContextMenu_MiloEntry" x:Key="ContextMenu_MiloEntry" x:Shared="false" DataContextChanged="ContextMenu_MiloEntry_DataContextChanged">
             <MenuItem Header="Extract" Click="MenuItem_MiloEntry_Extract_Click"/>
             <MenuItem Header="Replace" Click="MenuItem_MiloEntry_Replace_Click"/>
             <MenuItem Header="Rename" Click="MenuItem_MiloEntry_Rename_Click"/>
