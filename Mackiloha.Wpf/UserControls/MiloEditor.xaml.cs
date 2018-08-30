@@ -32,6 +32,21 @@ namespace Mackiloha.Wpf.UserControls
         private OpenFileDialog ofd = new OpenFileDialog();
         private SaveFileDialog sfd = new SaveFileDialog();
         
+        private string SelectedType
+        {
+            get => _selectedType;
+            set
+            {
+                _selectedType = value;
+                SelectedTypeChanged();
+            }
+        }
+
+        private void SelectedTypeChanged()
+        {
+            this.ItemsControl_MiloEntries.ItemsSource = FilteredMiloEntries;
+            this.ListView_MiloEntries.ItemsSource = FilteredMiloEntries;
+        }
 
         private MiloEntry SelectedEntry
         {
@@ -52,6 +67,7 @@ namespace Mackiloha.Wpf.UserControls
             {
                 var tex = MiloOG.Tex.FromStream(new MemoryStream(_selectedEntry.Data));
                 Image_TexPreview.Source = tex.Image.Image.ToBitmapSource();
+                
             }
             catch
             {
@@ -95,7 +111,7 @@ namespace Mackiloha.Wpf.UserControls
         private List<IMiloEntry> FilterEntriesByType(string type) =>
             this.Milo.Entries.Where(x => x.Type.Equals(type, StringComparison.CurrentCultureIgnoreCase)).OrderBy(x => x.Name).ToList();
 
-        private List<IMiloEntry> FilteredMiloEntries => this.FilterEntriesByType(this._selectedType);
+        private List<IMiloEntry> FilteredMiloEntries => this.FilterEntriesByType(this.SelectedType);
 
         public MiloFile Milo
         {
@@ -112,15 +128,12 @@ namespace Mackiloha.Wpf.UserControls
             if (e.NewValue is TreeViewItem)
             {
                 var item = e.NewValue as TreeViewItem;
-                _selectedType = item.Header as string;
-
-                this.ItemsControl_MiloEntries.ItemsSource = FilteredMiloEntries;
-                this.ListView_MiloEntries.ItemsSource = FilteredMiloEntries;
+                SelectedType = item.Header as string;
             }
             else
             {
                 Image_TexPreview.Source = null;
-                _selectedType = null;
+                SelectedType = null;
             }
         }
         
