@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using ImageMagick;
 
 namespace Mackiloha
 {
@@ -20,16 +21,16 @@ namespace Mackiloha
     public partial class HMXImage
     {
         // HMX: "Powerful and relatively insensitive nitroamine high explosive."
-        Bitmap _bmp;
+        private MagickImage _image;
 
-        private HMXImage(Bitmap bmp)
+        private HMXImage(MagickImage image)
         {
-            _bmp = bmp;
+            _image = image;
         }
 
         private HMXImage(int width, int height)
         {
-            _bmp = new Bitmap(width, height);
+            _image = new MagickImage(MagickColor.FromRgb(0, 0, 0), width, height);
         }
 
         public static HMXImage FromFile(string input)
@@ -71,7 +72,7 @@ namespace Mackiloha
             {
                 ImageEncoding encoding;
                 bool valid;
-                uint bpp, width, height, bpl;
+                uint bpp, width, height, bpl, mipmap;
 
                 byte firstByte = ar.ReadByte();
 
@@ -98,13 +99,14 @@ namespace Mackiloha
                     if (!valid) return null; // Maybe do something else later
 
                     // Reads rest of header
-                    ar.ReadByte(); // Mipmap count
+                    mipmap = ar.ReadByte(); // Mipmap count
                 }
                 else
                 {
                     // Xbox OG texture
                     encoding = ImageEncoding.BMP;
                     ar.BaseStream.Position += 2;
+                    mipmap = 0;
                 }
 
                 width = ar.ReadUInt16();
@@ -114,21 +116,23 @@ namespace Mackiloha
                 ar.BaseStream.Position += (firstByte == 1) ?  19 : 6;
 
                 // Decodes image
-                Bitmap bmp = Decode(ar, encoding, bpp, width, height, bpl, firstByte == 1);
-                HMXImage image = new HMXImage(bmp);
+                var magic = Decode(ar, encoding, bpp, mipmap, width, height, bpl, firstByte == 1);
+                HMXImage image = new HMXImage(magic);
                 image.Encoding = encoding;
 
                 return image;
             }
         }
 
-        public Bitmap Bitmap => new Bitmap(_bmp); // TODO: Improve this
+        public MagickImage Image => new MagickImage(_image);
 
-        public IntPtr Hbitmap => new Bitmap(_bmp).GetHbitmap(); // Copies image
+        public Bitmap Bitmap => _image.ToBitmap(); // TODO: Improve this
+        
+        public IntPtr Hbitmap => _image.ToBitmap().GetHbitmap();
 
         public void SaveAs(string path)
         {
-            _bmp.Save(path, ImageFormat.Png);
+            _image.Write(path, MagickFormat.Png);
         }
 
         private static bool DetermineEndianess(byte[] head, out ImageEncoding encoding, out bool valid)
@@ -167,8 +171,8 @@ namespace Mackiloha
 
         public ImageEncoding Encoding { get; set; }
 
-        public int Width => _bmp.Width;
+        public int Width => _image.Width;
 
-        public int Height => _bmp.Height;
+        public int Height => _image.Height;
     }
 }

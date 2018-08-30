@@ -35,13 +35,17 @@ namespace Mackiloha.Milo
                 // Guesses endianess
                 ar.BigEndian = DetermineEndianess(ar.ReadBytes(4), out version, out valid);
                 if (!valid) return null; // Probably do something else later
+
+                int idk = ar.ReadInt32();
+
+                // Skips duplicate width, height, bpp info
+                if (version < 10)
+                    ar.BaseStream.Position += 8;
+                else if (idk == 0)
+                    ar.BaseStream.Position += 17;
+                else
+                    ar.BaseStream.Position += 21;
                 
-                // Parses tex header
-                ar.BaseStream.Position += 12; // Skips duplicate width, height, bpp info
-
-                if (version >= 10)
-                    ar.BaseStream.Position += 9;
-
                 tex.ExternalPath = ar.ReadString(); // Relative path
 
                 if (version != 5)
@@ -53,7 +57,8 @@ namespace Mackiloha.Milo
                     ar.BaseStream.Position += 5; // Amp doesn't embed textures?
 
                 // Parses hmx image
-                if (!useExternal) tex.Image = HMXImage.FromStream(ar.BaseStream);
+                //if (!useExternal)
+                tex.Image = HMXImage.FromStream(ar.BaseStream);
                
                 return tex;
             }

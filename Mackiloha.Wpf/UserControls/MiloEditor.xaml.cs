@@ -15,8 +15,10 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Mackiloha.Milo2;
+using MiloOG = Mackiloha.Milo;
 using Mackiloha.Wpf.Extensions;
 using GLTFTools;
+using ImageMagick;
 
 namespace Mackiloha.Wpf.UserControls
 {
@@ -26,8 +28,36 @@ namespace Mackiloha.Wpf.UserControls
     public partial class MiloEditor : UserControl
     {
         private string _selectedType;
-        OpenFileDialog ofd = new OpenFileDialog();
-        SaveFileDialog sfd = new SaveFileDialog();
+        private MiloEntry _selectedEntry;
+        private OpenFileDialog ofd = new OpenFileDialog();
+        private SaveFileDialog sfd = new SaveFileDialog();
+        
+
+        private MiloEntry SelectedEntry
+        {
+            get => _selectedEntry;
+            set
+            {
+                _selectedEntry = value;
+                SelectedEntryChanged();
+            }
+        }
+
+        private void SelectedEntryChanged()
+        {
+            Image_TexPreview.Source = null;
+            if (_selectedEntry == null) return;
+            
+            try
+            {
+                var tex = MiloOG.Tex.FromStream(new MemoryStream(_selectedEntry.Data));
+                Image_TexPreview.Source = tex.Image.Image.ToBitmapSource();
+            }
+            catch
+            {
+                Image_TexPreview.Source = null;
+            }
+        }
 
         public MiloEditor()
         {
@@ -39,6 +69,7 @@ namespace Mackiloha.Wpf.UserControls
             var milo = this.Resources["Milo"] as MiloFile;
 
             TreeView_MiloTypes.Items.Clear();
+            Image_TexPreview.Source = null;
 
             var root = new TreeViewItem()
             {
@@ -82,12 +113,15 @@ namespace Mackiloha.Wpf.UserControls
             {
                 var item = e.NewValue as TreeViewItem;
                 _selectedType = item.Header as string;
-                
+
                 this.ItemsControl_MiloEntries.ItemsSource = FilteredMiloEntries;
                 this.ListView_MiloEntries.ItemsSource = FilteredMiloEntries;
             }
             else
+            {
+                Image_TexPreview.Source = null;
                 _selectedType = null;
+            }
         }
         
         private void RadioButton_Click(object sender, RoutedEventArgs e)
@@ -181,6 +215,17 @@ namespace Mackiloha.Wpf.UserControls
             //milo.WriteTree(sfd.FileName);
             //milo.WriteTree2(sfd.FileName);
             MessageBox.Show($"Successfully saved {sfd.SafeFileName}");
+        }
+
+        private void ListView_MiloEntries_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!(sender is ListView))
+            {
+                Image_TexPreview.Source = null;
+                return;
+            }
+            
+            this.SelectedEntry = (sender as ListView).SelectedItem as MiloEntry;
         }
     }
 }

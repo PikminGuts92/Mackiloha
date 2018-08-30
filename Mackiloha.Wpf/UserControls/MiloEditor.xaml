@@ -32,10 +32,12 @@
             <ColumnDefinition Width="200"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-
+        
         <TabControl Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Background="Beige">
             <TabItem Header="Scene">
-                <Grid Background="Black"></Grid>
+                <Grid Background="Black">
+                    <Image x:Name="Image_TexPreview" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"></Image>
+                </Grid>
             </TabItem>
         </TabControl>
 
@@ -54,7 +56,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Lists milo entries for selected type -->
-            <ListView Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Background="AliceBlue" x:Name="ListView_MiloEntries" Visibility="Visible">
+            <ListView Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Background="AliceBlue" x:Name="ListView_MiloEntries" Visibility="Visible" SelectionChanged="ListView_MiloEntries_SelectionChanged">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Header="Name" Width="300" DisplayMemberBinding="{Binding Name}"/>

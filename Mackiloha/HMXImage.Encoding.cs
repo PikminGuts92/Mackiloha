@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Drawing.Imaging;
+using ImageMagick;
 
 namespace Mackiloha
 {
     public partial class HMXImage
     {
-        private static Bitmap Decode(AwesomeReader ar, ImageEncoding encoding, uint bpp, uint width, uint height, uint bpl, bool ps2Texture = false)
+        private static MagickImage Decode(AwesomeReader ar, ImageEncoding encoding, uint bpp, uint mipmap, uint width, uint height, uint bpl, bool ps2Texture = false)
         {
             // Image starts at bottom left corner
 
@@ -18,15 +20,120 @@ namespace Mackiloha
             {
                 case ImageEncoding.BMP:
                     return DecodeBMP(ar, bpp, width, height, bpl);
+                case ImageEncoding.DXT1:
+                case ImageEncoding.DXT5:
+                case ImageEncoding.ATI2:
+                    return DecodeDXT(ar, mipmap, width, height, encoding);
             }
             
             return null;
         }
 
-        private static Bitmap DecodeBMP(AwesomeReader ar, uint bpp, uint width, uint height, uint bpl, bool ps2Texture = true)
+        private static MagickImage DecodeDXT(AwesomeReader ar, uint mipmap, uint width, uint height, ImageEncoding encoding, bool x360 = true)
+        {
+            uint imageSize;
+            string compression;
+
+            switch (encoding)
+            {
+                default:
+                case ImageEncoding.DXT1:
+                    imageSize = (width * height) / 2; // 4bpp
+                    compression = "DXT1";
+                    break;
+                case ImageEncoding.DXT5:
+                    imageSize = width * height; // 8bpp
+                    compression = "DXT5";
+                    break;
+                case ImageEncoding.ATI2:
+                    imageSize = width * height; // 8bpp
+                    compression = "ATI2";
+                    break;
+            }
+
+            byte[] dds = new byte[128 + imageSize];
+
+            // Writes DDS file
+            using (MemoryStream ms = new MemoryStream(dds))
+            {
+                ms.Write(BuildDDSHeader(compression, width, height, imageSize, 0), 0, 128);
+                ms.Write(ar.ReadBytes((int)imageSize), 0, (int)imageSize);
+            }
+
+            if (x360) SwapBytes(dds, 128);
+
+            // Converts to bitmap
+            return new MagickImage(dds);
+        }
+
+        private static void SwapBytes(byte[] data, int start = 0)
+        {
+            for (int i = start; i < data.Length; i += 2)
+            {
+                // Swaps bytes
+                byte b = data[i];
+                data[i] = data[i + 1];
+                data[i + 1] = b;
+            }
+        }
+
+        private static byte[] BuildDDSHeader(string format, uint width, uint height, uint size, uint mipMaps) // 128 bytes
+        {
+            byte[] dds = new byte[] //512x512 DXT5  -- 128 Bytes
+                {//|-D-----D-----S---------|--Header Size (124)----|-------Flags-----------|-------Height--------|
+                    0x44, 0x44, 0x53, 0x20, 0x7C, 0x00, 0x00, 0x00, 0x07, 0x10, 0x08, 0x00, 0x00, 0x02, 0x00, 0x00,
+                 //|--------Width----------|-----Size or Pitch-----|                       |-------Mip Maps------|
+                    0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x4E, 0x45, 0x4D, 0x4F, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00,
+                    0x04, 0x00, 0x00, 0x00, 0x44, 0x58, 0x54, 0x35, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+                };
+
+            byte[] buffer = new byte[4];
+            buffer = BitConverter.GetBytes(height);
+
+            dds[12] = buffer[0];
+            dds[13] = buffer[1];
+            dds[14] = buffer[2];
+            dds[15] = buffer[3];
+
+            buffer = BitConverter.GetBytes(width);
+
+            dds[16] = buffer[0];
+            dds[17] = buffer[1];
+            dds[18] = buffer[2];
+            dds[19] = buffer[3];
+
+            buffer = BitConverter.GetBytes(size);
+
+            dds[20] = buffer[0];
+            dds[21] = buffer[1];
+            dds[22] = buffer[2];
+            dds[23] = buffer[3];
+
+            buffer = BitConverter.GetBytes(mipMaps);
+
+            dds[28] = buffer[0];
+            dds[29] = buffer[1];
+            dds[30] = buffer[2];
+            dds[31] = buffer[3];
+
+            // Format magic
+            dds[84] = (byte)format[0];
+            dds[85] = (byte)format[1];
+            dds[86] = (byte)format[2];
+            dds[87] = (byte)format[3];
+            
+            return dds;
+        }
+
+        private static MagickImage DecodeBMP(AwesomeReader ar, uint bpp, uint width, uint height, uint bpl, bool ps2Texture = true)
         {
             Bitmap bmp = new Bitmap((int)width, (int)height, PixelFormat.Format32bppArgb);
-
+            
             if (bpp == 4)
             {
                 // 16 color palette (RGBa)
@@ -117,7 +224,7 @@ namespace Mackiloha
                 }
             }
 
-            return bmp;
+            return new MagickImage(bmp); // TODO: Just use magick image from the start
         }
 
         private static Color[] GetColorPaletteBGRa(AwesomeReader ar, uint count)
