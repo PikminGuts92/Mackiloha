@@ -63,15 +63,21 @@ namespace Mackiloha.Wpf.UserControls
             Image_TexPreview.Source = null;
             if (_selectedEntry == null) return;
             
-            try
+            switch((_selectedEntry.Type ?? "").ToLower())
             {
-                var tex = MiloOG.Tex.FromStream(new MemoryStream(_selectedEntry.Data));
-                Image_TexPreview.Source = tex.Image.Image.ToBitmapSource();
-                
-            }
-            catch
-            {
-                Image_TexPreview.Source = null;
+                case "tex":
+                    try
+                    {
+                        var tex = MiloOG.Tex.FromStream(new MemoryStream(_selectedEntry.Data));
+                        Image_TexPreview.Source = tex.Image.Image.ToBitmapSource();
+                    }
+                    catch
+                    {
+                        Image_TexPreview.Source = null;
+                    }
+                    break;
+                default:
+                    return;
             }
         }
 
@@ -293,7 +299,24 @@ namespace Mackiloha.Wpf.UserControls
 
         private void ImportTexItem_Click(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            var elm = sender as FrameworkElement;
+            if (elm == null) return;
+
+            var entry = elm.DataContext as MiloEntry;
+            if (entry == null || !entry.Type.Equals("Tex", StringComparison.CurrentCultureIgnoreCase)) return;
+            
+            ofd.Title = $"Open PNG file";
+            ofd.Filter = $"PNG|*.png";
+
+            if (ofd.ShowDialog() == false) return;
+
+            var tex = MiloOG.Tex.FromStream(new MemoryStream(entry.Data));
+            tex.Image.ImportImageFromFile(ofd.FileName);
+            var data = tex.WriteToBytes();
+            entry.Data = data;
+            
+            // Updates image
+            SelectedEntryChanged();
         }
     }
 }

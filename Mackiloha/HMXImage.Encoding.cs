@@ -23,13 +23,13 @@ namespace Mackiloha
                 case ImageEncoding.DXT1:
                 case ImageEncoding.DXT5:
                 case ImageEncoding.ATI2:
-                    return DecodeDXT(ar, mipmap, width, height, encoding);
+                    return DecodeDXT(ar, bpp, width, height, encoding);
             }
             
             return null;
         }
 
-        private static MagickImage DecodeDXT(AwesomeReader ar, uint mipmap, uint width, uint height, ImageEncoding encoding, bool x360 = true)
+        private static MagickImage DecodeDXT(AwesomeReader ar, uint bpp, uint width, uint height, ImageEncoding encoding, bool x360 = true)
         {
             uint imageSize;
             string compression;
@@ -51,6 +51,113 @@ namespace Mackiloha
                     break;
             }
 
+            if (encoding == ImageEncoding.DXT1)
+            {
+                const int PIXELS_PER_BLOCK = 16;
+                int blockSize = (PIXELS_PER_BLOCK * (int)bpp) / 8;
+
+                byte[] data = ar.ReadBytes((int)imageSize);
+                if (x360) SwapBytes(data);
+
+                Color FromRGB565(int c) => Color.FromArgb(
+                    0xFF,
+                    (c & 0b1111_1000_0000_0000) >> 8,
+                    (c & 0b0000_0111_1110_0000) >> 3,
+                    (c & 0b0000_0000_0001_1111) << 3);
+
+                Color MultiplyColor(Color c, float mult) => Color.FromArgb(
+                    (int)(c.A * mult),
+                    (int)(c.R * mult),
+                    (int)(c.G * mult),
+                    (int)(c.B * mult));
+
+                Color AddColors(Color a, Color b) => Color.FromArgb(
+                    a.A + b.A,
+                    a.R + b.R,
+                    a.G + b.G,
+                    a.B + b.B);
+
+                int idx = 0;
+                var colors = new Color[4];
+                var pixels = new Color[16];
+
+                int w, h;
+                var imageBytes = new byte[width * height * 4]; // 32-bit color
+                
+                for (int y = 0; y < (height >> 2); y++)
+                {
+                    for (int x = 0; x < (width >> 2); x++)
+                    {
+                        // Colors - 4 bytes
+                        colors[0] = FromRGB565(data[idx    ] | data[idx + 1] << 8);
+                        colors[1] = FromRGB565(data[idx + 2] | data[idx + 3] << 8);
+                        colors[2] = AddColors(MultiplyColor(colors[0], 0.66f), MultiplyColor(colors[1], 0.33f));
+                        colors[3] = AddColors(MultiplyColor(colors[0], 0.33f), MultiplyColor(colors[1], 0.66f));
+                        //colors[2] = AddColors(MultiplyColor(colors[0], 0.5f), MultiplyColor(colors[1], 0.5f));
+                        //colors[3] = Color.FromArgb(0);
+                        
+                        // Indices - 4 bytes (16 pixels)
+                        pixels[ 0] = colors[(data[idx + 4] & 0b00_00_00_11)     ]; // Row 1
+                        pixels[ 1] = colors[(data[idx + 4] & 0b00_00_11_00) >> 2];
+                        pixels[ 2] = colors[(data[idx + 4] & 0b00_11_00_00) >> 4];
+                        pixels[ 3] = colors[(data[idx + 4] & 0b11_00_00_00) >> 6];
+
+                        pixels[ 4] = colors[(data[idx + 5] & 0b00_00_00_11)     ]; // Row 2
+                        pixels[ 5] = colors[(data[idx + 5] & 0b00_00_11_00) >> 2];
+                        pixels[ 6] = colors[(data[idx + 5] & 0b00_11_00_00) >> 4];
+                        pixels[ 7] = colors[(data[idx + 5] & 0b11_00_00_00) >> 6];
+
+                        pixels[ 8] = colors[(data[idx + 6] & 0b00_00_00_11)     ]; // Row 3
+                        pixels[ 9] = colors[(data[idx + 6] & 0b00_00_11_00) >> 2];
+                        pixels[10] = colors[(data[idx + 6] & 0b00_11_00_00) >> 4];
+                        pixels[11] = colors[(data[idx + 6] & 0b11_00_00_00) >> 6];
+
+                        pixels[12] = colors[(data[idx + 7] & 0b00_00_00_11)     ]; // Row 4
+                        pixels[13] = colors[(data[idx + 7] & 0b00_00_11_00) >> 2];
+                        pixels[14] = colors[(data[idx + 7] & 0b00_11_00_00) >> 4];
+                        pixels[15] = colors[(data[idx + 7] & 0b11_00_00_00) >> 6];
+                        
+                        w = x << 2;
+                        h = y << 2;
+                        
+                        int linerOffset(int oY, int oX) => (oY * ((int)width << 2)) + (oX << 2);
+
+                        void SetPixel(int pY, int pX, Color c)
+                        {
+                            int off = linerOffset(pX, pY);
+                            imageBytes[off    ] = c.R;
+                            imageBytes[off + 1] = c.G;
+                            imageBytes[off + 2] = c.B;
+                            imageBytes[off + 3] = c.A;
+                        }
+
+                        SetPixel(w    , h, pixels[0]);
+                        SetPixel(w + 1, h, pixels[1]);
+                        SetPixel(w + 2, h, pixels[2]);
+                        SetPixel(w + 3, h, pixels[3]);
+
+                        SetPixel(w    , h + 1, pixels[4]);
+                        SetPixel(w + 1, h + 1, pixels[5]);
+                        SetPixel(w + 2, h + 1, pixels[6]);
+                        SetPixel(w + 3, h + 1, pixels[7]);
+
+                        SetPixel(w    , h + 2, pixels[8]);
+                        SetPixel(w + 1, h + 2, pixels[9]);
+                        SetPixel(w + 2, h + 2, pixels[10]);
+                        SetPixel(w + 3, h + 2, pixels[11]);
+
+                        SetPixel(w    , h + 3, pixels[12]);
+                        SetPixel(w + 1, h + 3, pixels[13]);
+                        SetPixel(w + 2, h + 3, pixels[14]);
+                        SetPixel(w + 3, h + 3, pixels[15]);
+                        
+                        idx += blockSize;
+                    }
+                }
+                
+                return new MagickImage(imageBytes, new PixelStorageSettings((int)width, (int)height, StorageType.Char, PixelMapping.RGBA));
+            }
+            
             byte[] dds = new byte[128 + imageSize];
 
             // Writes DDS file

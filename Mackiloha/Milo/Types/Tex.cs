@@ -24,6 +24,7 @@ namespace Mackiloha.Milo
                 return FromStream(fs);
             }
         }
+
         public static Tex FromStream(Stream input)
         {
             using (AwesomeReader ar = new AwesomeReader(input))
@@ -59,8 +60,40 @@ namespace Mackiloha.Milo
                 // Parses hmx image
                 //if (!useExternal)
                 tex.Image = HMXImage.FromStream(ar.BaseStream);
+                tex.BigEndian = ar.BigEndian;
                
                 return tex;
+            }
+        }
+
+        public void WriteToStream(Stream stream)
+        {
+            using (AwesomeWriter aw = new AwesomeWriter(stream, BigEndian))
+            {
+                aw.Write((int)10); // TODO: Save version
+                aw.Write((int)1);
+
+                aw.BaseStream.Position += 9;
+                aw.Write((int)Image.Width);
+                aw.Write((int)Image.Height);
+                aw.Write((int)((Image.Encoding == ImageEncoding.DXT1) ? 4 : 8));
+
+                //aw.Write("NO_EXTERNAL_PATH");
+                aw.Write(ExternalPath);
+                aw.Write((float)-8.0f);
+                aw.Write((int)1);
+                aw.Write((byte)0x01); // Use embedded
+
+                aw.Write(Image.WriteToBytes());
+            }
+        }
+
+        public byte[] WriteToBytes()
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                WriteToStream(ms);
+                return ms.ToArray();
             }
         }
 
@@ -122,6 +155,7 @@ namespace Mackiloha.Milo
         }
 
         public string ExternalPath { get; set; }
+        public bool BigEndian { get; set; }
 
         public HMXImage Image { get; set; }
 

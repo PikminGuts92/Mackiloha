@@ -78,10 +78,10 @@ namespace Mackiloha
 
                 if (firstByte != 0 && firstByte != 1)
                     return null;
-                
+
                 bpp = ar.ReadByte();
 
-                switch(bpp)
+                switch (bpp)
                 {
                     case 4:
                     case 8:
@@ -112,19 +112,144 @@ namespace Mackiloha
                 width = ar.ReadUInt16();
                 height = ar.ReadUInt16();
                 bpl = ar.ReadUInt16();
-                
-                ar.BaseStream.Position += (firstByte == 1) ?  19 : 6;
+
+                ar.BaseStream.Position += (firstByte == 1) ? 19 : 6;
 
                 // Decodes image
                 var magic = Decode(ar, encoding, bpp, mipmap, width, height, bpl, firstByte == 1);
                 HMXImage image = new HMXImage(magic);
                 image.Encoding = encoding;
+                image.BigEndian = ar.BigEndian;
 
                 return image;
             }
         }
 
-        public MagickImage Image => new MagickImage(_image);
+        public void ImportImageFromFile(string path)
+        {
+            var newImage = new MagickImage(path);
+            _image = newImage;
+        }
+
+        public void WriteToStream(Stream stream)
+        {
+            var uniqueColors = _image.TotalColors;
+            int bpp, bpl, mipmap = GetMipMapCount();
+            MagickFormat format;
+
+            switch (Encoding)
+            {
+                default:
+                case ImageEncoding.BMP:
+                    if (uniqueColors <= 16)
+                        bpp = 4;
+                    else if (uniqueColors <= 256)
+                        bpp = 8;
+                    else
+                        bpp = 32;
+                    
+                    bpl = (Width * bpp) / 8;
+                    format = MagickFormat.Png; // Ignore
+                    break;
+                case ImageEncoding.DXT1:
+                    bpp = 4;
+                    bpl = (Width * bpp) / 8;
+                    format = MagickFormat.Dxt1;
+                    break;
+                case ImageEncoding.DXT5:
+                case ImageEncoding.ATI2:
+                    bpp = 8;
+                    bpl = (Width * bpp) / 8;
+                    format = MagickFormat.Dxt5;
+                    break;
+            }
+            
+            using (AwesomeWriter aw = new AwesomeWriter(stream, BigEndian))
+            {
+                // Writes header
+                aw.Write((byte)0x01);
+                aw.Write((byte)bpp);
+                aw.Write((int)Encoding);
+                aw.Write((byte)mipmap);
+                aw.Write((short)Width);
+                aw.Write((short)Height);
+                aw.Write((short)bpl);
+                aw.BaseStream.Position += 19; // Zeros
+
+                var imgBytes = GetRawBytes(_image, Width, Height, bpp, mipmap, format);
+                aw.Write(imgBytes);
+            }
+        }
+
+        private byte[] GetRawBytes(MagickImage image, int width, int height, int bpp, int mipMap, MagickFormat format)
+        {
+            var sizes = new List<int>();
+
+            int CalcSize(int w, int h, int b) => (w * h * b) / 8;
+            int CalcTotalSize(int w, int h, int b, int m)
+            {
+                if (m <= 0)
+                    return CalcSize(w, h, b);
+
+                return CalcSize(w, h, b) + CalcTotalSize(w >> 1, h >> 1, b, --m);
+            };
+
+            void CalcSizes(int w, int h, int b, int m)
+            {
+                sizes.Add(CalcSize(w, h, b));
+                if (m > 0)
+                    CalcSizes(w >> 1, h >> 1, b, --m);
+            }
+            
+            CalcSizes(width, height, bpp, mipMap);
+            var totalSize = sizes.Sum();
+            var fullData = new byte[totalSize];
+            var ddsBytes = image.ToByteArray(format);
+
+            int offset = 128;
+            int currentIdx = 0;
+
+            foreach (var size in sizes)
+            {
+                Array.Copy(ddsBytes, offset + currentIdx, fullData, currentIdx, size);
+                currentIdx += size;
+            }
+            
+            SwapBytes(fullData);
+            return fullData;
+        }
+
+        private int GetMipMapCount()
+        {
+            if (Encoding == ImageEncoding.BMP)
+                return 0;
+
+            int min = Math.Min(Width, Height);
+            int mips = 0;
+
+            while (min >= 32)
+            {
+                mips++;
+                min >>= 1;
+            }
+
+            return mips;
+        }
+
+        public byte[] WriteToBytes()
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                WriteToStream(ms);
+                return ms.ToArray();
+            }
+        }
+
+        public MagickImage Image
+        {
+            get => new MagickImage(_image);
+            set => _image = value;
+        }
 
         public Bitmap Bitmap => _image.ToBitmap(); // TODO: Improve this
         
@@ -169,6 +294,7 @@ namespace Mackiloha
             }
         }
 
+        public bool BigEndian { get; set; }
         public ImageEncoding Encoding { get; set; }
 
         public int Width => _image.Width;
