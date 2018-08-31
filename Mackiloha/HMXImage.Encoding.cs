@@ -157,7 +157,159 @@ namespace Mackiloha
                 
                 return new MagickImage(imageBytes, new PixelStorageSettings((int)width, (int)height, StorageType.Char, PixelMapping.RGBA));
             }
-            
+            else if (encoding == ImageEncoding.ATI2)
+            {
+                const int PIXELS_PER_BLOCK = 16;
+                int blockSize = (PIXELS_PER_BLOCK * (int)bpp) / 8;
+
+                byte[] data = ar.ReadBytes((int)imageSize);
+                if (x360) SwapBytes(data);
+
+                int idx = 0;
+                
+                var reds = new float[8];
+                var greens = new float[8];
+                
+                var pixels = new Color[16];
+
+                int w, h;
+                var imageBytes = new byte[width * height * 4]; // 32-bit color
+
+                void CalculateColors(float[] colors)
+                {
+                    var c0 = colors[0];
+                    var c1 = colors[1];
+
+                    // BC5_UNORM
+                    if (c0 > c1)
+                    {
+                        // 6 interpolated color values
+                        colors[2] = (6 * c0 + 1 * c1) / 7.0f;
+                        colors[3] = (5 * c0 + 2 * c1) / 7.0f;
+                        colors[4] = (4 * c0 + 3 * c1) / 7.0f;
+                        colors[5] = (3 * c0 + 4 * c1) / 7.0f;
+                        colors[6] = (2 * c0 + 5 * c1) / 7.0f;
+                        colors[7] = (1 * c0 + 6 * c1) / 7.0f;
+                    }
+                    else
+                    {
+                        // 4 interpolated color values
+                        colors[2] = (4 * c0 + 1 * c1) / 5.0f;
+                        colors[3] = (3 * c0 + 2 * c1) / 5.0f;
+                        colors[4] = (2 * c0 + 3 * c1) / 5.0f;
+                        colors[5] = (1 * c0 + 4 * c1) / 5.0f;
+                        colors[6] = 0.0f;
+                        colors[7] = 1.0f;
+                    }
+                }
+
+                int[] GetIndices(int v1, int v2) =>
+                    new int[] {
+                        (v1 & 0b000_000_000_000_000_000_000_111),
+                        (v1 & 0b000_000_000_000_000_000_111_000) >>  3,
+                        (v1 & 0b000_000_000_000_000_111_000_000) >>  6,
+                        (v1 & 0b000_000_000_000_111_000_000_000) >>  9,
+                        (v1 & 0b000_000_000_111_000_000_000_000) >> 12,
+                        (v1 & 0b000_000_111_000_000_000_000_000) >> 15,
+                        (v1 & 0b000_111_000_000_000_000_000_000) >> 18,
+                        (v1 & 0b111_000_000_000_000_000_000_000) >> 21,
+                        (v2 & 0b000_000_000_000_000_000_000_111),
+                        (v2 & 0b000_000_000_000_000_000_111_000) >>  3,
+                        (v2 & 0b000_000_000_000_000_111_000_000) >>  6,
+                        (v2 & 0b000_000_000_000_111_000_000_000) >>  9,
+                        (v2 & 0b000_000_000_111_000_000_000_000) >> 12,
+                        (v2 & 0b000_000_111_000_000_000_000_000) >> 15,
+                        (v2 & 0b000_111_000_000_000_000_000_000) >> 18,
+                        (v2 & 0b111_000_000_000_000_000_000_000) >> 21
+                    };
+                
+                for (int y = 0; y < (height >> 2); y++)
+                {
+                    for (int x = 0; x < (width >> 2); x++)
+                    {
+
+                        // Reds - 2 bytes
+                        reds[0] = data[idx] / (float)byte.MaxValue;
+                        reds[1] = data[idx + 1] / (float)byte.MaxValue;
+                        CalculateColors(reds);
+                        
+                        // Greens - 2 bytes
+                        greens[0] = data[idx + 8] / (float)byte.MaxValue;
+                        greens[1] = data[idx + 9] / (float)byte.MaxValue;
+                        CalculateColors(greens);
+
+                        // Indicies
+                        var ir0 = GetIndices(data[idx +  2] | (data[idx +  3] << 8) | (data[idx +  4] << 16),
+                                             data[idx +  5] | (data[idx +  6] << 8) | (data[idx +  7] << 16));
+                        var ig0 = GetIndices(data[idx + 10] | (data[idx + 11] << 8) | (data[idx + 12] << 16),
+                                             data[idx + 13] | (data[idx + 14] << 8) | (data[idx + 15] << 16));
+
+                        Color GetColor(int i) => Color.FromArgb(
+                            0xFF,
+                            (byte)(reds[ir0[i]] * byte.MaxValue),
+                            (byte)(greens[ig0[i]] * byte.MaxValue),
+                            0x00
+                            );
+                        
+                        pixels[0] = GetColor(0);
+                        pixels[1] = GetColor(1);
+                        pixels[2] = GetColor(2);
+                        pixels[3] = GetColor(3);
+                        pixels[4] = GetColor(4);
+                        pixels[5] = GetColor(5);
+                        pixels[6] = GetColor(6);
+                        pixels[7] = GetColor(7);
+
+                        pixels[ 8] = GetColor( 8);
+                        pixels[ 9] = GetColor( 9);
+                        pixels[10] = GetColor(10);
+                        pixels[11] = GetColor(11);
+                        pixels[12] = GetColor(12);
+                        pixels[13] = GetColor(13);
+                        pixels[14] = GetColor(14);
+                        pixels[15] = GetColor(15);
+                        
+                        w = x << 2;
+                        h = y << 2;
+
+                        int linerOffset(int oY, int oX) => (oY * ((int)width << 2)) + (oX << 2);
+
+                        void SetPixel(int pY, int pX, Color c)
+                        {
+                            int off = linerOffset(pX, pY);
+                            imageBytes[off] = c.R;
+                            imageBytes[off + 1] = c.G;
+                            imageBytes[off + 2] = c.B;
+                            imageBytes[off + 3] = c.A;
+                        }
+
+                        SetPixel(w    , h, pixels[0]);
+                        SetPixel(w + 1, h, pixels[1]);
+                        SetPixel(w + 2, h, pixels[2]);
+                        SetPixel(w + 3, h, pixels[3]);
+
+                        SetPixel(w    , h + 1, pixels[4]);
+                        SetPixel(w + 1, h + 1, pixels[5]);
+                        SetPixel(w + 2, h + 1, pixels[6]);
+                        SetPixel(w + 3, h + 1, pixels[7]);
+
+                        SetPixel(w    , h + 2, pixels[8]);
+                        SetPixel(w + 1, h + 2, pixels[9]);
+                        SetPixel(w + 2, h + 2, pixels[10]);
+                        SetPixel(w + 3, h + 2, pixels[11]);
+
+                        SetPixel(w    , h + 3, pixels[12]);
+                        SetPixel(w + 1, h + 3, pixels[13]);
+                        SetPixel(w + 2, h + 3, pixels[14]);
+                        SetPixel(w + 3, h + 3, pixels[15]);
+
+                        idx += blockSize;
+                    }
+                }
+
+                return new MagickImage(imageBytes, new PixelStorageSettings((int)width, (int)height, StorageType.Char, PixelMapping.RGBA));
+            }
+
             byte[] dds = new byte[128 + imageSize];
 
             // Writes DDS file
