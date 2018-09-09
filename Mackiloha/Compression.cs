@@ -41,11 +41,12 @@ namespace Mackiloha
                     using (MemoryStream ms = new MemoryStream())
                     {
                         // Decompresses zlib stream
-                        DeflateStream outZStream = new DeflateStream(new MemoryStream(inBlock), CompressionMode.Decompress, false);
-                        outZStream.CopyTo(ms);
+                        using (var outZStream = new DeflateStream(new MemoryStream(inBlock.Skip(offset).ToArray()), CompressionMode.Decompress, true))
+                        {
+                            outZStream.CopyTo(ms);
+                        }
 
                         outBlock = ms.ToArray();
-                        outZStream.Flush();
                     }
                     break;
                 default:
@@ -79,11 +80,12 @@ namespace Mackiloha
                     using (MemoryStream ms = new MemoryStream())
                     {
                         // Compresses zlib stream
-                        DeflateStream outZStream = new DeflateStream(ms, CompressionMode.Compress, true);
-                        outZStream.Write(inBlock, offset, inBlock.Length - offset);
-
+                        using (var outZStream = new DeflateStream(ms, CompressionLevel.Optimal, true))
+                        {
+                            outZStream.Write(inBlock, offset, inBlock.Length - offset);
+                        }
+                        
                         outBlock = ms.ToArray();
-                        outZStream.Flush();
                     }
                     return outBlock; // Returns without magic
                 default:
