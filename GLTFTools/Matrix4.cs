@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 namespace GLTFTools
 {
     [JsonConverter(typeof(Matrix4Converter))]
-    public struct Matrix4<T> : IGLPrimitive where T : IComparable<T>
+    public struct Matrix4<T> : IGLPrimitive
     {
         public T M11, M12, M13, M14;
         public T M21, M22, M23, M24;
@@ -101,8 +101,7 @@ namespace GLTFTools
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            // TODO: Check for null rows?
-            var mat = (value as dynamic); // TODO: Don't use dynamic?
+            dynamic mat = value;
 
             writer.WriteStartArray();
             writer.WriteValue(mat.M11);

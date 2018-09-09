@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 namespace GLTFTools
 {
     [JsonConverter(typeof(ScalarConverter))]
-    public struct Scalar<T> : IGLPrimitive where T : IComparable<T>
+    public struct Scalar<T> : IGLPrimitive
     {
         public T Value;
         

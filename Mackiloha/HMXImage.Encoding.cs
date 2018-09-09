@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
-using System.Drawing.Imaging;
 using ImageMagick;
 
 namespace Mackiloha
@@ -391,8 +390,19 @@ namespace Mackiloha
 
         private static MagickImage DecodeBMP(AwesomeReader ar, uint bpp, uint width, uint height, uint bpl, bool ps2Texture = true)
         {
-            Bitmap bmp = new Bitmap((int)width, (int)height, PixelFormat.Format32bppArgb);
-            
+            var imageBytes = new byte[width * height * 4]; // 32-bit color
+
+            int linerOffset(int oY, int oX) => (oY * ((int)width << 2)) + (oX << 2);
+
+            void SetPixel(int pY, int pX, Color c)
+            {
+                int off = linerOffset(pX, pY);
+                imageBytes[off] = c.R;
+                imageBytes[off + 1] = c.G;
+                imageBytes[off + 2] = c.B;
+                imageBytes[off + 3] = c.A;
+            }
+
             if (bpp == 4)
             {
                 // 16 color palette (RGBa)
@@ -411,8 +421,8 @@ namespace Mackiloha
                         pixel2 = index & 0x0F;
 
                         // Pixels are in reverse order
-                        bmp.SetPixel(w, h, palette[pixel2]);
-                        bmp.SetPixel(w + 1, h, palette[pixel1]);
+                        SetPixel(w, h, palette[pixel2]);
+                        SetPixel(w + 1, h, palette[pixel1]);
                     }
                 }
             }
@@ -437,7 +447,7 @@ namespace Mackiloha
                             index = (0xE7 & index) | (bit4 | bit3);
                         }
 
-                        bmp.SetPixel(w, h, palette[index]);
+                        SetPixel(w, h, palette[index]);
                     }
                 }
             }
@@ -455,7 +465,7 @@ namespace Mackiloha
                         G = ar.ReadByte();
                         B = ar.ReadByte();
 
-                        bmp.SetPixel(w, h, Color.FromArgb(a, R, G, B));
+                        SetPixel(w, h, Color.FromArgb(a, R, G, B));
                     }
                 }
             }
@@ -478,12 +488,12 @@ namespace Mackiloha
                         else if (a > 0x80) Console.WriteLine("Alpha channel has value of {0}", a);
                         else a = (byte)(a << 1);
 
-                        bmp.SetPixel(w, h, Color.FromArgb(a, R, G, B));
+                        SetPixel(w, h, Color.FromArgb(a, R, G, B));
                     }
                 }
             }
 
-            return new MagickImage(bmp); // TODO: Just use magick image from the start
+            return new MagickImage(imageBytes, new PixelStorageSettings((int)width, (int)height, StorageType.Char, PixelMapping.RGBA));
         }
 
         private static Color[] GetColorPaletteBGRa(AwesomeReader ar, uint count)

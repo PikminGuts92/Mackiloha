@@ -4,9 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Converters;
 
 namespace Mackiloha.Milo
 {
@@ -21,7 +18,7 @@ namespace Mackiloha.Milo
         RB3 = 38
     }
 
-    public class Mesh : AbstractEntry, IExportable
+    public class Mesh : AbstractEntry
     {
         private MeshVersion _version;
         private Matrix _mat1, _mat2;
@@ -308,61 +305,6 @@ namespace Mackiloha.Milo
                 default:
                     return false;
             }
-        }
-
-        public void Export(string path)
-        {
-            dynamic json = new JObject();
-            json.FileType = Type;
-
-            json.Matrix1 = JsonConvert.SerializeObject(_mat1.GetRawMatrix);
-            json.Matrix2 = JsonConvert.SerializeObject(_mat2.GetRawMatrix);
-
-            JArray verts = new JArray();
-
-            // Writes vertex entries
-            foreach (Vertex v in _vertices)
-            {
-                dynamic vertEntry = new JObject();
-
-                vertEntry.VertX = v.VertX;
-                vertEntry.VertY = v.VertY;
-                vertEntry.VertZ = v.VertZ;
-                vertEntry.VertW = v.VertW;
-
-                vertEntry.NormX = v.NormX;
-                vertEntry.NormY = v.NormY;
-                vertEntry.NormZ = v.NormZ;
-                vertEntry.NormW = v.NormW;
-
-                vertEntry.ColorR = v.ColorR;
-                vertEntry.ColorG = v.ColorG;
-                vertEntry.ColorB = v.ColorB;
-                vertEntry.ColorA = v.ColorA;
-
-                vertEntry.U = v.U;
-                vertEntry.V = v.V;
-
-                // Adds entry
-                verts.Add(vertEntry);
-            }
-
-            json.VertexEntries = verts;
-            JArray faces = new JArray();
-
-            // Writes face entries
-            foreach (ushort[] f in _faces)
-            {
-                faces.Add(JsonConvert.SerializeObject(f));
-            }
-            json.FaceEntries = faces;
-
-            File.WriteAllText(path, json.ToString());
-        }
-
-        public void Import(string path)
-        {
-            throw new NotImplementedException();
         }
 
         public MeshVersion Version { get { return _version; } }

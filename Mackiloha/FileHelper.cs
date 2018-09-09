@@ -44,16 +44,19 @@ namespace Mackiloha
 
         public static bool HasAccess(string path)
         {
+            // TODO: Implement for .net standard
             DirectoryInfo info = new DirectoryInfo(path);
-            try
-            {
-                DirectorySecurity dirAC = info.GetAccessControl(AccessControlSections.All);
-                return true;
-            }
-            catch (PrivilegeNotHeldException)
-            {
-                return false;
-            }
+            //try
+            //{
+            //    DirectorySecurity dirAC = info.GetAccessControl(AccessControlSections.All);
+            //    return true;
+            //}
+            //catch (PrivilegeNotHeldException)
+            //{
+            //    return false;
+            //}
+
+            return true;
         }
     }
 }

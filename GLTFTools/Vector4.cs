@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 namespace GLTFTools
 {
     [JsonConverter(typeof(Vector4Converter))]
-    public struct Vector4<T> : IGLPrimitive where T : IComparable<T>
+    public struct Vector4<T> : IGLPrimitive
     {
         public T X;
         public T Y;
@@ -46,7 +46,7 @@ namespace GLTFTools
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var vec = (value as dynamic); // TODO: Don't use dynamic?
+            dynamic vec = value;
 
             writer.WriteStartArray();
             writer.WriteValue(vec.X);

@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Mackiloha.Milo
 {
-    public class Trans : AbstractEntry, IExportable
+    public class Trans : AbstractEntry
     {
         private Matrix _mat1, _mat2;
 
@@ -76,16 +76,6 @@ namespace Mackiloha.Milo
                 default:
                     return false;
             }
-        }
-
-        public void Export(string path)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Import(string path)
-        {
-            throw new NotImplementedException();
         }
 
         public Matrix Mat1 { get { return _mat1; } set { _mat1 = value; } }

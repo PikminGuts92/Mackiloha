@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Mackiloha.Milo
 {
-    public class Mat : AbstractEntry, IExportable
+    public class Mat : AbstractEntry
     {
         public Mat(string name, bool bigEndian = true) : base(name, "", bigEndian)
         {
@@ -121,16 +121,6 @@ namespace Mackiloha.Milo
                 default:
                     return false;
             }
-        }
-
-        public void Import(string path)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Export(string path)
-        {
-            throw new NotImplementedException();
         }
 
         public List<string> Textures { get; } = new List<string>();

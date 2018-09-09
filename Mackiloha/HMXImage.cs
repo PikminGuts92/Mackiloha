@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using ImageMagick;
 
@@ -251,9 +251,7 @@ namespace Mackiloha
             set => _image = value;
         }
 
-        public Bitmap Bitmap => _image.ToBitmap(); // TODO: Improve this
-        
-        public IntPtr Hbitmap => _image.ToBitmap().GetHbitmap();
+        //public Bitmap Bitmap => new Bitmap(new MemoryStream(_image.ToByteArray(MagickFormat.Png))); // TODO: Improve this
 
         public void SaveAs(string path)
         {

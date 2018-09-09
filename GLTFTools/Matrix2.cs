@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 namespace GLTFTools
 {
     [JsonConverter(typeof(Matrix2Converter))]
-    public struct Matrix2<T> : IGLPrimitive where T : IComparable<T>
+    public struct Matrix2<T> : IGLPrimitive
     {
         public T M11, M12;
         public T M21, M22;

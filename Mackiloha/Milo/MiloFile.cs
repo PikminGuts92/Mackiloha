@@ -4,13 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Converters;
 
 namespace Mackiloha.Milo
 {
-    public partial class MiloFile : AbstractEntry, IExportable
+    public partial class MiloFile : AbstractEntry
     {
         private BlockStructure _structure;
         private uint _offset;
@@ -250,76 +247,6 @@ namespace Mackiloha.Milo
             }
             
             return endOffset - startOffset;
-        }
-
-        public void Import(string path)
-        {
-            //throw new NotImplementedException();
-        }
-
-        public void Export(string path)
-        {
-            string extractPath = $@"{FileHelper.RemoveExtension(path)}.extracted";
-
-            dynamic json = new JObject();
-            json.FileType = "MiloFile";
-            json.Structure = JsonConvert.SerializeObject(_structure, new StringEnumConverter()).Replace("\"", "");
-            json.BlockOffset = _offset;
-            json.Version = _version;
-            
-            if ((uint)_version > 10)
-            {
-                json.DirectoryName = Name;
-                json.DirectoryType = Type;
-            }
-
-            json.ExtractDirectory = FileHelper.GetFileName(extractPath);
-
-            // Writes entries
-            JArray array = new JArray();
-            foreach(AbstractEntry entry in Entries)
-            {
-                string entryPath = $@"Entries\{entry.Type}\{entry.Name}";
-
-                // Adds to json file
-                dynamic jsonEntry = new JObject();
-                jsonEntry.Name = entry.Name;
-                jsonEntry.Type = entry.Type;
-                jsonEntry.ExtractPath = entryPath;
-                
-                // Checks if entry is IExportable
-                if (entry is IExportable)
-                {
-                    string fullEntryPath = $@"{extractPath}\{entryPath}.json";
-                    FileHelper.CreateDirectoryIfNotExists(fullEntryPath);
-
-                    try
-                    {
-                        // Exports entry
-                        IExportable export = entry as IExportable;
-                        export.Export(fullEntryPath);
-                        jsonEntry.Exported = true;
-                    }
-                    catch
-                    {
-                        continue;
-                    }
-                }
-                else
-                {
-                    // Writes raw bytes
-                    string fullEntryPath = $@"{extractPath}\{entryPath}";
-                    FileHelper.CreateDirectoryIfNotExists(fullEntryPath);
-                    File.WriteAllBytes(fullEntryPath, entry.Data);
-                }
-
-                // Adds entry
-                array.Add(jsonEntry);
-            }
-
-            json.Entries = array;
-
-            File.WriteAllText(path, json.ToString());
         }
 
         /// <summary>

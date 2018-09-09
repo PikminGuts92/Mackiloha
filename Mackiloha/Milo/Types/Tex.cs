@@ -4,13 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Converters;
 
 namespace Mackiloha.Milo
 {
-    public class Tex : AbstractEntry, IExportable
+    public class Tex : AbstractEntry
     {
         public Tex(string name, bool bigEndian = true) : base(name, "", bigEndian)
         {
@@ -128,30 +125,6 @@ namespace Mackiloha.Milo
                 default:
                     return false;
             }
-        }
-
-        public void Import(string path)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Export(string path)
-        {
-            dynamic json = new JObject();
-            json.FileType = Type;
-            json.ExternalPath = ExternalPath;
-
-            if (Image != null)
-            {
-                json.Encoding = JsonConvert.SerializeObject(Image.Encoding, new StringEnumConverter()).Replace("\"", "");
-
-                // Exports image as PNG
-                string pngPath = $@"{FileHelper.RemoveExtension(path)}.png";
-                Image.SaveAs(pngPath);
-                json.Png = FileHelper.GetFileName(pngPath);
-            }
-
-            File.WriteAllText(path, json.ToString());
         }
 
         public string ExternalPath { get; set; }

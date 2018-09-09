@@ -35,9 +35,9 @@ namespace SuperFreq
             if (source == null) return;
 
             _imageFile = HMXImage.FromStream(source);
-            Image_Texture.Source = BitmapToImageSource(_imageFile.Bitmap);
+            Image_Texture.Source = BitmapToImageSource(_imageFile.Image.ToBitmap());
         }
-
+        
         private BitmapImage BitmapToImageSource(Bitmap bitmap)
         {
             using (MemoryStream memory = new MemoryStream())

@@ -426,10 +426,7 @@ namespace SuperFreq
 
             // Converts texture to WPF-acceptable format
             ImageBrush brush = new ImageBrush();
-            brush.ImageSource = Imaging.CreateBitmapSourceFromHBitmap(img.Hbitmap, // Don't forget to dispose
-                                IntPtr.Zero,
-                                Int32Rect.Empty,
-                                BitmapSizeOptions.FromEmptyOptions());
+            brush.ImageSource = img.Image.ToBitmapSource();
             brush.ViewportUnits = BrushMappingMode.Absolute;
             
             brush.SetName(texName);

@@ -4,8 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using System.IO.Compression; // For Gzip compression
-using zlib; // For Zlib compression
+using System.IO.Compression; // For GZip/ZLib compression
 
 namespace Mackiloha
 {
@@ -17,7 +16,7 @@ namespace Mackiloha
 
     public static class Compression
     {
-        private static byte[] ZLIB_MAGIC = { 0x78, 0x9C }; // Default compression
+        private static readonly byte[] ZLIB_MAGIC = { 0x78, 0x9C }; // Default compression
 
         public static byte[] InflateBlock(byte[] inBlock, CompressionType type, int offset = 0)
         {
@@ -42,20 +41,9 @@ namespace Mackiloha
                     using (MemoryStream ms = new MemoryStream())
                     {
                         // Decompresses zlib stream
-                        ZOutputStream outZStream = new ZOutputStream(ms);
-                        outZStream.Write(ZLIB_MAGIC, 0, ZLIB_MAGIC.Length); // Required
+                        DeflateStream outZStream = new DeflateStream(new MemoryStream(inBlock), CompressionMode.Decompress, false);
+                        outZStream.CopyTo(ms);
 
-                        // Reads in blocks
-                        int readSize;
-                        while (offset < inBlock.Length)
-                        {
-                            readSize = inBlock.Length - offset;
-                            if (readSize > MAX_READ_SIZE) readSize = MAX_READ_SIZE;
-
-                            outZStream.Write(inBlock, offset, readSize);
-                            offset += readSize;
-                        }
-                        
                         outBlock = ms.ToArray();
                         outZStream.Flush();
                     }
@@ -91,14 +79,13 @@ namespace Mackiloha
                     using (MemoryStream ms = new MemoryStream())
                     {
                         // Compresses zlib stream
-                        ZOutputStream outZStream = new ZOutputStream(ms, zlibConst.Z_DEFAULT_COMPRESSION);
+                        DeflateStream outZStream = new DeflateStream(ms, CompressionMode.Compress, true);
                         outZStream.Write(inBlock, offset, inBlock.Length - offset);
-                        outZStream.finish();
 
                         outBlock = ms.ToArray();
                         outZStream.Flush();
                     }
-                    return outBlock.Skip(2).ToArray(); // Returns without magic
+                    return outBlock; // Returns without magic
                 default:
                     outBlock = new byte[inBlock.Length];
                     Array.Copy(inBlock, outBlock, inBlock.Length);
