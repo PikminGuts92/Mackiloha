@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2006
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mackiloha", "Mackiloha\Mackiloha.csproj", "{6F65B855-4191-45BD-956C-6D1513AFDADB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mackiloha", "Mackiloha\Mackiloha.csproj", "{6F65B855-4191-45BD-956C-6D1513AFDADB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFreq", "SuperFreq\SuperFreq.csproj", "{45FB4506-5EB0-4259-8CA5-389BE08644A6}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mackiloha.Wpf", "Mackiloha.Wpf\Mackiloha.Wpf.csproj", "{D7AACE79-4EED-4F0E-A22F-2EFC6610845F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GLTFTools", "GLTFTools\GLTFTools.csproj", "{DA9AA7F3-6D6A-46F6-A692-C630CC4D1CB2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Boom", "Boom\Boom.csproj", "{37D0BE92-0C3C-4750-A379-727ECA7F79F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{DA9AA7F3-6D6A-46F6-A692-C630CC4D1CB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA9AA7F3-6D6A-46F6-A692-C630CC4D1CB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA9AA7F3-6D6A-46F6-A692-C630CC4D1CB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37D0BE92-0C3C-4750-A379-727ECA7F79F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37D0BE92-0C3C-4750-A379-727ECA7F79F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37D0BE92-0C3C-4750-A379-727ECA7F79F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37D0BE92-0C3C-4750-A379-727ECA7F79F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

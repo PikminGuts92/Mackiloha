@@ -16,6 +16,8 @@ namespace Mackiloha.Milo2
         private BlockStructure _structure;
         private uint _offset;
         private MiloVersion _version;
+        private int _size;
+
         private bool _bigEndian;
         private MiloEntry _directoryEntry;
         
@@ -39,6 +41,11 @@ namespace Mackiloha.Milo2
             {
                 return ReadFromStream(new AwesomeReader(fs, false));
             }
+        }
+
+        public static MiloFile ReadFromStream(Stream stream)
+        {
+            return ReadFromStream(new AwesomeReader(stream, false));
         }
 
         public static MiloFile ReadFromStream(AwesomeReader ar)
@@ -95,6 +102,7 @@ namespace Mackiloha.Milo2
                 ms.Seek(0, SeekOrigin.Begin);
 
                 var milo = ParseDirectory(new AwesomeReader(ms));
+                milo._size = (int)ms.Length; // Raw size
                 milo._offset = offset;
                 milo._structure = structureType;
                 return milo;
@@ -373,6 +381,10 @@ namespace Mackiloha.Milo2
             ar.BaseStream.Seek(start, SeekOrigin.Begin);
             return (int)((currentPosition - 4) - start);
         }
+
+        public MiloVersion Version => _version;
+        public int Size => _size;
+        public MiloEntry DirectoryEntry => _directoryEntry;
 
         public List<IMiloEntry> Entries { get; }
     }
