@@ -25,6 +25,204 @@ namespace Boom.Controllers
             _miloContext = miloContext;
         }
 
+        [HttpGet]
+        [Route("Archive")]
+        public IActionResult GetArchives()
+        {
+            var games = _miloContext.Arks.Include(x => x.Entries).ToList();
+
+            var milos = _miloContext.Milos.Include(x => x.Entries).Join(_miloContext.ArkEntries, milo => milo.ArkEntryId, arkEntry => arkEntry.Id, (milo, arkEntry) => new
+            {
+                ArkId = arkEntry.ArkId,
+                FilePath = arkEntry.Path,
+
+                Version = milo.Version,
+                TotalSize = milo.TotalSize,
+                
+                Directory = new
+                {
+                    Name = milo.Name,
+                    Type = milo.Type,
+                    Size = milo.Size,
+                    Magic = milo.Magic
+                },
+                
+                Entries = milo.Entries.OrderBy(y => y.Type).ThenBy(z => z.Name).ToList()
+            });
+
+            var newList = games.Select(x => new
+            {
+                Title = x.Title,
+                Platform = x.Platform,
+                Region = x.Region,
+                Version = x.ArkVersion,
+
+                DirectoryTypes = new List<NameCollection<string, int>>(),
+                EntryTypes = new List<NameCollection<string, int>>(),
+
+                Milos = milos.Where(y => y.ArkId == x.Id).OrderBy(z => z.FilePath).ToList()
+            }).ToList();
+
+            foreach (var item in newList)
+            {
+                var dirTypes = item.Milos
+                    .Select(x => x.Directory.Type)
+                    .Where(x => !string.IsNullOrEmpty(x))
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .Select(x => new NameCollection<string, int>()
+                    {
+                        Name = x,
+                        Values = item.Milos
+                            .Where(y => y.Directory.Type == x)
+                            .Select(z => z.Directory.Magic)
+                            .Distinct()
+                            .OrderBy(w => w)
+                            .ToList()
+                    });
+                
+                var entryTypes = item.Milos
+                    .SelectMany(x => x.Entries)
+                    .Select(y => y.Type)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .Select(x => new NameCollection<string, int>()
+                    {
+                        Name = x,
+                        Values = item.Milos
+                            .SelectMany(y => y.Entries)
+                            .Where(z => z.Type == x)
+                            .Select(w => w.Magic)
+                            .Distinct()
+                            .OrderBy(q => q)
+                            .ToList()
+                    });
+                
+                item.DirectoryTypes.AddRange(dirTypes);
+                item.EntryTypes.AddRange(entryTypes);
+            }
+
+            return Ok(newList);
+        }
+
+        [HttpGet]
+        [Route("Archive/{id}")]
+        public IActionResult GetArchive(int? id)
+        {
+            if (!id.HasValue)
+                return BadRequest();
+
+            var game = _miloContext.Arks.Include(x => x.Entries).Single(x => x.Id == id);
+
+            var milos = _miloContext.Milos.Include(x => x.Entries).Join(_miloContext.ArkEntries.Where(x => x.ArkId == game.Id), milo => milo.ArkEntryId, arkEntry => arkEntry.Id, (milo, arkEntry) => new
+            {
+                FilePath = arkEntry.Path,
+
+                Version = milo.Version,
+                TotalSize = milo.TotalSize,
+
+                Directory = new
+                {
+                    Name = milo.Name,
+                    Type = milo.Type,
+                    Size = milo.Size,
+                    Magic = milo.Magic
+                },
+
+                Entries = milo.Entries.OrderBy(y => y.Type).ThenBy(z => z.Name).ToList()
+            });
+
+            var item = new
+            {
+                Title = game.Title,
+                Platform = game.Platform,
+                Region = game.Region,
+                Version = game.ArkVersion,
+
+                DirectoryTypes = new List<NameCollection<string, int>>(),
+                EntryTypes = new List<NameCollection<string, int>>(),
+
+                Milos = milos.OrderBy(z => z.FilePath).ToList()
+            };
+
+            item.DirectoryTypes.AddRange(item.Milos
+                .Select(x => x.Directory.Type)
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Distinct()
+                .OrderBy(x => x)
+                .Select(x => new NameCollection<string, int>()
+                {
+                    Name = x,
+                    Values = item.Milos
+                        .Where(y => y.Directory.Type == x)
+                        .Select(z => z.Directory.Magic)
+                        .Distinct()
+                        .OrderBy(w => w)
+                        .ToList()
+                }));
+
+            item.EntryTypes.AddRange(item.Milos
+                .SelectMany(x => x.Entries)
+                .Select(y => y.Type)
+                .Distinct()
+                .OrderBy(x => x)
+                .Select(x => new NameCollection<string, int>()
+                {
+                    Name = x,
+                    Values = item.Milos
+                        .SelectMany(y => y.Entries)
+                        .Where(z => z.Type == x)
+                        .Select(w => w.Magic)
+                        .Distinct()
+                        .OrderBy(q => q)
+                        .ToList()
+                }));
+            
+            return Ok(item);
+        }
+
+        [HttpGet]
+        [Route("Archive/{id}/Milos")]
+        public IActionResult GetArchiveEntries(int? id, bool groupByType)
+        {
+            if (!id.HasValue)
+                return BadRequest();
+
+            var game = _miloContext.Arks.Include(x => x.Entries).Single(x => x.Id == id);
+
+            var milos = _miloContext.Milos.Include(x => x.Entries).Join(_miloContext.ArkEntries.Where(x => x.ArkId == game.Id), milo => milo.ArkEntryId, arkEntry => arkEntry.Id, (milo, arkEntry) => new
+            {
+                FilePath = arkEntry.Path,
+
+                Version = milo.Version,
+                TotalSize = milo.TotalSize,
+
+                Directory = new
+                {
+                    Name = milo.Name,
+                    Type = milo.Type,
+                    Size = milo.Size,
+                    Magic = milo.Magic
+                },
+
+                Entries = milo.Entries.OrderBy(y => y.Type).ThenBy(z => z.Name).ToList()
+            }).OrderBy(x => x.FilePath);
+
+            if (!groupByType)
+                return Ok(milos);
+
+            var grouped = milos
+                .GroupBy(x => x.Directory.Type)
+                .OrderBy(y => y.Key)
+                .Select(z => new
+                {
+                    Group = z.Key,
+                    Milos = z.ToList()
+                });
+            
+            return Ok(grouped);
+        }
+
         [HttpPost]
         [Route("ScanArk")]
         public IActionResult ScanArkPost([FromBody] ScanRequest request)

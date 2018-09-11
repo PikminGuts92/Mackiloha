@@ -18,5 +18,21 @@ namespace Boom.Data
         public DbSet<ArkEntry> ArkEntries { get; set; }
         public DbSet<Milo> Milos { get; set; }
         public DbSet<MiloEntry> MiloEntries { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            /*
+            modelBuilder.Entity<Ark>()
+                .HasMany(ark => ark.Entries)
+                .WithOne()
+                .HasForeignKey(entry => entry.ArkId);*/
+            /*
+            modelBuilder.Entity<ArkEntry>(entity =>
+            {
+                entity.HasOne(entry => entry.Ark)
+                    .WithMany(ark => ark.Entries)
+                    .HasForeignKey(entry => entry.ArkId);
+            });*/
+        }
     }
 }

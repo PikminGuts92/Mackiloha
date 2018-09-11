@@ -21,7 +21,7 @@ namespace Boom
         }
 
         public IConfiguration Configuration { get; }
-        
+
         public void ConfigureServices(IServiceCollection services)
         {
             var con = Configuration.GetConnectionString("Milo");
@@ -29,7 +29,10 @@ namespace Boom
             services.AddDbContext<MiloContext>(op =>
                 op.UseSqlite(Configuration.GetConnectionString("Milo")));
 
-            services.AddMvc();
+            services.AddMvc().AddJsonOptions(op =>
+            {
+                op.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
+            });
         }
         
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
