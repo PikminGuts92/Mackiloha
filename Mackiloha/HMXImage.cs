@@ -14,8 +14,11 @@ namespace Mackiloha
     {
         BMP = 0x03, // PS2
         DXT1 = 0x08,
+        //GC = 0x10, // GC (8bpp)
         DXT5 = 0x18,
-        ATI2 = 0x20
+        //GC = 0x20, // GC (16bpp) RGB565?
+        ATI2 = 0x20,
+        //TPL = 0x48 // Wii (4bpp)
     }
 
     public partial class HMXImage
