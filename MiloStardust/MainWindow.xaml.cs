@@ -63,7 +63,7 @@ namespace MiloStardust
         private void Menu_File_Open_Click(object sender, RoutedEventArgs e)
         {
             ofd.Title = "Open MILO file";
-            ofd.Filter = "MILO|*.milo_ps2;*.milo_ps3;*.milo_xbox;*.rnd_ps2;*.gh";
+            ofd.Filter = "MILO|*.milo_ps2;*.milo_ps3;*.milo_wii;*.milo_xbox;*.rnd_gc;*.rnd_ps2;*.rnd_xbox;*.gh";
 
             if (ofd.ShowDialog() == false) return;
 
