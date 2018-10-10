@@ -20,6 +20,9 @@ namespace Mackiloha
                 case ImageEncoding.BMP:
                     return DecodeBMP(ar, bpp, width, height, bpl);
                 case ImageEncoding.DXT1:
+                    return bpp == 8
+                        ? DecodeBMP(ar, bpp, width, height, bpl, false)
+                        : DecodeDXT(ar, bpp, width, height, encoding);
                 case ImageEncoding.DXT5:
                 case ImageEncoding.ATI2:
                     return DecodeDXT(ar, bpp, width, height, encoding);
@@ -431,7 +434,7 @@ namespace Mackiloha
                 // 256 color palette (RGBa)
                 Color[] palette = (ps2Texture) ? GetColorPalette(ar, 256) : GetColorPaletteBGRa(ar, 256); // 2^8 = 256 colors
                 int index, bit3, bit4;
-
+                
                 for (int h = 0; h < height; h++)
                 {
                     for (int w = 0; w < width; w++)
@@ -446,7 +449,7 @@ namespace Mackiloha
                             bit4 = (index & 0x08) << 1;
                             index = (0xE7 & index) | (bit4 | bit3);
                         }
-
+                        
                         SetPixel(w, h, palette[index]);
                     }
                 }

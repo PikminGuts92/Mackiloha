@@ -13,6 +13,7 @@ namespace Mackiloha
     public enum ImageEncoding
     {
         BMP = 0x03, // PS2
+        //XBX = 0x08, // Xbox OG (8bpp - color palette)
         DXT1 = 0x08,
         //GC = 0x10, // GC (8bpp)
         DXT5 = 0x18,
