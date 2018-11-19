@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Mackiloha.System.Render
 {
-    public class Tex : RenderObject
+    public class Tex : RenderObject, ISerializable
     {
         public int Width { get; set; }
         public int Height { get; set; }

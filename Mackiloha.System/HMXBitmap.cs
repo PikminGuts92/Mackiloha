@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Mackiloha.System
 {
-    public class HMXBitmap
+    public class HMXBitmap : ISerializable
     {
         public int Bpp { get; set; }
         public int Encoding { get; set; }

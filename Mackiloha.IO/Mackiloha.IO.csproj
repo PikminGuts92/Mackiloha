@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Mackiloha.System\Mackiloha.System.csproj" />
     <ProjectReference Include="..\Mackiloha\Mackiloha.csproj" />
   </ItemGroup>
 
