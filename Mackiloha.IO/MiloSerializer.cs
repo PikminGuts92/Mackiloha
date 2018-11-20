@@ -54,6 +54,12 @@ namespace Mackiloha.IO
             {
                 switch (obj)
                 {
+                    case Tex tex:
+                        WriteToStream(aw, tex);
+                        break;
+                    case HMXBitmap bitmap:
+                        WriteToStream(aw, bitmap);
+                        break;
                     default:
                         throw new NotImplementedException($"Serialization of {obj.GetType().Name} is not supported yet!");
                 }
