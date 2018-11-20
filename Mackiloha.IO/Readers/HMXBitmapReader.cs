@@ -21,12 +21,21 @@ namespace Mackiloha.IO
             bitmap.BPL = ar.ReadUInt16();
 
             ar.BaseStream.Position += 19; // Skips zeros
-            bitmap.RawData = ar.ReadBytes(CalculateTextureByteSize(bitmap.Width, bitmap.Height, bitmap.Bpp, bitmap.MipMaps));
+            bitmap.RawData = ar.ReadBytes(CalculateTextureByteSize(bitmap.Encoding, bitmap.Width, bitmap.Height, bitmap.Bpp, bitmap.MipMaps));
         }
 
-        private int CalculateTextureByteSize(int w, int h, int bpp, int mips)
+        private int CalculateTextureByteSize(int encoding, int w, int h, int bpp, int mips)
         {
             int bytes = 0;
+
+            // Adds color palette if applicable
+            switch (encoding)
+            {
+                case 3:
+                    // Each color is 32 bits 
+                    bytes += (bpp == 4 || bpp == 8) ? 1 << (bpp + 2) : 0;
+                    break;
+            }
 
             while (mips >= 0)
             {
