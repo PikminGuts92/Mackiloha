@@ -6,5 +6,6 @@ namespace Mackiloha.System
 {
     public abstract class MiloObject
     {
+        public MiloString Name { get; set; }
     }
 }

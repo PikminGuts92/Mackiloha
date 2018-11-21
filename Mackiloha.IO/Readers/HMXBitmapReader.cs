@@ -10,7 +10,7 @@ namespace Mackiloha.IO
         private void ReadFromStream(AwesomeReader ar, HMXBitmap bitmap)
         {
             if (ar.ReadByte() != 0x01)
-                throw new Exception($"HMXBitmapReader: Expected 0x01 at offset 0");
+                throw new NotSupportedException($"HMXBitmapReader: Expected 0x01 at offset 0");
 
             bitmap.Bpp = ar.ReadByte();
             bitmap.Encoding = ar.ReadInt32();

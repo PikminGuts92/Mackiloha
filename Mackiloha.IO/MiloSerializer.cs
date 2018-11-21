@@ -40,6 +40,20 @@ namespace Mackiloha.IO
             }
         }
 
+        internal void ReadFromStream(Stream stream, string type, out ISerializable obj)
+        {
+            switch (type)
+            {
+                case "Tex":
+                    obj = new Tex();
+                    break;
+                default:
+                    throw new NotImplementedException($"Deserialization of {type} is not supported yet!");
+            }
+
+            ReadFromStream(stream, obj);
+        }
+
         public void WriteToFile(string path, ISerializable obj)
         {
             using (var fs = File.OpenWrite(path))

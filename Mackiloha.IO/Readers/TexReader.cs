@@ -12,7 +12,7 @@ namespace Mackiloha.IO
         {
             // TODO: Add version check
             if (ar.ReadInt32() != 0x08)
-                throw new Exception($"TexReader: Expected 0x08 at offset 0");
+                throw new NotSupportedException($"TexReader: Expected 0x08 at offset 0");
 
             tex.Width = ar.ReadInt32();
             tex.Height = ar.ReadInt32();
@@ -21,10 +21,10 @@ namespace Mackiloha.IO
             tex.ExternalPath = ar.ReadString();
 
             if (ar.ReadSingle() != -8.0f)
-                throw new Exception("TexReader: Expected -8.0");
+                throw new NotSupportedException("TexReader: Expected -8.0");
 
             if (ar.ReadInt32() != 0x01)
-                throw new Exception($"TexReader: Expected 0x01");
+                throw new NotSupportedException($"TexReader: Expected 0x01");
 
             tex.UseExternal = ar.ReadBoolean();
 
