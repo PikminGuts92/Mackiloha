@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Mackiloha.IO
 {
-    public class SystemInfo
+    public struct SystemInfo
     {
         public string Title { get; set; }
         public Region Region { get; set; }

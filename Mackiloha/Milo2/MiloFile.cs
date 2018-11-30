@@ -15,26 +15,13 @@ namespace Mackiloha.Milo2
 
         private BlockStructure _structure;
         private uint _offset;
-        private MiloVersion _version;
-        private int _size;
-
-        private bool _bigEndian;
-        private MiloEntry _directoryEntry;
         
         public MiloFile()
         {
             _structure = BlockStructure.MILO_B;
             _offset = 2064;
-            _version = MiloVersion.V24;
-            _bigEndian = true;
-            Entries = new List<IMiloEntry>();
         }
-
-        public MiloFile(MiloEntry directory) : this()
-        {
-            _directoryEntry = directory;
-        }
-
+        
         public static MiloFile ReadFromFile(string path)
         {
             using (var fs = File.OpenRead(path))
@@ -97,18 +84,35 @@ namespace Mackiloha.Milo2
                     ms.Write(block, 0, block.Length);
                 }
                 
-                // Copies raw milo data
-                //ar.BaseStream.CopyTo(ms, totalSize);
                 ms.Seek(0, SeekOrigin.Begin);
-
-                var milo = ParseDirectory(new AwesomeReader(ms));
-                milo._size = (int)ms.Length; // Raw size
-                milo._offset = offset;
-                milo._structure = structureType;
-                return milo;
+                
+                return new MiloFile()
+                {
+                    _structure = structureType,
+                    _offset = offset,
+                    Data = ms.ToArray()
+                };
             }
         }
 
+        private (int Version, bool BigEndian) GuessVersion()
+        {
+            if (Data == null || Data.Length < 4
+                || Data[1] != 0 || Data[2] != 0)
+                return (-1, false);
+
+            // Version should be between 6-32 (should be)
+            return (Data[3] != 0) ? ((int)Data[3], true) : ((int)Data[0], false);
+
+        }
+
+        //public MiloObjectDir Directory { get; set; }
+        public byte[] Data { get; set; }
+
+        public bool BigEndian => GuessVersion().BigEndian;
+        public int Version => GuessVersion().Version;
+
+        /*
         private static string[] GetExternalResources(AwesomeReader ar)
         {
             string[] res = new string[ar.ReadUInt32()];
@@ -381,11 +385,13 @@ namespace Mackiloha.Milo2
             ar.BaseStream.Seek(start, SeekOrigin.Begin);
             return (int)((currentPosition - 4) - start);
         }
+        
 
         public MiloVersion Version => _version;
         public int Size => _size;
         public MiloEntry DirectoryEntry => _directoryEntry;
 
         public List<IMiloEntry> Entries { get; }
+        */
     }
 }

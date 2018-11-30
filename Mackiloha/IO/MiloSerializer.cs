@@ -13,46 +13,53 @@ namespace Mackiloha.IO
             _info = info;
         }
 
-        public void ReadFromFile(string path, ISerializable obj)
+        public void ReadFromFile<T>(string path) where T : ISerializable, new()
         {
             using (var fs = File.OpenRead(path))
             {
-                ReadFromStream(fs, obj);
+                ReadFromStream<T>(fs);
             }
         }
 
-        public void ReadFromStream(Stream stream, ISerializable obj)
+        public T ReadFromStream<T>(Stream stream) where T : ISerializable, new()
         {
-            using (var ar = new AwesomeReader(stream, _info.BigEndian))
+            var data = new T();
+            var ar = new AwesomeReader(stream, _info.BigEndian);
+
+            switch (data)
             {
-                switch (obj)
-                {
-                    case Tex tex:
-                        ReadFromStream(ar, tex);
-                        break;
-                    case HMXBitmap bitmap:
-                        ReadFromStream(ar, bitmap);
-                        break;
-                    default:
-                        throw new NotImplementedException($"Deserialization of {obj.GetType().Name} is not supported yet!");
-                }
+                case MiloObjectDir dir:
+                    ReadFromStream(ar, dir);
+                    break;
+                case Tex tex:
+                    ReadFromStream(ar, tex);
+                    break;
+                case HMXBitmap bitmap:
+                    ReadFromStream(ar, bitmap);
+                    break;
+                default:
+                    throw new NotImplementedException($"Deserialization of {typeof(T).Name} is not supported yet!");
             }
+
+            return data;
         }
 
-        internal void ReadFromStream(Stream stream, string type, out ISerializable obj)
+        internal MiloObject ReadFromStream(Stream stream, string type)
         {
+            MiloObject obj;
+
             switch (type)
             {
                 case "Tex":
-                    obj = new Tex();
+                    obj = ReadFromStream<Tex>(stream);
                     break;
                 default:
                     throw new NotImplementedException($"Deserialization of {type} is not supported yet!");
             }
 
-            ReadFromStream(stream, obj);
+            return obj;
         }
-
+        
         public void WriteToFile(string path, ISerializable obj)
         {
             using (var fs = File.OpenWrite(path))
@@ -63,20 +70,19 @@ namespace Mackiloha.IO
 
         public void WriteToStream(Stream stream, ISerializable obj)
         {
-            using (var aw = new AwesomeWriter(stream, _info.BigEndian))
+            var aw = new AwesomeWriter(stream, _info.BigEndian);
+
+            switch (obj)
             {
-                switch (obj)
-                {
-                    case Tex tex:
-                        WriteToStream(aw, tex);
-                        break;
-                    case HMXBitmap bitmap:
-                        WriteToStream(aw, bitmap);
-                        break;
-                    default:
-                        throw new NotImplementedException($"Serialization of {obj.GetType().Name} is not supported yet!");
-                }
-            }
+                case Tex tex:
+                    WriteToStream(aw, tex);
+                    break;
+                case HMXBitmap bitmap:
+                    WriteToStream(aw, bitmap);
+                    break;
+                default:
+                    throw new NotImplementedException($"Serialization of {obj.GetType().Name} is not supported yet!");
+            } 
         }
     }
 }

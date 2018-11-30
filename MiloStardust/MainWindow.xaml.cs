@@ -14,6 +14,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 //using System.Windows.Shapes;
+using Mackiloha;
+using Mackiloha.IO;
 using Mackiloha.Milo2;
 
 namespace MiloStardust
@@ -36,9 +38,37 @@ namespace MiloStardust
 
             if (args != null && args.Length > 1)
             {
-                Milo_Editor.Milo = MiloFile.ReadFromFile(args[1]);
-                miloPath = args[1];
+                OpenMilo(args[1]);
+                
             }
+        }
+
+        private void OpenMilo(string path)
+        {
+            var mf = MiloFile.ReadFromFile(path);
+            var serializer = new MiloSerializer(new SystemInfo() { BigEndian = mf.BigEndian });
+            miloPath = path;
+
+            // TODO: Add try-catch block
+            using (var ms = new MemoryStream(mf.Data))
+            {
+                Milo_Editor.Milo = serializer.ReadFromStream<MiloObjectDir>(ms);
+                Milo_Editor.Serializer = serializer;
+            }
+        }
+
+        private void SaveMilo(string path)
+        {
+            var mf = new MiloFile();
+
+            using (var ms = new MemoryStream())
+            {
+                Milo_Editor.Serializer.WriteToStream(ms, Milo_Editor.Milo);
+                ms.Seek(0, SeekOrigin.Begin);
+                mf.Data = ms.ToArray();
+            }
+
+            // TODO: Finish implementing saving
         }
 
         private void ToolBar_Loaded(object sender, RoutedEventArgs e)
@@ -67,8 +97,7 @@ namespace MiloStardust
 
             if (ofd.ShowDialog() == false) return;
 
-            Milo_Editor.Milo = MiloFile.ReadFromFile(ofd.FileName);
-            miloPath = ofd.FileName;
+            OpenMilo(ofd.FileName);
         }
 
         private void Menu_File_SaveAs_Click(object sender, RoutedEventArgs e)
@@ -80,8 +109,8 @@ namespace MiloStardust
             sfd.FileName = Path.GetFileName(miloPath);
 
             if (sfd.ShowDialog() == false) return;
-
-            Milo_Editor.Milo.WriteToFile(sfd.FileName);
+            
+            SaveMilo(sfd.FileName);
             MessageBox.Show($"Successfully saved {sfd.SafeFileName}");
         }
 
@@ -108,8 +137,7 @@ namespace MiloStardust
             var files = e.Data.GetData(DataFormats.FileDrop) as string[];
             var firstFile = files.First();
 
-            Milo_Editor.Milo = MiloFile.ReadFromFile(firstFile);
-            miloPath = firstFile;
+            OpenMilo(firstFile);
         }
     }
 }

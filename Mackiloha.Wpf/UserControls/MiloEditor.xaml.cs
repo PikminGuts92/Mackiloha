@@ -15,6 +15,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Mackiloha.Milo2;
+using Mackiloha.IO;
+using Mackiloha.Render;
 using MiloOG = Mackiloha.Milo;
 using Mackiloha.Wpf.Extensions;
 using GLTFTools;
@@ -28,7 +30,7 @@ namespace Mackiloha.Wpf.UserControls
     public partial class MiloEditor : UserControl
     {
         private string _selectedType;
-        private MiloEntry _selectedEntry;
+        private MiloObject _selectedEntry;
         private OpenFileDialog ofd = new OpenFileDialog();
         private SaveFileDialog sfd = new SaveFileDialog();
         
@@ -48,7 +50,7 @@ namespace Mackiloha.Wpf.UserControls
             this.ListView_MiloEntries.ItemsSource = FilteredMiloEntries;
         }
 
-        private MiloEntry SelectedEntry
+        private MiloObject SelectedEntry
         {
             get => _selectedEntry;
             set
@@ -63,13 +65,17 @@ namespace Mackiloha.Wpf.UserControls
             Image_TexPreview.Source = null;
             if (_selectedEntry == null) return;
             
-            switch((_selectedEntry.Type ?? "").ToLower())
+            switch(_selectedEntry)
             {
-                case "tex":
+                case Tex tex:
                     try
                     {
-                        var tex = MiloOG.Tex.FromStream(new MemoryStream(_selectedEntry.Data));
-                        Image_TexPreview.Source = tex.Image.Image.ToBitmapSource();
+                        //var tex = MiloOG.Tex.FromStream(new MemoryStream(_selectedEntry.Data));
+
+                        // TODO: Fix
+                        Image_TexPreview.Source = null;
+
+                        //Image_TexPreview.Source = tex.Image.Image.ToBitmapSource();
                     }
                     catch
                     {
@@ -88,8 +94,6 @@ namespace Mackiloha.Wpf.UserControls
 
         private void BuildTreeView()
         {
-            var milo = this.Resources["Milo"] as MiloFile;
-
             TreeView_MiloTypes.Items.Clear();
             Image_TexPreview.Source = null;
 
@@ -99,7 +103,7 @@ namespace Mackiloha.Wpf.UserControls
                 ContextMenu = this.Resources["ContextMenu_RootScene"] as ContextMenu
             };
 
-            var types = milo.Entries.Select(x => x.Type).Distinct().OrderBy(x => x);
+            var types = Milo.Entries.Select(x => (string)x.Type).Distinct().OrderBy(x => x);
 
             foreach (var type in types)
             {
@@ -114,20 +118,21 @@ namespace Mackiloha.Wpf.UserControls
             TreeView_MiloTypes.Items.Add(root);
         }
 
-        private List<IMiloEntry> FilterEntriesByType(string type) =>
-            this.Milo.Entries.Where(x => x.Type.Equals(type, StringComparison.CurrentCultureIgnoreCase)).OrderBy(x => x.Name).ToList();
+        private List<MiloObject> FilterEntriesByType(string type) => this.Milo.FilterByType(type);
 
-        private List<IMiloEntry> FilteredMiloEntries => this.FilterEntriesByType(this.SelectedType);
+        private List<MiloObject> FilteredMiloEntries => this.FilterEntriesByType(this.SelectedType);
 
-        public MiloFile Milo
+        public MiloObjectDir Milo
         {
-            get => this.Resources["Milo"] as MiloFile;
+            get => this.Resources["Milo"] as MiloObjectDir;
             set
             {
                 this.Resources["Milo"] = value;
                 BuildTreeView();
             }
         }
+
+        public MiloSerializer Serializer { get; set; }
 
         private void TreeView_MiloTypes_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
@@ -158,10 +163,10 @@ namespace Mackiloha.Wpf.UserControls
         private void MenuItem_MiloEntry_Extract_Click(object sender, RoutedEventArgs e)
         {
             var context = (sender as MenuItem).DataContext;
-            if (!(context is MiloEntry)) return;
+            if (!(context is MiloObject)) return;
 
-            var entry = context as MiloEntry;
-            var type = entry.Type.ToUpper();
+            var entry = context as MiloObject;
+            var type = ((string)entry.Type).ToUpper();
             var ext = entry.Extension();
 
             sfd.Title = $"Save {type} file";
@@ -170,17 +175,17 @@ namespace Mackiloha.Wpf.UserControls
 
             if (sfd.ShowDialog() == false) return;
 
-            File.WriteAllBytes(sfd.FileName, entry.Data);
+            Serializer.WriteToFile(sfd.FileName, entry as ISerializable);
             MessageBox.Show($"Successfully saved {sfd.SafeFileName}");
         }
         
         private void MenuItem_MiloEntry_Replace_Click(object sender, RoutedEventArgs e)
         {
             var context = (sender as MenuItem).DataContext;
-            if (!(context is MiloEntry)) return;
+            if (!(context is MiloObject)) return;
 
-            var entry = context as MiloEntry;
-            var type = entry.Type.ToUpper();
+            var entry = context as MiloObject;
+            var type = ((string)entry.Type).ToUpper();
             var ext = entry.Extension();
 
             ofd.Title = $"Open {type} file";
@@ -188,16 +193,21 @@ namespace Mackiloha.Wpf.UserControls
 
             if (ofd.ShowDialog() == false) return;
 
-            var data = File.ReadAllBytes(ofd.FileName);
-            entry.Data = data;
+            // Removes old entry
+            Milo.Entries.Remove(entry);
+
+            // Adds new entry
+            var newEntry = new MiloObjectBytes(entry.Type) { Name = entry.Name };
+            newEntry.Data = File.ReadAllBytes(ofd.FileName);
+            Milo.Entries.Add(newEntry);
         }
 
         private void MenuItem_MiloEntry_Rename_Click(object sender, RoutedEventArgs e)
         {
             var context = (sender as MenuItem).DataContext;
-            if (!(context is MiloEntry)) return;
+            if (!(context is MiloObject)) return;
 
-            var entry = context as MiloEntry;
+            var entry = context as MiloObject; // TODO: Implement?
         }
 
         private void MenuItem_MiloEntry_Delete_Click(object sender, RoutedEventArgs e)
@@ -244,7 +254,7 @@ namespace Mackiloha.Wpf.UserControls
                 return;
             }
             
-            this.SelectedEntry = (sender as ListView).SelectedItem as MiloEntry;
+            this.SelectedEntry = (sender as ListView).SelectedItem as MiloObject;
         }
         
         private void ContextMenu_MiloEntry_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -252,8 +262,8 @@ namespace Mackiloha.Wpf.UserControls
             var menu = sender as ContextMenu;
             if (menu == null) return;
 
-            var entry = menu.DataContext as MiloEntry;
-            if (entry == null || !entry.Type.Equals("Tex", StringComparison.CurrentCultureIgnoreCase)) return;
+            var entry = menu.DataContext as MiloObject;
+            if (entry == null || !((string)entry.Type).Equals("Tex", StringComparison.CurrentCultureIgnoreCase)) return;
 
             var texItem = new MenuItem()
             {
@@ -276,8 +286,8 @@ namespace Mackiloha.Wpf.UserControls
             var elm = sender as FrameworkElement;
             if (elm == null) return;
 
-            var entry = elm.DataContext as MiloEntry;
-            if (entry == null || !entry.Type.Equals("Tex", StringComparison.CurrentCultureIgnoreCase)) return;
+            var entry = elm.DataContext as MiloObject;
+            if (entry == null || !((string)entry.Type).Equals("Tex", StringComparison.CurrentCultureIgnoreCase)) return;
 
             sfd.Title = $"Save PNG file";
             sfd.Filter = $"PNG|*.png";
@@ -287,7 +297,8 @@ namespace Mackiloha.Wpf.UserControls
             
             try
             {
-                var tex = MiloOG.Tex.FromStream(new MemoryStream(entry.Data));
+                // TODO: Re-implement this!
+                var tex = MiloOG.Tex.FromStream(new MemoryStream((entry as MiloObjectBytes).Data));
                 tex.Image.SaveAs(sfd.FileName);
                 MessageBox.Show($"Successfully saved {sfd.SafeFileName}");
             }
@@ -302,18 +313,25 @@ namespace Mackiloha.Wpf.UserControls
             var elm = sender as FrameworkElement;
             if (elm == null) return;
 
-            var entry = elm.DataContext as MiloEntry;
-            if (entry == null || !entry.Type.Equals("Tex", StringComparison.CurrentCultureIgnoreCase)) return;
+            var entry = elm.DataContext as MiloObject;
+            if (entry == null || !((string)entry.Type).Equals("Tex", StringComparison.CurrentCultureIgnoreCase)) return;
             
             ofd.Title = $"Open PNG file";
             ofd.Filter = $"PNG|*.png";
 
             if (ofd.ShowDialog() == false) return;
 
-            var tex = MiloOG.Tex.FromStream(new MemoryStream(entry.Data));
+            // TODO: Clean this up A LOT!
+            var tex = MiloOG.Tex.FromStream(new MemoryStream((entry as MiloObjectBytes).Data));
             tex.Image.ImportImageFromFile(ofd.FileName);
             var data = tex.WriteToBytes();
-            entry.Data = data;
+
+            // Removes old entry
+            Milo.Entries.Remove(entry);
+
+            // Adds new entry
+            var newEntry = new MiloObjectBytes(entry.Type) { Name = entry.Name, Data = data };
+            Milo.Entries.Add(newEntry);
             
             // Updates image
             SelectedEntryChanged();

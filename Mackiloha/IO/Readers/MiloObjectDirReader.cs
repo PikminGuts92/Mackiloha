@@ -21,7 +21,7 @@ namespace Mackiloha.IO
             {
                 Type = ar.ReadString(),
                 Name = ar.ReadString()
-            });
+            }).ToArray();
 
             // Skips external resource paths?
             entryCount = ar.ReadInt32();
@@ -33,8 +33,7 @@ namespace Mackiloha.IO
                 
                 try
                 {
-                    ReadFromStream(ar.BaseStream, entry.Type, out ISerializable file);
-                    var miloEntry = file as MiloObject; // Assume milo object for now
+                    var miloEntry = ReadFromStream(ar.BaseStream, entry.Type);
                     miloEntry.Name = entry.Name;
 
                     dir.Entries.Add(miloEntry);
@@ -56,14 +55,29 @@ namespace Mackiloha.IO
 
                         ar.BaseStream.Position += 4; // Skips padding
                         
+                        if (ar.BaseStream.Position >= ar.BaseStream.Length)
+                        {
+                            // EOF reached
+                            break;
+                        }
+
                         // Checks magic because ADDE padding can also be found in some Tex files as pixel data
                         // This should reduce false positives
                         magic = ar.ReadInt32();
                         ar.BaseStream.Position -= 4;
 
                     } while (magic < 0 || magic > 0xFF);
+                    
 
-                    // TODO: Read byte array data instead of skipping
+                    // Reads data as a byte array
+                    var entrySize = ar.BaseStream.Position - (entryOffset + 4);
+                    ar.BaseStream.Position = entryOffset;
+
+                    var entryBytes = new MiloObjectBytes(entry.Type) { Name = entry.Name };
+                    entryBytes.Data = ar.ReadBytes((int)entrySize);
+                    dir.Entries.Add(entryBytes);
+
+                    ar.BaseStream.Position += 4;
                 }
             }
         }

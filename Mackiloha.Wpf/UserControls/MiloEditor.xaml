@@ -4,11 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Mackiloha.Wpf.UserControls"
-             xmlns:milo="clr-namespace:Mackiloha.Milo;assembly=Mackiloha"
+             xmlns:mack="clr-namespace:Mackiloha;assembly=Mackiloha"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
-        <milo:MiloFile x:Name="Milo" x:Key="Milo"/>
+        <mack:MiloObjectDir x:Name="Milo" x:Key="Milo"/>
 
         <ContextMenu x:Name="ContextMenu_RootScene" x:Key="ContextMenu_RootScene" x:Shared="false">
             <MenuItem Header="Import" Click="MenuItem_RootScene_Import_Click"/>

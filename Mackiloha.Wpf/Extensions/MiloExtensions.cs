@@ -13,16 +13,17 @@ namespace Mackiloha.Wpf.Extensions
 {
     public static class MiloExtensions
     {
-        public static int Size(this IMiloEntry entry) => entry is MiloEntry ? (entry as MiloEntry).Data.Length : -1;
+        public static int Size(this MiloObject entry) => entry is MiloObjectBytes ? (entry as MiloObjectBytes).Data.Length : -1;
 
-        public static string Extension(this IMiloEntry entry)
+        public static string Extension(this MiloObject entry)
         {
-            if (entry == null || !entry.Name.Contains('.')) return "";
+            if (entry == null || !((string)entry.Name).Contains('.')) return "";
             return Path.GetExtension(entry.Name); // Returns .cs
         }
 
-        public static void ExportToGLTF(this MiloFile milo, string path)
+        public static void ExportToGLTF(this MiloObjectDir milo, string path)
         {
+            /*
             var pathDirectory = Path.GetDirectoryName(path);
 
             var textures = milo.Entries
@@ -455,25 +456,22 @@ namespace Mackiloha.Wpf.Extensions
                 nodes.Add(node);
                 return nodeIndex[name];
             }
-
-            /*
-            foreach (var n in meshes.Union<MiloOG.AbstractEntry>(views).Union<MiloOG.AbstractEntry>(transforms)) CreateNode(n.Name);
-
-            scene.Scene = 0;
-            scene.Scenes = new Scene[] { new Scene() { Nodes = Enumerable.Range(0, nodes.Count).ToArray() } };
-            */
-
-            /*
-            foreach (var view in views) CreateNode(view.Name);
             
-            // Finds root node
-            var childrenNodes = nodes.SelectMany(x => x.Children ?? new int[0]).Distinct();
-            var parentNodes = Enumerable.Range(0, nodes.Count);
-            var rootIdx = parentNodes.Except(childrenNodes).Single();
+            // foreach (var n in meshes.Union<MiloOG.AbstractEntry>(views).Union<MiloOG.AbstractEntry>(transforms)) CreateNode(n.Name);
+            // 
+            // scene.Scene = 0;
+            // scene.Scenes = new Scene[] { new Scene() { Nodes = Enumerable.Range(0, nodes.Count).ToArray() } };
 
-            scene.Scene = 0;
-            scene.Scenes = new Scene[] { new Scene() { Nodes = new int[] { rootIdx } } };
-            */
+            
+            // foreach (var view in views) CreateNode(view.Name);
+            // 
+            // // Finds root node
+            // var childrenNodes = nodes.SelectMany(x => x.Children ?? new int[0]).Distinct();
+            // var parentNodes = Enumerable.Range(0, nodes.Count);
+            // var rootIdx = parentNodes.Except(childrenNodes).Single();
+            // 
+            // scene.Scene = 0;
+            // scene.Scenes = new Scene[] { new Scene() { Nodes = new int[] { rootIdx } } };
 
             List<string> GetAllSubs(MiloOG.AbstractEntry aEntry)
             {
@@ -507,6 +505,7 @@ namespace Mackiloha.Wpf.Extensions
 
             var json = scene.ToJson();
             File.WriteAllText(path, json);
+            */
         }
 
         public static Matrix4<float> ToGLMatrix(this Matrix miloMatrix) =>
@@ -533,8 +532,8 @@ namespace Mackiloha.Wpf.Extensions
                 M43 = miloMatrix.M42,
                 M44 = miloMatrix.M44
             };
-
-        public static void WriteTree(this MiloFile milo, string path)
+        /*
+        public static void WriteTree(this MiloObjectDir milo, string path)
         {
             using (StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8))
             {
@@ -597,10 +596,8 @@ namespace Mackiloha.Wpf.Extensions
                 
                 foreach (var entry in milo.Entries)
                 {
-                    /*
-                    if (!children.ContainsKey(entry.Name))
-                        children.Add(entry.Name, new List<string>());
-                    */
+                    // if (!children.ContainsKey(entry.Name))
+                    //     children.Add(entry.Name, new List<string>());
 
                     var trans = GetTransformName(entry.Name);
                     if (trans == null || trans == entry.Name) continue;
@@ -656,6 +653,6 @@ namespace Mackiloha.Wpf.Extensions
             {
                 WriteTree(milo, sub, sw, depth + 1);
             }
-        }
+        }*/
     }
 }
