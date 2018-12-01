@@ -35,5 +35,7 @@ namespace Mackiloha
                 return string.Compare(x.Name, y.Name);
             });
         }
+
+        public override MiloString Type => "ObjectDir";
     }
 }

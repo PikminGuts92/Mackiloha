@@ -11,5 +11,7 @@ namespace Mackiloha.Render
 
         public Sphere Origin;
         public float KeyFrame;
+
+        public override MiloString Type => "Light";
     }
 }

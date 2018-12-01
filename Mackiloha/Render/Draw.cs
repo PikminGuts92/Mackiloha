@@ -10,5 +10,7 @@ namespace Mackiloha.Render
 
         public List<MiloString> Drawables { get; } = new List<MiloString>();
         public Sphere Boundry { get; set; }
+
+        public override MiloString Type => "Draw";
     }
 }

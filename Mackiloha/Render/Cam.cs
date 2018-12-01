@@ -10,5 +10,7 @@ namespace Mackiloha.Render
         public Trans Trans => new Trans();
 
         public Matrix4 Mat { get; set; }
+
+        public override MiloString Type => "Cam";
     }
 }

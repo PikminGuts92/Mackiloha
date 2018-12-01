@@ -19,5 +19,7 @@ namespace Mackiloha.Render
         public List<LightEvent> Events { get; } = new List<LightEvent>();
 
         public MiloString LightAnimation { get; set; }
+
+        public override MiloString Type => "LightAnim";
     }
 }

@@ -12,5 +12,7 @@ namespace Mackiloha.Render
         public List<MiloString> Transformables { get; } = new List<MiloString>();
         public MiloString Camera { get; set; }
         public MiloString Transform { get; set; }
+
+        public override MiloString Type => "Trans";
     }
 }

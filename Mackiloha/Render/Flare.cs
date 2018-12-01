@@ -14,5 +14,7 @@ namespace Mackiloha.Render
         public Sphere Origin { get; set; }
 
         public int Strength { get; set; }
+
+        public override MiloString Type => "Flare";
     }
 }

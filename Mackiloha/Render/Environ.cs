@@ -8,5 +8,7 @@ namespace Mackiloha.Render
     {
         public List<List<MiloString>> Drawables { get; } = new List<List<MiloString>>();
         public List<float> Values { get; } = new List<float>();
+
+        public override MiloString Type => "Environ";
     }
 }

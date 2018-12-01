@@ -12,5 +12,7 @@ namespace Mackiloha.Render
         public Draw Draw => new Draw();
 
         public MiloString MainView { get; set; }
+
+        public override MiloString Type => "View";
     }
 }

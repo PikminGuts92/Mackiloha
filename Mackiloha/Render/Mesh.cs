@@ -59,5 +59,7 @@ namespace Mackiloha.Render
 
         public List<FaceGroup> Groups { get; } = new List<FaceGroup>();
         public List<Bone> Bones { get; } = new List<Bone>();
+
+        public override MiloString Type => "Mesh";
     }
 }

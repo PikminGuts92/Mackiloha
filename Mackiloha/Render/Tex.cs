@@ -15,6 +15,6 @@ namespace Mackiloha.Render
 
         public HMXBitmap Bitmap { get; set; }
 
-        public override MiloString Type { get => "Tex"; internal set => base.Type = value; }
+        public override MiloString Type => "Tex";
     }
 }

@@ -11,5 +11,7 @@ namespace Mackiloha.Render
 
         MiloString Camera { get; set; }
         MiloString Animation { get; set; }
+
+        public override MiloString Type => "CamAnim";
     }
 }
