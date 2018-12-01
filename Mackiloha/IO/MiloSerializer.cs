@@ -80,6 +80,9 @@ namespace Mackiloha.IO
                 case HMXBitmap bitmap:
                     WriteToStream(aw, bitmap);
                     break;
+                case MiloObjectBytes bytes:
+                    WriteToStream(aw, bytes);
+                    break;
                 default:
                     throw new NotImplementedException($"Serialization of {obj.GetType().Name} is not supported yet!");
             } 

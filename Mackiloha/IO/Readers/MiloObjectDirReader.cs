@@ -30,55 +30,59 @@ namespace Mackiloha.IO
             foreach (var entry in entries)
             {
                 var entryOffset = ar.BaseStream.Position;
-                
-                try
-                {
-                    var miloEntry = ReadFromStream(ar.BaseStream, entry.Type);
-                    miloEntry.Name = entry.Name;
+                // TODO: De-serialize entries
 
-                    dir.Entries.Add(miloEntry);
-                    ar.BaseStream.Position += 4; // Skips padding
-                }
-                catch (Exception ex)
-                {
-                    ar.BaseStream.Position = entryOffset;
-                    int magic;
+                //try
+                //{
+                //    var miloEntry = ReadFromStream(ar.BaseStream, entry.Type);
+                //    miloEntry.Name = entry.Name;
 
-                    do
+                //    dir.Entries.Add(miloEntry);
+                //    ar.BaseStream.Position += 4; // Skips padding
+                //    continue;
+                //}
+                //catch (Exception ex)
+                //{
+                //    // Catch exception and log?
+                //}
+
+                ar.BaseStream.Position = entryOffset;
+                int magic;
+
+                do
+                {
+                    int size = (int)ar.FindNext(ADDE_PADDING);
+                    if (size == -1)
                     {
-                        int size = (int)ar.FindNext(ADDE_PADDING);
-                        if (size == -1)
-                        {
-                            ar.BaseStream.Seek(0, SeekOrigin.End);
-                            break; // End of file reached!
-                        }
+                        ar.BaseStream.Seek(0, SeekOrigin.End);
+                        break; // End of file reached!
+                    }
 
-                        ar.BaseStream.Position += 4; // Skips padding
-                        
-                        if (ar.BaseStream.Position >= ar.BaseStream.Length)
-                        {
-                            // EOF reached
-                            break;
-                        }
+                    ar.BaseStream.Position += 4; // Skips padding
 
-                        // Checks magic because ADDE padding can also be found in some Tex files as pixel data
-                        // This should reduce false positives
-                        magic = ar.ReadInt32();
-                        ar.BaseStream.Position -= 4;
+                    if (ar.BaseStream.Position >= ar.BaseStream.Length)
+                    {
+                        // EOF reached
+                        break;
+                    }
 
-                    } while (magic < 0 || magic > 0xFF);
-                    
+                    // Checks magic because ADDE padding can also be found in some Tex files as pixel data
+                    // This should reduce false positives
+                    magic = ar.ReadInt32();
+                    ar.BaseStream.Position -= 4;
 
-                    // Reads data as a byte array
-                    var entrySize = ar.BaseStream.Position - (entryOffset + 4);
-                    ar.BaseStream.Position = entryOffset;
+                } while (magic < 0 || magic > 0xFF);
 
-                    var entryBytes = new MiloObjectBytes(entry.Type) { Name = entry.Name };
-                    entryBytes.Data = ar.ReadBytes((int)entrySize);
-                    dir.Entries.Add(entryBytes);
 
-                    ar.BaseStream.Position += 4;
-                }
+                // Reads data as a byte array
+                var entrySize = ar.BaseStream.Position - (entryOffset + 4);
+                ar.BaseStream.Position = entryOffset;
+
+                var entryBytes = new MiloObjectBytes(entry.Type) { Name = entry.Name };
+                entryBytes.Data = ar.ReadBytes((int)entrySize);
+                dir.Entries.Add(entryBytes);
+
+                ar.BaseStream.Position += 4;
             }
         }
     }
