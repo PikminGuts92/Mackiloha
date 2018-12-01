@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -9,7 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using Boom.Data;
 using Boom.Extensions;
 using Boom.Models;
+using Mackiloha;
 using Mackiloha.Ark;
+using Mackiloha.IO;
 using Mackiloha.Milo2;
 
 namespace Boom.Controllers
@@ -287,7 +290,16 @@ namespace Boom.Controllers
             foreach (var miloEntry in miloEntries)
             {
                 var arkEntry = ark.Entries.First(x => x.FullPath == miloEntry.Path);
-                var milo = MiloFile.ReadFromStream(ark.GetArkEntryFileStream(arkEntry));
+                var mf = MiloFile.ReadFromStream(ark.GetArkEntryFileStream(arkEntry));
+                var serializer = new MiloSerializer(new SystemInfo() { BigEndian = mf.BigEndian });
+                MiloObjectDir milo;
+
+
+                using (var ms = new MemoryStream(mf.Data))
+                {
+                    milo = serializer.ReadFromStream<MiloObjectDir>(ms);
+                }
+
                 totalMiloEntries += milo.Entries.Count;
 
                 var contextEntry = _miloContext.Milos.FirstOrDefault(x => x.ArkEntry == miloEntry);
@@ -302,19 +314,31 @@ namespace Boom.Controllers
                     _miloContext.SaveChanges();
                 }
 
-                contextEntry.Version = (int)milo.Version;
-                contextEntry.TotalSize = milo.Size;
+                contextEntry.Version = mf.Version;
+                contextEntry.TotalSize = mf.Data.Length;
 
-                contextEntry.Name = milo?.DirectoryEntry?.Name ?? "";
-                contextEntry.Type = milo?.DirectoryEntry?.Type ?? "";
-                contextEntry.Size = (milo.DirectoryEntry == null || milo.DirectoryEntry.Data == null) ? -1 : milo.DirectoryEntry.Data.Length;
-                contextEntry.Magic = (milo.DirectoryEntry == null) ? -1 : milo.DirectoryEntry.GetMagic();
+                contextEntry.Name = (string)milo.Name ?? "";
+                contextEntry.Type = (string)milo.Type ?? "";
+
+                var dirEntry = milo.Entries
+                    .Where(x => ((string)x.Type).EndsWith("Dir") && x is MiloObjectBytes)
+                    .Select(x => x as MiloObjectBytes)
+                    .FirstOrDefault();
+
+                if (dirEntry != null)
+                {
+                    contextEntry.Size = dirEntry.Data.Length;
+                    contextEntry.Magic = dirEntry.GetMagic();
+                }
+                else
+                {
+                    contextEntry.Size = -1;
+                    contextEntry.Magic = -1;
+                }
                 
                 // Updates milo entries
-                foreach (var entry in milo.Entries)
+                foreach (var mEntry in milo.Entries.Where(x => x is MiloObjectBytes && x != dirEntry).Select(y => y as MiloObjectBytes))
                 {
-                    var mEntry = entry as MiloEntry;
-
                     var contextMEntry = _miloContext.MiloEntries.FirstOrDefault(x => x.Milo == contextEntry && x.Name == mEntry.Name && x.Type == mEntry.Type);
                     if (contextMEntry == null)
                     {
@@ -327,8 +351,8 @@ namespace Boom.Controllers
                         _miloContext.SaveChanges();
                     }
 
-                    contextMEntry.Name = mEntry.Name ?? "";
-                    contextMEntry.Type = mEntry.Type ?? "";
+                    contextMEntry.Name = (string)mEntry.Name ?? "";
+                    contextMEntry.Type = (string)mEntry.Type ?? "";
                     contextMEntry.Size = mEntry.Data.Length;
                     contextMEntry.Magic = mEntry.GetMagic();
 
