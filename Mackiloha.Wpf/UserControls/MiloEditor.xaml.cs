@@ -63,8 +63,29 @@ namespace Mackiloha.Wpf.UserControls
         private void SelectedEntryChanged()
         {
             Image_TexPreview.Source = null;
-            if (_selectedEntry == null) return;
+            if (_selectedEntry == null || !(_selectedEntry is MiloObjectBytes)) return;
+
+            var miloEntry = _selectedEntry as MiloObjectBytes;
             
+
+            switch (_selectedEntry.Type)
+            {
+                case "Tex":
+                    try
+                    {
+
+                        var tex = Serializer.ReadFromMiloObjectBytes<Tex>(miloEntry);
+                        Image_TexPreview.Source = tex.Bitmap.ToBitmapSource();
+                    }
+                    catch
+                    {
+                        Image_TexPreview.Source = null;
+                    }
+
+                    break;
+            }
+
+            /*
             switch(_selectedEntry)
             {
                 case Tex tex:
@@ -76,6 +97,9 @@ namespace Mackiloha.Wpf.UserControls
                         Image_TexPreview.Source = null;
 
                         //Image_TexPreview.Source = tex.Image.Image.ToBitmapSource();
+
+
+
                     }
                     catch
                     {
@@ -84,7 +108,7 @@ namespace Mackiloha.Wpf.UserControls
                     break;
                 default:
                     return;
-            }
+            }*/
         }
 
         public MiloEditor()

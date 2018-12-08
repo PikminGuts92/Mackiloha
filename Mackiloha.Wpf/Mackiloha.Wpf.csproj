@@ -53,6 +53,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\MiloExtensions.cs" />
+    <Compile Include="Extensions\SerializerExtensions.cs" />
+    <Compile Include="Extensions\TextureExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UserControls\MiloEditor.xaml.cs">
       <DependentUpon>MiloEditor.xaml</DependentUpon>
