@@ -73,5 +73,7 @@ namespace Mackiloha.IO.Serializers
         }
 
         public override bool IsOfType(ISerializable data) => data is HMXBitmap;
+
+        public override int Magic() => 1;
     }
 }

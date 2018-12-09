@@ -9,7 +9,7 @@ namespace Mackiloha.IO
 {
     public class MiloSerializer
     {
-        private readonly SystemInfo Info;
+        public readonly SystemInfo Info;
         private readonly AbstractSerializer[] Serializers;
         
         public MiloSerializer(SystemInfo info)

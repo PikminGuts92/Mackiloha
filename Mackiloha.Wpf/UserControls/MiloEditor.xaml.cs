@@ -73,7 +73,6 @@ namespace Mackiloha.Wpf.UserControls
                 case "Tex":
                     try
                     {
-
                         var tex = Serializer.ReadFromMiloObjectBytes<Tex>(miloEntry);
                         Image_TexPreview.Source = tex.Bitmap.ToBitmapSource();
                     }

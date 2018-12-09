@@ -13,9 +13,10 @@ namespace Mackiloha.IO.Serializers
         {
             var tex = data as Tex;
 
-            // TODO: Add version check
-            if (ar.ReadInt32() != 0x08)
-                throw new NotSupportedException($"TexReader: Expected 0x08 at offset 0");
+            int version = ReadMagic(ar, data);
+
+            if (version >= 10)
+                ar.BaseStream.Position += 9; // Skips zeros
 
             tex.Width = ar.ReadInt32();
             tex.Height = ar.ReadInt32();
@@ -39,6 +40,10 @@ namespace Mackiloha.IO.Serializers
             var tex = data as Tex;
 
             // TODO: Add version check
+            var version = Magic();
+            if (version >= 10)
+                aw.Write(new byte[9]);
+
             aw.Write((int)0x08);
 
             aw.Write((int)tex.Width);
@@ -61,5 +66,20 @@ namespace Mackiloha.IO.Serializers
         }
 
         public override bool IsOfType(ISerializable data) => data is Tex;
+
+        public override int Magic()
+        {
+            switch(MiloSerializer.Info.Version)
+            {
+                case 10:
+                    // GH1
+                    return 8;
+                case 24:
+                    // GH2
+                    return 10; // TODO: Take into account other factors for demos
+                default:
+                    return -1;
+            }
+        }
     }
 }

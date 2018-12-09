@@ -36,6 +36,9 @@ namespace Mackiloha
             });
         }
 
+        // TODO: Change object to ISerializable
+        public Dictionary<string, object> Extras { get; } = new Dictionary<string, object>();
+
         public override MiloString Type => "ObjectDir";
     }
 }
