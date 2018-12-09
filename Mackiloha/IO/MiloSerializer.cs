@@ -1,16 +1,39 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.IO;
+using Mackiloha.IO.Serializers;
 using Mackiloha.Render;
 
 namespace Mackiloha.IO
 {
-    public partial class MiloSerializer
+    public class MiloSerializer
     {
-        private readonly SystemInfo _info;
-
+        private readonly SystemInfo Info;
+        private readonly AbstractSerializer[] Serializers;
+        
         public MiloSerializer(SystemInfo info)
         {
-            _info = info;
+            Info = info;
+
+            Serializers = new AbstractSerializer[]
+            {
+                new HMXBitmapSerializer(this),
+                new MiloObjectBytesSerializer(this),
+                new MiloObjectDirSerializer(this),
+                new TexSerializer(this)
+            };
+        }
+
+        public MiloSerializer(SystemInfo info, AbstractSerializer[] serializers)
+        {
+            Info = info;
+
+            // Just to be extra safe
+            if (serializers == null)
+                Serializers = new AbstractSerializer[0];
+            else
+                Serializers = serializers.Where(x => x != default(AbstractSerializer)).ToArray();
         }
 
         public void ReadFromFile<T>(string path) where T : ISerializable, new()
@@ -24,8 +47,16 @@ namespace Mackiloha.IO
         public T ReadFromStream<T>(Stream stream) where T : ISerializable, new()
         {
             var data = new T();
-            var ar = new AwesomeReader(stream, _info.BigEndian);
+            var ar = new AwesomeReader(stream, Info.BigEndian);
 
+            var serializer = Serializers.FirstOrDefault(x => x.IsOfType(data));
+
+            if (serializer == null)
+                throw new NotImplementedException($"Deserialization of {typeof(T).Name} is not supported yet!");
+
+            serializer.ReadFromStream(ar, data);
+
+            /*
             switch (data)
             {
                 case MiloObjectDir dir:
@@ -35,11 +66,11 @@ namespace Mackiloha.IO
                     ReadFromStream(ar, tex);
                     break;
                 case HMXBitmap bitmap:
-                    ReadFromStream(ar, bitmap);
+                    this.ReadFromStream(ar, bitmap);
                     break;
                 default:
                     throw new NotImplementedException($"Deserialization of {typeof(T).Name} is not supported yet!");
-            }
+            }*/
 
             return data;
         }
@@ -70,8 +101,16 @@ namespace Mackiloha.IO
 
         public void WriteToStream(Stream stream, ISerializable obj)
         {
-            var aw = new AwesomeWriter(stream, _info.BigEndian);
+            var aw = new AwesomeWriter(stream, Info.BigEndian);
 
+            var serializer = Serializers.FirstOrDefault(x => x.IsOfType(obj));
+
+            if (serializer == null)
+                throw new NotImplementedException($"Serialization of {obj.GetType().Name} is not supported yet!");
+
+            serializer.WriteToStream(aw, obj);
+
+            /*
             switch (obj)
             {
                 case Tex tex:
@@ -85,7 +124,7 @@ namespace Mackiloha.IO
                     break;
                 default:
                     throw new NotImplementedException($"Serialization of {obj.GetType().Name} is not supported yet!");
-            } 
+            } */
         }
     }
 }

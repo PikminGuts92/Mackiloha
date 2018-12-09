@@ -2,19 +2,23 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Mackiloha.IO
+namespace Mackiloha.IO.Serializers
 {
-    public partial class MiloSerializer
+    public class HMXBitmapSerializer : AbstractSerializer
     {
-        private void ReadFromStream(AwesomeReader ar, HMXBitmap bitmap)
+        public HMXBitmapSerializer(MiloSerializer miloSerializer) : base(miloSerializer) { }
+
+        public override void ReadFromStream(AwesomeReader ar, ISerializable data)
         {
+            var bitmap = data as HMXBitmap;
+
             if (ar.ReadByte() != 0x01)
                 throw new NotSupportedException($"HMXBitmapReader: Expected 0x01 at offset 0");
 
             bitmap.Bpp = ar.ReadByte();
             bitmap.Encoding = ar.ReadInt32();
             bitmap.MipMaps = ar.ReadByte();
-            
+
             bitmap.Width = ar.ReadUInt16();
             bitmap.Height = ar.ReadUInt16();
             bitmap.BPL = ar.ReadUInt16();
@@ -23,7 +27,28 @@ namespace Mackiloha.IO
             bitmap.RawData = ar.ReadBytes(CalculateTextureByteSize(bitmap.Encoding, bitmap.Width, bitmap.Height, bitmap.Bpp, bitmap.MipMaps));
         }
 
-        private int CalculateTextureByteSize(int encoding, int w, int h, int bpp, int mips)
+        public override void WriteToStream(AwesomeWriter aw, ISerializable data)
+        {
+            var bitmap = data as HMXBitmap;
+
+            aw.Write((byte)0x01);
+
+            aw.Write((byte)bitmap.Bpp);
+            aw.Write((int)bitmap.Encoding);
+            aw.Write((byte)bitmap.MipMaps);
+
+            aw.Write((short)bitmap.Width);
+            aw.Write((short)bitmap.Height);
+            aw.Write((short)bitmap.BPL);
+
+            aw.Write(new byte[19]);
+
+            byte[] bytes = new byte[CalculateTextureByteSize(bitmap.Encoding, bitmap.Width, bitmap.Height, bitmap.Bpp, bitmap.MipMaps)];
+            Array.Copy(bitmap.RawData, bytes, bytes.Length);
+            aw.Write(bytes);
+        }
+
+        private static int CalculateTextureByteSize(int encoding, int w, int h, int bpp, int mips)
         {
             int bytes = 0;
 
@@ -46,5 +71,7 @@ namespace Mackiloha.IO
 
             return bytes;
         }
+
+        public override bool IsOfType(ISerializable data) => data is HMXBitmap;
     }
 }

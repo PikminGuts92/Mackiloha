@@ -46,7 +46,7 @@ namespace MiloStardust
         private void OpenMilo(string path)
         {
             var mf = MiloFile.ReadFromFile(path);
-            var serializer = new MiloSerializer(new SystemInfo() { BigEndian = mf.BigEndian });
+            var serializer = new MiloSerializer(new SystemInfo() { BigEndian = mf.BigEndian, Version = mf.Version });
             miloPath = path;
 
             // TODO: Add try-catch block

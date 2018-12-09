@@ -291,7 +291,7 @@ namespace Boom.Controllers
             {
                 var arkEntry = ark.Entries.First(x => x.FullPath == miloEntry.Path);
                 var mf = MiloFile.ReadFromStream(ark.GetArkEntryFileStream(arkEntry));
-                var serializer = new MiloSerializer(new SystemInfo() { BigEndian = mf.BigEndian });
+                var serializer = new MiloSerializer(new SystemInfo() { BigEndian = mf.BigEndian, Version = mf.Version });
                 MiloObjectDir milo;
 
 

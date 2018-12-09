@@ -1,17 +1,21 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Mackiloha.IO
+namespace Mackiloha.IO.Serializers
 {
-    public partial class MiloSerializer
+    public class MiloObjectDirSerializer : AbstractSerializer
     {
-        private static byte[] ADDE_PADDING = { 0xAD, 0xDE, 0xAD, 0xDE }; // Used to pad files
+        private static readonly byte[] ADDE_PADDING = { 0xAD, 0xDE, 0xAD, 0xDE }; // Used to pad files
 
-        private void ReadFromStream(AwesomeReader ar, MiloObjectDir dir)
+        public MiloObjectDirSerializer(MiloSerializer miloSerializer) : base(miloSerializer) { }
+
+        public override void ReadFromStream(AwesomeReader ar, ISerializable data)
         {
+            var dir = data as MiloObjectDir;
+
             // TODO: Add version check
             if (ar.ReadInt32() != 0x0A)
                 throw new NotSupportedException($"MiloObjectReader: Expected 0x0A at offset 0");
@@ -85,5 +89,12 @@ namespace Mackiloha.IO
                 ar.BaseStream.Position += 4;
             }
         }
+
+        public override void WriteToStream(AwesomeWriter aw, ISerializable data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool IsOfType(ISerializable data) => data is MiloObjectDir;
     }
 }
