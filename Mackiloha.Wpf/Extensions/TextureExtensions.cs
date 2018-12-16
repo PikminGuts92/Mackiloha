@@ -134,10 +134,10 @@ namespace Mackiloha.Wpf.Extensions
                 for (int i = 0; i < image.Length; i += 16)
                 {
                     // Palette offsets
-                    p1 =  raw[ o + r    ] & 0x0F;
-                    p2 = (raw[ o + r    ] & 0xF0) >> 4;
-                    p3 =  raw[ o + r + 1] & 0x0F;
-                    p4 = (raw[ o + r + 1] & 0xF0) >> 4;
+                    p1 = (raw[ o + r    ] & 0x0F) << 2;
+                    p2 = (raw[ o + r    ] & 0xF0) >> 2;
+                    p3 = (raw[ o + r + 1] & 0x0F) << 2;
+                    p4 = (raw[ o + r + 1] & 0xF0) >> 2;
                     // Pixel 1
                     image[i     ] = palette[p1    ];
                     image[i +  1] = palette[p1 + 1];
