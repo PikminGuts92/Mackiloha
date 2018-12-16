@@ -36,11 +36,11 @@ namespace Mackiloha.IO
                 Serializers = serializers.Where(x => x != default(AbstractSerializer)).ToArray();
         }
 
-        public void ReadFromFile<T>(string path) where T : ISerializable, new()
+        public T ReadFromFile<T>(string path) where T : ISerializable, new()
         {
             using (var fs = File.OpenRead(path))
             {
-                ReadFromStream<T>(fs);
+                return ReadFromStream<T>(fs);
             }
         }
 

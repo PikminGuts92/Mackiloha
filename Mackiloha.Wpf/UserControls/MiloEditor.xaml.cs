@@ -74,7 +74,25 @@ namespace Mackiloha.Wpf.UserControls
                     try
                     {
                         var tex = Serializer.ReadFromMiloObjectBytes<Tex>(miloEntry);
-                        Image_TexPreview.Source = tex.Bitmap.ToBitmapSource();
+
+                        if (!tex.UseExternal)
+                        {
+                            Image_TexPreview.Source = tex.Bitmap.ToBitmapSource(Serializer.Info);
+                            return;
+                        }
+
+                        var pwd = System.IO.Path.GetDirectoryName(MiloPath);
+                        var dir = System.IO.Path.GetDirectoryName(tex.ExternalPath);
+                        var file = System.IO.Path.GetFileName(tex.ExternalPath);
+
+                        var fullImagePath = System.IO.Path.Combine(pwd, dir, file);
+
+                        // Look in gen folder if not found
+                        if (!File.Exists(fullImagePath))
+                            fullImagePath = System.IO.Path.Combine(pwd, dir, "gen", $"{file}_ps2");
+
+                        var bitmap = Serializer.ReadFromFile<HMXBitmap>(fullImagePath);
+                        Image_TexPreview.Source = bitmap.ToBitmapSource(Serializer.Info);
                     }
                     catch
                     {
@@ -156,6 +174,8 @@ namespace Mackiloha.Wpf.UserControls
         }
 
         public MiloSerializer Serializer { get; set; }
+
+        public string MiloPath { get; set; }
 
         private void TreeView_MiloTypes_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
@@ -320,9 +340,35 @@ namespace Mackiloha.Wpf.UserControls
             
             try
             {
+                /*
                 // TODO: Re-implement this!
                 var tex = MiloOG.Tex.FromStream(new MemoryStream((entry as MiloObjectBytes).Data));
                 tex.Image.SaveAs(sfd.FileName);
+                */
+
+                // TODO: Merge code with bitmap previewer
+                var tex = Serializer.ReadFromMiloObjectBytes<Tex>(entry as MiloObjectBytes);
+
+                if (tex.UseExternal)
+                {
+                    var pwd = System.IO.Path.GetDirectoryName(MiloPath);
+                    var dir = System.IO.Path.GetDirectoryName(tex.ExternalPath);
+                    var file = System.IO.Path.GetFileName(tex.ExternalPath);
+
+                    var fullImagePath = System.IO.Path.Combine(pwd, dir, file);
+
+                    // Look in gen folder if not found
+                    if (!File.Exists(fullImagePath))
+                        fullImagePath = System.IO.Path.Combine(pwd, dir, "gen", $"{file}_ps2");
+
+                    var bitmap = Serializer.ReadFromFile<HMXBitmap>(fullImagePath);
+                    bitmap.SaveAs(Serializer.Info, sfd.FileName);
+                }
+                else
+                {
+                    tex.Bitmap.SaveAs(Serializer.Info, sfd.FileName);
+                }
+                
                 MessageBox.Show($"Successfully saved {sfd.SafeFileName}");
             }
             catch

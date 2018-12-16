@@ -39,15 +39,22 @@ namespace MiloStardust
             if (args != null && args.Length > 1)
             {
                 OpenMilo(args[1]);
-                
             }
         }
 
         private void OpenMilo(string path)
         {
             var mf = MiloFile.ReadFromFile(path);
-            var serializer = new MiloSerializer(new SystemInfo() { BigEndian = mf.BigEndian, Version = mf.Version });
+            var serializer = new MiloSerializer(new SystemInfo()
+            {
+                BigEndian = mf.BigEndian, Version = mf.Version,
+                // TODO: Implement full file path parsing for paltform
+                Platform = path.EndsWith("xbox", StringComparison.CurrentCultureIgnoreCase)
+                    ? Platform.X360 :
+                    Platform.PS2
+            });
             miloPath = path;
+            Milo_Editor.MiloPath = path;
 
             // TODO: Add try-catch block
             using (var ms = new MemoryStream(mf.Data))

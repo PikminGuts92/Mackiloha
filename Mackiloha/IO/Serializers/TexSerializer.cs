@@ -15,8 +15,11 @@ namespace Mackiloha.IO.Serializers
 
             int version = ReadMagic(ar, data);
 
-            if (version >= 10)
-                ar.BaseStream.Position += 9; // Skips zeros
+            // Skips zeros
+            if (version >= 10 && MiloSerializer.Info.Version == 24)
+                ar.BaseStream.Position += 9; // GH2 PS2
+            else if (version >= 10)
+                ar.BaseStream.Position += 13; // GH2 360
 
             tex.Width = ar.ReadInt32();
             tex.Height = ar.ReadInt32();
@@ -24,15 +27,18 @@ namespace Mackiloha.IO.Serializers
 
             tex.ExternalPath = ar.ReadString();
 
-            if (ar.ReadSingle() != -8.0f)
-                throw new NotSupportedException("TexReader: Expected -8.0");
+            float unknown = ar.ReadSingle();
+
+            if (unknown != -8.0f && unknown != 0.0f)
+                throw new NotSupportedException("TexReader: Expected -8.0 or 0.0");
 
             if (ar.ReadInt32() != 0x01)
                 throw new NotSupportedException($"TexReader: Expected 0x01");
 
             tex.UseExternal = ar.ReadBoolean();
 
-            tex.Bitmap = MiloSerializer.ReadFromStream<HMXBitmap>(ar.BaseStream);
+            if (!tex.UseExternal)
+                tex.Bitmap = MiloSerializer.ReadFromStream<HMXBitmap>(ar.BaseStream);
         }
 
         public override void WriteToStream(AwesomeWriter aw, ISerializable data)
@@ -75,8 +81,11 @@ namespace Mackiloha.IO.Serializers
                     // GH1
                     return 8;
                 case 24:
-                    // GH2
+                    // GH2 PS2
                     return 10; // TODO: Take into account other factors for demos
+                case 25:
+                    // GH2 360 / RB1
+                    return 10;
                 default:
                     return -1;
             }
