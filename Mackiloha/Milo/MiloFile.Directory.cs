@@ -35,6 +35,7 @@ namespace Mackiloha.Milo
                 milo._externalResources = new List<string>(GetExternalResources(ar));
             else if (version == MiloVersion.V24)
             {
+                /*
                 if (dirName == "alterna1") // Hacky fix, please remove!
                 {
                     ar.BaseStream.Position += 117;
@@ -60,7 +61,7 @@ namespace Mackiloha.Milo
                     ar.BaseStream.Position += 4;
 
                     milo.Entries.Add(tran);
-                }
+                }*/
 
                 // Skips unknown stuff for now
                 ar.FindNext(ADDE_PADDING);

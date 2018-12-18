@@ -25,7 +25,10 @@ namespace Mackiloha.IO.Serializers
                 // Parses directory type/name
                 dirType = ar.ReadString();
                 dirName = ar.ReadString();
-                ar.BaseStream.Position += 8; // Skips string count + total length
+
+                //ar.BaseStream.Position += 8; // Skips string count + total length
+                dir.Extras.Add("Num1", ar.ReadInt32());
+                dir.Extras.Add("Num2", ar.ReadInt32());
             }
 
             int entryCount = ar.ReadInt32();
@@ -93,7 +96,57 @@ namespace Mackiloha.IO.Serializers
 
         public override void WriteToStream(AwesomeWriter aw, ISerializable data)
         {
-            throw new NotImplementedException();
+            var dir = data as MiloObjectDir;
+            aw.Write((int)Magic());
+
+            if (Magic() >= 24)
+            {
+                // Write extra info
+                var dirEntry = dir.Extras["DirectoryEntry"] as MiloObjectBytes;
+                aw.Write((string)dirEntry.Type);
+                aw.Write((string)dirEntry.Name);
+
+                /*
+                var entryNameLengths = dir.Entries.Select(x => ((string)x.Name).Length).Sum();
+                aw.Write(0); // Unknown
+                aw.Write(1 + ((string)dirEntry.Name).Length + dir.Entries.Count + entryNameLengths);
+                */
+
+                aw.Write((int)dir.Extras["Num1"]);
+                aw.Write((int)dir.Extras["Num2"]);
+                aw.Write((int)dir.Entries.Count);
+            }
+
+            foreach (var entry in dir.Entries)
+            {
+                aw.Write((string)entry.Type);
+                aw.Write((string)entry.Name);
+            }
+
+            if (Magic() >= 24)
+            {
+                var dirEntry = dir.Extras["DirectoryEntry"] as MiloObjectBytes;
+                MiloSerializer.WriteToStream(aw.BaseStream, dirEntry);
+                aw.Write(ADDE_PADDING);
+            }
+            else if (Magic() <= 10)
+            {
+                /*
+                var texEntries = dir.Entries.Where(x => x.Type == "Tex").ToArray();
+                aw.Write((int)texEntries.Count());
+                aw.Write(new byte[texEntries.Length << 2]); // TODO: Write external bitmap paths?
+                */
+
+                var external = dir.Extras["ExternalResources"] as List<string>;
+                aw.Write((int)external.Count());
+                external.ForEach(x => aw.Write((string)x));
+            }
+
+            foreach (var entry in dir.Entries)
+            {
+                MiloSerializer.WriteToStream(aw.BaseStream, entry as ISerializable); // TODO: Don't cast
+                aw.Write(ADDE_PADDING);
+            }
         }
 
         private long GuessEntrySize(AwesomeReader ar)
