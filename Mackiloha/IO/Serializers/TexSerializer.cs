@@ -47,11 +47,11 @@ namespace Mackiloha.IO.Serializers
 
             // TODO: Add version check
             var version = Magic();
+            aw.Write((int)version);
+
             if (version >= 10)
                 aw.Write(new byte[9]);
-
-            aw.Write((int)0x08);
-
+            
             aw.Write((int)tex.Width);
             aw.Write((int)tex.Height);
             aw.Write((int)tex.Bpp);
@@ -60,14 +60,14 @@ namespace Mackiloha.IO.Serializers
             aw.Write((float)-8.0);
             aw.Write((int)0x01);
 
-            if (tex.UseExternal && tex.Bitmap != null)
+            if (!tex.UseExternal && tex.Bitmap != null)
             {
-                aw.Write(true);
+                aw.Write(false);
                 MiloSerializer.WriteToStream(aw.BaseStream, tex.Bitmap);
             }
             else
             {
-                aw.Write(false);
+                aw.Write(true);
             }
         }
 

@@ -20,5 +20,14 @@ namespace Mackiloha.Wpf.Extensions
                 return obj;
             }
         }
+
+        public static byte[] WriteToBytes(this MiloSerializer serializer, ISerializable obj)
+        {
+            using (var ms = new MemoryStream())
+            {
+                serializer.WriteToStream(ms, obj);
+                return ms.ToArray();
+            }
+        }
     }
 }
