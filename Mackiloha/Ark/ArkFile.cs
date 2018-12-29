@@ -259,7 +259,7 @@ namespace Mackiloha.Ark
 
         public void WriteHeader(string path)
         {
-            using (var fs = File.Open(path, FileMode.CreateNew, FileAccess.ReadWrite))
+            using (var fs = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                 WriteHeader(fs);
         }
 
