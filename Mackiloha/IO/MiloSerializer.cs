@@ -21,7 +21,8 @@ namespace Mackiloha.IO
                 new HMXBitmapSerializer(this),
                 new MiloObjectBytesSerializer(this),
                 new MiloObjectDirSerializer(this),
-                new TexSerializer(this)
+                new TexSerializer(this),
+                new TransSerializer(this)
             };
         }
 
