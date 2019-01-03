@@ -11,7 +11,7 @@ namespace Mackiloha.Render
         public float F2;
     }
 
-    public class Anim : RenderObject
+    public class Anim : RenderObject, ISerializable
     {
         public List<AnimEntry> Entries { get; } = new List<AnimEntry>();
         public List<MiloString> Animatables { get; } = new List<MiloString>();

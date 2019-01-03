@@ -24,7 +24,8 @@ namespace Mackiloha.IO
                 new MiloObjectBytesSerializer(this),
                 new MiloObjectDirSerializer(this),
                 new TexSerializer(this),
-                new TransSerializer(this)
+                new TransSerializer(this),
+                new ViewSerializer(this)
             };
         }
 
@@ -39,42 +40,33 @@ namespace Mackiloha.IO
                 Serializers = serializers.Where(x => x != default(AbstractSerializer)).ToArray();
         }
 
+        public void ReadFromFile(string path, ISerializable data)
+        {
+            using (var fs = File.OpenRead(path))
+                ReadFromStream(fs, data);
+        }
+
         public T ReadFromFile<T>(string path) where T : ISerializable, new()
         {
             using (var fs = File.OpenRead(path))
-            {
                 return ReadFromStream<T>(fs);
-            }
+        }
+
+        public void ReadFromStream(Stream stream, ISerializable data)
+        {
+            var serializer = Serializers.FirstOrDefault(x => x.IsOfType(data));
+
+            if (serializer == null)
+                throw new NotImplementedException($"Deserialization of {data.GetType().Name} is not supported yet!");
+
+            var ar = new AwesomeReader(stream, Info.BigEndian);
+            serializer.ReadFromStream(ar, data);
         }
 
         public T ReadFromStream<T>(Stream stream) where T : ISerializable, new()
         {
             var data = new T();
-            var ar = new AwesomeReader(stream, Info.BigEndian);
-
-            var serializer = Serializers.FirstOrDefault(x => x.IsOfType(data));
-
-            if (serializer == null)
-                throw new NotImplementedException($"Deserialization of {typeof(T).Name} is not supported yet!");
-
-            serializer.ReadFromStream(ar, data);
-
-            /*
-            switch (data)
-            {
-                case MiloObjectDir dir:
-                    ReadFromStream(ar, dir);
-                    break;
-                case Tex tex:
-                    ReadFromStream(ar, tex);
-                    break;
-                case HMXBitmap bitmap:
-                    this.ReadFromStream(ar, bitmap);
-                    break;
-                default:
-                    throw new NotImplementedException($"Deserialization of {typeof(T).Name} is not supported yet!");
-            }*/
-
+            ReadFromStream(stream, data);
             return data;
         }
 

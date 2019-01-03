@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Mackiloha.Render
 {
-    public class Draw : RenderObject
+    public class Draw : RenderObject, ISerializable
     {
         public bool Showing { get; set; } = true;
 

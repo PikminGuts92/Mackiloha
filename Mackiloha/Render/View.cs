@@ -5,7 +5,7 @@ using Mackiloha.Render.Interfaces;
 
 namespace Mackiloha.Render
 {
-    public class View : RenderObject, IAnim, IDraw, ITrans
+    public class View : RenderObject, IAnim, IDraw, ITrans, ISerializable
     {
         public Anim Anim => new Anim();
         public Trans Trans => new Trans();

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Mackiloha.Render
 {
-    public class Trans : RenderObject
+    public class Trans : RenderObject, ISerializable
     {
         public Matrix4 Mat1 { get; set; }
         public Matrix4 Mat2 { get; set; }
