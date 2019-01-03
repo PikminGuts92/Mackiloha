@@ -14,6 +14,7 @@ namespace Mackiloha.IO.Serializers
             var anim = data as Anim;
             int version = ReadMagic(ar, data);
 
+            // Read anim entries
             int count = ar.ReadInt32();
             anim.Entries.Clear();
             anim.Entries.AddRange(
@@ -24,6 +25,7 @@ namespace Mackiloha.IO.Serializers
                     F2 = ar.ReadSingle()
                 }));
 
+            // Read animatable strings
             count = ar.ReadInt32();
             anim.Animatables.Clear();
             anim.Animatables.AddRange(
@@ -49,14 +51,7 @@ namespace Mackiloha.IO.Serializers
             aw.Write((int)anim.Animatables.Count);
             anim.Animatables.ForEach(x => aw.Write((string)x));
         }
-
-        protected static void WriteAnimEntry(AnimEntry ae, AwesomeWriter aw)
-        {
-            aw.Write((string)ae.Name);
-            aw.Write((float)ae.F1);
-            aw.Write((float)ae.F2);
-        }
-
+        
         public override bool IsOfType(ISerializable data) => data is Anim;
 
         public override int Magic()
