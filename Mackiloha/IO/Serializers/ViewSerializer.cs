@@ -51,9 +51,9 @@ namespace Mackiloha.IO.Serializers
         {
             switch (MiloSerializer.Info.Version)
             {
-                case 7:
+                case 10:
                     // GH1
-                    return 0;
+                    return 7;
                 default:
                     return -1;
             }

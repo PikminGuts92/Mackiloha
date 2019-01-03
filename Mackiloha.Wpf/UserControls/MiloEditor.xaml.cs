@@ -279,11 +279,11 @@ namespace Mackiloha.Wpf.UserControls
 
             sfd.Title = $"Save GLTF file";
             sfd.Filter = $"GLTF|*.gltf";
-            sfd.FileName = "output.gltf";
+            sfd.FileName = $"{System.IO.Path.GetFileNameWithoutExtension(MiloPath)}.gltf";
 
             if (sfd.ShowDialog() == false) return;
 
-            milo.ExportToGLTF(sfd.FileName);
+            milo.ExportToGLTF(sfd.FileName, Serializer);
             //milo.WriteTree(sfd.FileName);
             //milo.WriteTree2(sfd.FileName);
             MessageBox.Show($"Successfully saved {sfd.SafeFileName}");

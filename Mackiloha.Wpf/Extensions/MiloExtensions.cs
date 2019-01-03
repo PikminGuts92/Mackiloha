@@ -5,7 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mackiloha;
+using Mackiloha.IO;
 using Mackiloha.Milo2;
+using Mackiloha.Render;
 using MiloOG = Mackiloha.Milo;
 using GLTFTools;
 
@@ -21,8 +23,18 @@ namespace Mackiloha.Wpf.Extensions
             return Path.GetExtension(entry.Name); // Returns .cs
         }
 
-        public static void ExportToGLTF(this MiloObjectDir milo, string path)
+        public static void ExportToGLTF(this MiloObjectDir milo, string path, MiloSerializer serializer)
         {
+            var textures = milo.Entries
+                .Where(x => "Tex".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
+                .Select(y => serializer.ReadFromMiloObjectBytes<Tex>(y as MiloObjectBytes))
+                .ToList();
+
+            var views = milo.Entries
+                .Where(x => "View".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
+                .Select(y => serializer.ReadFromMiloObjectBytes<View>(y as MiloObjectBytes))
+                .ToList();
+
             /*
             var pathDirectory = Path.GetDirectoryName(path);
 
