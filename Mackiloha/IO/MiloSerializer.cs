@@ -18,6 +18,7 @@ namespace Mackiloha.IO
 
             Serializers = new AbstractSerializer[]
             {
+                new AnimSerializer(this),
                 new HMXBitmapSerializer(this),
                 new MiloObjectBytesSerializer(this),
                 new MiloObjectDirSerializer(this),

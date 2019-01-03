@@ -20,7 +20,7 @@ namespace Mackiloha.IO.Serializers
             
             var transformableCount = ar.ReadInt32();
             trans.Transformables.Clear();
-            trans.Transformables.AddRange(Enumerable.Range(0, transformableCount).Select(x => (MiloString)ar.ReadString()));
+            trans.Transformables.AddRange(RepeatFor(transformableCount, () => (MiloString)ar.ReadString()));
 
             var always0 = ar.ReadInt32();
             if (always0 != 0)

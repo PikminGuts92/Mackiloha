@@ -26,6 +26,18 @@ namespace Mackiloha.IO
             return version;
         }
 
+        public static void RepeatFor(int count, Action readItem)
+        {
+            for (int i = 0; i < count; i++)
+                readItem();
+        }
+
+        public static IEnumerable<T> RepeatFor<T>(int count, Func<T> readItem)
+        {
+            for (int i = 0; i < count; i++)
+                yield return readItem();
+        }
+
         public abstract void ReadFromStream(AwesomeReader ar, ISerializable data);
 
         public abstract void WriteToStream(AwesomeWriter aw, ISerializable data);
