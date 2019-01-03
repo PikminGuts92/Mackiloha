@@ -7,7 +7,7 @@ namespace Mackiloha.Render
 {
     public class Cam : RenderObject, ITrans
     {
-        public Trans Trans => new Trans();
+        public Trans Trans { get; } = new Trans();
 
         public Matrix4 Mat { get; set; }
 

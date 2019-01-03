@@ -7,7 +7,7 @@ namespace Mackiloha.Render
 {
     public class Light : RenderObject, ITrans
     {
-        public Trans Trans => new Trans();
+        public Trans Trans { get; } = new Trans();
 
         public Sphere Origin;
         public float KeyFrame;

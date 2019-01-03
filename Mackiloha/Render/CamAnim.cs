@@ -7,7 +7,7 @@ namespace Mackiloha.Render
 {
     public class CamAnim : RenderObject, IAnim
     {
-        public Anim Anim => new Anim();
+        public Anim Anim { get; } = new Anim();
 
         MiloString Camera { get; set; }
         MiloString Animation { get; set; }

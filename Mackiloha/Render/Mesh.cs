@@ -46,8 +46,8 @@ namespace Mackiloha.Render
     
     public class Mesh : RenderObject, ITrans, IAnim
     {
-        public Trans Trans => new Trans();
-        public Anim Anim => new Anim();
+        public Trans Trans { get; } = new Trans();
+        public Anim Anim { get; } = new Anim();
 
         public MiloString Material { get; set; }
         public MiloString MainMesh { get; set; }

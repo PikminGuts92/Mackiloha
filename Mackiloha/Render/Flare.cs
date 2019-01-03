@@ -7,8 +7,8 @@ namespace Mackiloha.Render
 {
     public class Flare : RenderObject, ITrans, IDraw
     {
-        public Trans Trans => new Trans();
-        public Draw Draw => new Draw();
+        public Trans Trans { get; } = new Trans();
+        public Draw Draw { get; } = new Draw();
 
         public MiloString Material { get; set; }
         public Sphere Origin { get; set; }

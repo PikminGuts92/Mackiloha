@@ -13,7 +13,7 @@ namespace Mackiloha.Render
 
     public class LightAnim : RenderObject, IAnim
     {
-        public Anim Anim => new Anim();
+        public Anim Anim { get; } = new Anim();
 
         public MiloString Light { get; set; }
         public List<LightEvent> Events { get; } = new List<LightEvent>();
