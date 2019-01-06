@@ -10,6 +10,9 @@ namespace Mackiloha.Render
         public int Height { get; set; }
         public int Bpp { get; set; }
 
+        public float IndexF { get; set; }
+        public int Index { get; set; } = 1;
+
         public MiloString ExternalPath { get; set; }
         public bool UseExternal { get; set; }
 

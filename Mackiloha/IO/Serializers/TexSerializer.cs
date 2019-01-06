@@ -27,18 +27,47 @@ namespace Mackiloha.IO.Serializers
 
             tex.ExternalPath = ar.ReadString();
 
-            float unknown = ar.ReadSingle();
+            tex.IndexF = ar.ReadSingle();
 
-            if (unknown != -8.0f && unknown != 0.0f)
-                throw new NotSupportedException("TexReader: Expected -8.0 or 0.0");
+            switch (tex.IndexF)
+            {
+                case -10.0f:
+                case  -9.0f:
+                case  -8.0f:
+                case  -7.0f:
+                case  -6.0f:
+                case  -0.5f:
+                case   0.0f:
+                    break;
+                default:
+                    throw new NotSupportedException($"Expected number between -10.0 <-> 0.0, got {tex.IndexF}");
+            }
 
-            if (ar.ReadInt32() != 0x01)
-                throw new NotSupportedException($"TexReader: Expected 0x01");
-
+            tex.Index = ar.ReadInt32();
+            switch(tex.Index)
+            {
+                case 1:
+                case 4:
+                case 34:
+                    break;
+                default:
+                    throw new NotSupportedException($"Unexpected number, got {tex.Index}");
+            }
+            
             tex.UseExternal = ar.ReadBoolean();
+            tex.Bitmap = null;
 
-            if (!tex.UseExternal)
-                tex.Bitmap = MiloSerializer.ReadFromStream<HMXBitmap>(ar.BaseStream);
+            if (tex.UseExternal)
+                return;
+
+            if (!tex.UseExternal && ar.BaseStream.Position == ar.BaseStream.Length)
+            {
+                // What the heck? Even HMX had some bad serializations
+                tex.UseExternal = true;
+                return;
+            }
+
+            tex.Bitmap = MiloSerializer.ReadFromStream<HMXBitmap>(ar.BaseStream);
         }
 
         public override void WriteToStream(AwesomeWriter aw, ISerializable data)
@@ -57,8 +86,8 @@ namespace Mackiloha.IO.Serializers
             aw.Write((int)tex.Bpp);
 
             aw.Write(tex.ExternalPath);
-            aw.Write((float)-8.0);
-            aw.Write((int)0x01);
+            aw.Write((float)tex.IndexF);
+            aw.Write((int)tex.Index);
 
             if (!tex.UseExternal && tex.Bitmap != null)
             {
