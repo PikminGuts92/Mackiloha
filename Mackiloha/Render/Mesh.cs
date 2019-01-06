@@ -44,15 +44,15 @@ namespace Mackiloha.Render
         public Matrix4 Mat;
     }
     
-    public class Mesh : RenderObject, ITrans, IAnim
+    public class Mesh : RenderObject, ITrans, IDraw, ISerializable
     {
         public Trans Trans { get; } = new Trans();
-        public Anim Anim { get; } = new Anim();
+        public Draw Draw { get; } = new Draw();
 
         public MiloString Material { get; set; }
         public MiloString MainMesh { get; set; }
 
-        public bool Unknown { get; set; }
+        public int Unknown { get; set; }
 
         public List<Vertex3> Vertices { get; } = new List<Vertex3>();
         public List<Face> Faces { get; } = new List<Face>();

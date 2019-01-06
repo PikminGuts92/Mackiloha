@@ -21,6 +21,7 @@ namespace Mackiloha.IO
                 new AnimSerializer(this),
                 new DrawSerializer(this),
                 new HMXBitmapSerializer(this),
+                new MeshSerializer(this),
                 new MiloObjectBytesSerializer(this),
                 new MiloObjectDirSerializer(this),
                 new TexSerializer(this),
