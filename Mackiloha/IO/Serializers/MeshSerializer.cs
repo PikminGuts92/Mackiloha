@@ -22,8 +22,17 @@ namespace Mackiloha.IO.Serializers
             mesh.MainMesh = ar.ReadString();
 
             mesh.Unknown = ar.ReadInt32();
-            if (mesh.Unknown != 0 && mesh.Unknown != 31)
-                throw new Exception($"This should be 0 or 31, got {mesh.Unknown}");
+            switch(mesh.Unknown)
+            {
+                case 0:
+                case 31:
+                case 33:
+                case 37:
+                case 63:
+                    break;
+                default:
+                    throw new Exception($"Unexpected number, got {mesh.Unknown}");
+            }                
 
             var num = ar.ReadInt32();
             if (num != 1)

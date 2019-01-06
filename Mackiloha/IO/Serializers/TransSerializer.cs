@@ -22,15 +22,20 @@ namespace Mackiloha.IO.Serializers
             trans.Transformables.Clear();
             trans.Transformables.AddRange(RepeatFor(transformableCount, () => (MiloString)ar.ReadString()));
 
-            var always0 = ar.ReadInt32();
-            if (always0 != 0)
-                throw new Exception($"This should be 0, got {always0}");
-
+            trans.UnknownInt = ar.ReadInt32();
+            switch (trans.UnknownInt)
+            {
+                case 0:
+                case 5:
+                case 7:
+                case 8:
+                    break;
+                default:
+                    throw new Exception($"Unexpected number, got {trans.UnknownInt}");
+            }
+            
             trans.Camera = ar.ReadString();
-
-            always0 = ar.ReadByte();
-            if (always0 != 0)
-                throw new Exception($"This should be 0, got {always0}");
+            trans.UnknownBool = ar.ReadBoolean();
 
             trans.Transform = ar.ReadString();
         }
@@ -72,9 +77,9 @@ namespace Mackiloha.IO.Serializers
             aw.Write((int)trans.Transformables.Count);
             trans.Transformables.ForEach(x => aw.Write((string)x));
 
-            aw.Write((int)0);
+            aw.Write((int)trans.UnknownInt);
             aw.Write((string)trans.Camera);
-            aw.Write((byte)0);
+            aw.Write((bool)trans.UnknownBool);
 
             aw.Write((string)trans.Transform);
         }

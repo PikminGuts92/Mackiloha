@@ -472,12 +472,12 @@ namespace Boom.Controllers
                         {
                             Coverage = g.Count(x => x.Converted) / (double)g.Count(),
                             Scanned = g.Count(),
-                            Converted = g
-                                .Where(x => x.Converted)
-                                .Select(x => new
-                                {
-                                    x.Entry.FullPath
-                                }),
+                            //Converted = g
+                            //    .Where(x => x.Converted)
+                            //    .Select(x => new
+                            //    {
+                            //        x.Entry.FullPath
+                            //    }),
                             NotConverted = g
                                 .Where(x => !x.Converted)
                                 .Select(x => new
@@ -485,20 +485,20 @@ namespace Boom.Controllers
                                     x.Entry.FullPath,
                                     x.Message
                                 })  
-                        }),
-                Converted = results
-                    .Where(x => x.Converted)
-                    .Select(x => new
-                    {
-                        x.Entry.FullPath
-                    }),
-                NotConverted = results
-                    .Where(x => !x.Converted)
-                    .Select(x => new
-                    {
-                        x.Entry.FullPath,
-                        x.Message
-                    })
+                        })
+                //Converted = results
+                //    .Where(x => x.Converted)
+                //    .Select(x => new
+                //    {
+                //        x.Entry.FullPath
+                //    }),
+                //NotConverted = results
+                //    .Where(x => !x.Converted)
+                //    .Select(x => new
+                //    {
+                //        x.Entry.FullPath,
+                //        x.Message
+                //    })
             });
         }
 
