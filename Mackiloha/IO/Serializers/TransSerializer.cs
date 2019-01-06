@@ -24,13 +24,13 @@ namespace Mackiloha.IO.Serializers
 
             var always0 = ar.ReadInt32();
             if (always0 != 0)
-                throw new Exception("This should be 0");
+                throw new Exception($"This should be 0, got {always0}");
 
             trans.Camera = ar.ReadString();
 
             always0 = ar.ReadByte();
             if (always0 != 0)
-                throw new Exception("This should be 0");
+                throw new Exception($"This should be 0, got {always0}");
 
             trans.Transform = ar.ReadString();
         }

@@ -23,15 +23,15 @@ namespace Mackiloha.IO.Serializers
 
             mesh.Unknown = ar.ReadInt32();
             if (mesh.Unknown != 0 && mesh.Unknown != 31)
-                throw new Exception("This should be 0 or 31");
+                throw new Exception($"This should be 0 or 31, got {mesh.Unknown}");
 
             var num = ar.ReadInt32();
             if (num != 1)
-                throw new Exception("This should be 1");
+                throw new Exception($"This should be 1, got {num}");
 
             num = ar.ReadByte();
             if (num != 0)
-                throw new Exception("This should be 0");
+                throw new Exception($"This should be 0, got {num}");
 
             // Read vertices
             var count = ar.ReadInt32();

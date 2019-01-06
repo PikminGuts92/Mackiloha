@@ -7,7 +7,8 @@ namespace Boom.Models
 {
     public class ScanRequest
     {
-        public string FilePath { get; set; }
+        public string InputPath { get; set; }
+        public string OutputPath { get; set; }
         public string GameTitle { get; set; }
         public string Platform { get; set; }
         public string Region { get; set; }

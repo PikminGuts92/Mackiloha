@@ -14,6 +14,7 @@ using Mackiloha;
 using Mackiloha.Ark;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
+using Mackiloha.Render;
 
 namespace Boom.Controllers
 {
@@ -252,7 +253,7 @@ namespace Boom.Controllers
                 _miloContext.SaveChanges();
             }
             
-            var ark = ArkFile.FromFile(request.FilePath);
+            var ark = ArkFile.FromFile(request.InputPath);
             game.ArkVersion = (int)ark.Version;
             var miloEntries = new List<Data.MiloEntities.ArkEntry>();
             var totalMiloEntries = 0;
@@ -372,6 +373,251 @@ namespace Boom.Controllers
                 TotalMiloEntries = totalMiloEntries,
                 TimeElapsed = sw.ElapsedMilliseconds
             });
+        }
+
+        [HttpPost]
+        [Route("TestSerialization")]
+        public IActionResult TestSerialization([FromBody] ScanRequest request)
+        {
+            if (!Directory.Exists(request.InputPath))
+                return BadRequest($"Directory \"{request.InputPath}\" does not exist!");
+
+            var miloEntryRegex = new Regex(@"([^\\]*([.](rnd)|(gh)))\\([^\\]+)\\([^\\]+)$", RegexOptions.IgnoreCase);
+            var miloEntries = Directory.GetFiles(request.InputPath, "*", SearchOption.AllDirectories)
+                .Where(x => miloEntryRegex.IsMatch(x))
+                .Select(y =>
+                {
+                    var match = miloEntryRegex.Match(y);
+
+                    var miloArchive = match.Groups[1].Value;
+                    var miloEntryType = match.Groups[5].Value;
+                    var miloEntryName = match.Groups[6].Value;
+
+                    return new
+                    {
+                        FullPath = y,
+                        MiloArchive = miloArchive,
+                        MiloEntryType = miloEntryType,
+                        MiloEntryName = miloEntryName
+                    };
+                })
+                .ToArray();
+
+            //var groupedEntries = miloEntries.GroupBy(x => x.MiloEntryType).ToDictionary(g => g.Key, g => g.ToList());
+            MiloSerializer serializer = new MiloSerializer(new SystemInfo() { Version = 10, Platform = Platform.PS2, BigEndian = false });
+            var supportedTypes = new [] { "Mesh", "Tex", "View" };
+
+            var results = miloEntries
+                .Where(w => supportedTypes.Contains(w.MiloEntryType))
+                .OrderBy(x => x.MiloEntryType)
+                .ThenBy(y => y.FullPath)
+                .Select(z =>
+                {
+                    ISerializable data = null;
+                    string message = "";
+                    bool converted = false;
+
+                    try
+                    {
+                        switch (z.MiloEntryType)
+                        {
+                            case "Mesh":
+                                data = serializer.ReadFromFile<Mesh>(z.FullPath);
+                                break;
+                            case "Tex":
+                                data = serializer.ReadFromFile<Tex>(z.FullPath);
+                                break;
+                            case "View":
+                                data = serializer.ReadFromFile<View>(z.FullPath);
+                                break;
+                            default:
+                                throw new Exception("Not Supported");
+                        }
+
+                        converted = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        var trace = new StackTrace(ex, true);
+                        var frame = trace.GetFrame(0);
+                        var name = frame.GetMethod().ReflectedType.Name;
+
+                        message = $"{name}: {ex.Message}";
+                    }
+                    
+                    return new { Entry = z, Data = data, Message = message, Converted = converted };
+                }).ToList();
+
+            /*
+            var textures = groupedEntries["Tex"]
+                .Select(x => serializer.ReadFromFile<Tex>(x.FullPath))
+                .ToList();
+
+            var views = groupedEntries["View"]
+                .Select(x => serializer.ReadFromFile<View>(x.FullPath))
+                .ToList();
+
+            var meshes = groupedEntries["Mesh"]
+                .Select(x => serializer.ReadFromFile<Mesh>(x.FullPath))
+                .ToList();
+            */        
+
+            return Ok(new
+            {
+                TotalCoverage = results.Count(x => x.Converted) / (double)results.Count,
+                TotalScanned = results.Count,
+                ByType = results
+                    .GroupBy(x => x.Entry.MiloEntryType)
+                    .ToDictionary(g => g.Key, g => new
+                        {
+                            Coverage = g.Count(x => x.Converted) / (double)g.Count(),
+                            Scanned = g.Count(),
+                            Converted = g
+                                .Where(x => x.Converted)
+                                .Select(x => new
+                                {
+                                    x.Entry.FullPath
+                                }),
+                            NotConverted = g
+                                .Where(x => !x.Converted)
+                                .Select(x => new
+                                {
+                                    x.Entry.FullPath,
+                                    x.Message
+                                })  
+                        }),
+                Converted = results
+                    .Where(x => x.Converted)
+                    .Select(x => new
+                    {
+                        x.Entry.FullPath
+                    }),
+                NotConverted = results
+                    .Where(x => !x.Converted)
+                    .Select(x => new
+                    {
+                        x.Entry.FullPath,
+                        x.Message
+                    })
+            });
+        }
+
+        [HttpPost]
+        [Route("ExtractArk")]
+        public IActionResult ExtractFilesFromArk([FromBody] ScanRequest request, bool extractMilos, bool extractDTAs)
+        {
+            if (!System.IO.File.Exists(request.InputPath))
+                return BadRequest($"File \"{request.InputPath}\" does not exist!");
+
+            if (request.OutputPath == null)
+                return BadRequest($"Output directory cannot be null!");
+
+            var ark = ArkFile.FromFile(request.InputPath);
+            
+            string CombinePath(string basePath, string path)
+            {
+                // Consistent slash
+                basePath = (request.OutputPath ?? "").Replace("/", "\\");
+                path = (path ?? "").Replace("/", "\\");
+                
+                Regex dotRegex = new Regex(@"[.]+[\\]");
+                if (dotRegex.IsMatch(path))
+                {
+                    // Replaces dotdot path
+                    path = dotRegex.Replace(path, x => $"({x.Value.Substring(0, x.Value.Length - 1)})\\");
+                }
+                
+                return Path.Combine(basePath, path);
+            }
+
+            string GetNonGenPath(string path)
+            {
+                // Consistent slash
+                path = (path ?? "").Replace("/", "\\");
+
+                Regex genRegex = new Regex(@"gen\\[^\\]+$", RegexOptions.IgnoreCase);
+                Regex platformRegex = new Regex(@"_[^_]+$", RegexOptions.IgnoreCase); // TODO: Revisit for Forge extensions
+
+                if (genRegex.IsMatch(path))
+                {
+                    var splitPath = path.Split('\\');
+                    var dir = string.Join("\\", splitPath.SkipLast(2));
+                    var file = platformRegex.Replace(splitPath.Last(), "");
+
+                    path = $"{dir}\\{file}";
+                }
+
+                return path;
+            }
+
+            void SaveAsFile(MiloObjectBytes miloEntry, string basePath)
+            {
+                var filePath = basePath = Path.Combine(basePath, miloEntry.Type, miloEntry.Name);
+                if (!Directory.Exists(Path.GetDirectoryName(filePath)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+                System.IO.File.WriteAllBytes(filePath, miloEntry.Data);
+                Console.WriteLine($"Wrote \"{filePath}\"");
+            }
+
+            // Extract everything
+            if (!extractDTAs && !extractMilos)
+            {
+                foreach (var arkEntry in ark.Entries)
+                {
+                    var filePath = CombinePath(request.OutputPath, arkEntry.FullPath);
+
+                    if (!Directory.Exists(Path.GetDirectoryName(filePath)))
+                        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+                    using (var fs = System.IO.File.Open(filePath, FileMode.OpenOrCreate, FileAccess.Write))
+                    {
+                        using (var stream = ark.GetArkEntryFileStream(arkEntry))
+                        {
+                            stream.CopyTo(fs);
+                        }
+                    }
+
+                    Console.WriteLine($"Wrote \"{filePath}\"");
+                }
+
+                return Ok();
+            }
+
+            // Extract milos
+            foreach (var miloArkEntry in ark.Entries.Where(x => _miloRegex.IsMatch(x.FullPath)))
+            {
+                var filePath = CombinePath(request.OutputPath, GetNonGenPath(miloArkEntry.FullPath));
+
+                if (!Directory.Exists(Path.GetDirectoryName(filePath)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+                using (var stream = ark.GetArkEntryFileStream(miloArkEntry))
+                {
+                    var milo = MiloFile.ReadFromStream(stream);
+                    var miloSerializer = new MiloSerializer(new SystemInfo()
+                    {
+                        Version = milo.Version,
+                        BigEndian = false,
+                        Platform = Enum.Parse<Platform>(request.Platform)
+                    });
+
+                    var miloDir = new MiloObjectDir();
+                    using (var ms = new MemoryStream(milo.Data))
+                    {
+                        miloSerializer.ReadFromStream(ms, miloDir);
+                    }
+
+                    miloDir.Entries.ForEach(x => SaveAsFile(x as MiloObjectBytes, filePath));
+
+                    if (miloDir.Extras.ContainsKey("DirectoryEntry"))
+                    {
+                        SaveAsFile(miloDir.Extras["DirectoryEntry"] as MiloObjectBytes, filePath);
+                    }
+                }
+            }
+
+            return Ok();
         }
     }
 }
