@@ -8,5 +8,8 @@ namespace Mackiloha
     {
         public MiloString Name { get; set; }
         public abstract MiloString Type { get; }
+
+        public override string ToString()
+            => Name != "" ? $"{Type}: {Name}" : (string)Type;
     }
 }

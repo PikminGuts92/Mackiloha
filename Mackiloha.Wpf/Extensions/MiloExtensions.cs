@@ -25,6 +25,8 @@ namespace Mackiloha.Wpf.Extensions
 
         public static void ExportToGLTF(this MiloObjectDir milo, string path, MiloSerializer serializer)
         {
+            var pathDirectory = Path.GetDirectoryName(path);
+
             var textures = milo.Entries
                 .Where(x => "Tex".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
                 .Select(y => serializer.ReadFromMiloObjectBytes<Tex>(y as MiloObjectBytes))
@@ -38,60 +40,33 @@ namespace Mackiloha.Wpf.Extensions
             var meshes = milo.Entries
                 .Where(x => "Mesh".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
                 .Select(y => serializer.ReadFromMiloObjectBytes<Mackiloha.Render.Mesh>(y as MiloObjectBytes))
+                .Where(z => !string.IsNullOrEmpty(z.Material)) // Don't care about bone meshes for now
                 .ToList();
 
             var materials = milo.Entries
                 .Where(x => "Mat".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
                 .Select(y => serializer.ReadFromMiloObjectBytes<Mackiloha.Render.Mat>(y as MiloObjectBytes))
+                //.Where(z => z.TextureEntries.Count > 0 && z.TextureEntries.Any(w => !string.IsNullOrEmpty(w.Texture))) // TODO: Idk?
                 .ToList();
 
-            /*
-            var pathDirectory = Path.GetDirectoryName(path);
+            var miloEntries = textures
+                .Union<MiloObject>(views)
+                .Union(meshes)
+                .Union(materials)
+                .ToList();
 
-            var textures = milo.Entries
-                .Where(x => x.Type.Equals("Tex", StringComparison.CurrentCultureIgnoreCase))
-                .Select(y =>
-                {
-                    var tex = MiloOG.Tex.FromStream(new MemoryStream((y as MiloEntry).Data));
-                    tex.Name = y.Name;
-                    return tex;
-                }).ToList();
+            var transEntries = miloEntries
+                .Where(x => x is Mackiloha.Render.Interfaces.ITrans)
+                .ToList();
 
-            var materials = milo.Entries
-                .Where(x => x.Type.Equals("Mat", StringComparison.CurrentCultureIgnoreCase))
-                .Select(y =>
-                {
-                    var mat = MiloOG.Mat.FromStream(new MemoryStream((y as MiloEntry).Data));
-                    mat.Name = y.Name;
-                    return mat;
-                }).ToList();
-
-            var meshes = milo.Entries
-                .Where(x => x.Type.Equals("Mesh", StringComparison.CurrentCultureIgnoreCase))
-                .Select(y =>
-                {
-                    var mesh = MiloOG.Mesh.FromStream(new MemoryStream((y as MiloEntry).Data));
-                    mesh.Name = y.Name;
-                    return mesh;
-                }).Where(z => !string.IsNullOrEmpty(z.Material)).ToList();
-
-            var transforms = milo.Entries
+            /* var transforms = milo.Entries
                 .Where(x => x.Type.Equals("Trans", StringComparison.CurrentCultureIgnoreCase))
                 .Select(y =>
                 {
                     var trans = MiloOG.Trans.FromStream(new MemoryStream((y as MiloEntry).Data));
                     trans.Name = y.Name;
                     return trans;
-                }).ToList();
-
-            var views = milo.Entries
-                .Where(x => x.Type.Equals("View", StringComparison.CurrentCultureIgnoreCase))
-                .Select(y =>
-                {
-                    var view = MiloOG.View.FromStream(new MemoryStream((y as MiloEntry).Data));
-                    view.Name = y.Name;
-                    return view;
-                }).ToList();
+                }).ToList(); */
 
             var scene = new GLTF()
             {
@@ -124,37 +99,40 @@ namespace Mackiloha.Wpf.Extensions
                 Sampler = 0,
                 Source = currentOffset++
             }).ToArray();
-            
+
             var keyIdxPairs = Enumerable.Range(0, textures.Count).ToDictionary(x => textures[x].Name);
             scene.Materials = materials.Select(x => new Material()
             {
                 Name = x.Name,
                 PbrMetallicRoughness = new PbrMetallicRoughness()
                 {
-                    BaseColorTexture = x.Textures.Count > 0 ? new BaseColorTexture()
+                    BaseColorTexture = x.TextureEntries.Any(w => !string.IsNullOrEmpty(w.Texture)) ? new BaseColorTexture()
                     {
                         // TODO: Figure out how to map multiple textures to single material
-                        Index = keyIdxPairs[x.Textures.First()]
+                        Index = keyIdxPairs[x.TextureEntries.First(y => !string.IsNullOrEmpty(y.Texture)).Texture]
                     } : null,
-                    BaseColorFactor = new Vector4<double>(x.BaseColorR, x.BaseColorG, x.BaseColorB, x.BaseColorA),
-                    MetallicFactor = (x.Mode2 == 2) ? 1 : 0,
-                    RoughnessFactor = (x.Mode2 == 2) ? 0 : 1
+                    BaseColorFactor = new Vector4<double>(x.BaseColor.R, x.BaseColor.G, x.BaseColor.B, x.BaseColor.A),
+                    MetallicFactor = (x.TextureEntries.Any(w => !string.IsNullOrEmpty(w.Texture)) && x.TextureEntries.First(y => !string.IsNullOrEmpty(y.Texture)).Unknown2 == 2) ? 1 : 0,
+                    RoughnessFactor = (x.TextureEntries.Any(w => !string.IsNullOrEmpty(w.Texture)) && x.TextureEntries.First(y => !string.IsNullOrEmpty(y.Texture)).Unknown2 == 2) ? 0 : 1
                 },
                 EmissiveFactor = new Vector3<double>(),
-                AlphaMode = x.BlendFactor == 2 ? AlphaMode.Blend : AlphaMode.Opaque,
+                AlphaMode = x.Blend == BlendFactor.One ? AlphaMode.Blend : AlphaMode.Opaque,
                 DoubleSided = true
             }).ToArray();
 
             // Saves textures
             for (int i = 0; i < textures.Count; i++)
-                textures[i].Image.SaveAs(Path.Combine(pathDirectory, scene.Images[i].Uri));
+            {
+                textures[i].Bitmap.SaveAs(serializer.Info,
+                    Path.Combine(pathDirectory, scene.Images[i].Uri));
+            }
 
             var accessors = new List<Accessor>();
-            var sceneMeshes = new List<Mesh>();
+            var sceneMeshes = new List<GLTFTools.Mesh>();
 
-            int bufferSize12 = meshes.Select(x => x.Vertices.Length * 12 * 2).Sum(); // Verts + norms
-            int bufferSize8 = meshes.Select(x => x.Vertices.Length * 8).Sum(); // UV
-            int bufferSize4 = meshes.Select(x => x.Faces.Length * 6).Sum(); // Faces
+            int bufferSize12 = meshes.Select(x => x.Vertices.Count * 12 * 2).Sum(); // Verts + norms
+            int bufferSize8 = meshes.Select(x => x.Vertices.Count * 8).Sum(); // UV
+            int bufferSize4 = meshes.Select(x => x.Faces.Count * 6).Sum(); // Faces
             if (bufferSize4 % 4 != 0) bufferSize4 += 4 - (bufferSize4 % 4);
 
             scene.Buffers = new GLTFTools.Buffer[]
@@ -200,17 +178,19 @@ namespace Mackiloha.Wpf.Extensions
             Dictionary<string, int> meshIndex = new Dictionary<string, int>();
             currentOffset = 0;
 
-            keyIdxPairs = Enumerable.Range(0, materials.Count).ToDictionary(x => materials[x].Name);
+            keyIdxPairs = Enumerable
+                .Range(0, materials.Count)
+                .ToDictionary(x => materials[x].Name);
 
             foreach (var mesh in meshes)
             {
-                if (mesh.Vertices.Length <= 0 || mesh.Faces.Length <= 0) continue;
+                if (mesh.Vertices.Count <= 0 || mesh.Faces.Count <= 0) continue;
                 meshIndex.Add(mesh.Name, currentOffset++);
 
                 // Finds related material + texture
-                var mat = materials.First(x => x.Name.Equals(mesh.Material, StringComparison.CurrentCultureIgnoreCase));
-                
-                sceneMeshes.Add(new Mesh()
+                var mat = materials.First(x => ((string)x.Name).Equals(mesh.Material, StringComparison.CurrentCultureIgnoreCase));
+
+                sceneMeshes.Add(new GLTFTools.Mesh()
                 {
                     Name = mesh.Name,
                     Primitives = new MeshPrimitive[]
@@ -235,18 +215,18 @@ namespace Mackiloha.Wpf.Extensions
                 {
                     Name = mesh.Name + "_positions",
                     ComponentType = ComponentType.Float,
-                    Count = mesh.Vertices.Length,
+                    Count = mesh.Vertices.Count,
                     Min = new double[]
                     {
-                        mesh.Vertices.Select(x => x.VertX).Min(),
-                        mesh.Vertices.Select(x => x.VertY).Min(),
-                        mesh.Vertices.Select(x => x.VertZ).Min()
+                        mesh.Vertices.Select(x => x.X).Min(),
+                        mesh.Vertices.Select(x => x.Y).Min(),
+                        mesh.Vertices.Select(x => x.Z).Min()
                     },
                     Max = new double[]
                     {
-                        mesh.Vertices.Select(x => x.VertX).Max(),
-                        mesh.Vertices.Select(x => x.VertY).Max(),
-                        mesh.Vertices.Select(x => x.VertZ).Max()
+                        mesh.Vertices.Select(x => x.X).Max(),
+                        mesh.Vertices.Select(x => x.Y).Max(),
+                        mesh.Vertices.Select(x => x.Z).Max()
                     },
                     Type = GLType.Vector3,
                     BufferView = 0,
@@ -255,9 +235,9 @@ namespace Mackiloha.Wpf.Extensions
                 bw.BaseStream.Seek(buffer12Offset, SeekOrigin.Begin);
                 foreach (var vert in mesh.Vertices)
                 {
-                    bw.Write(vert.VertX);
-                    bw.Write(vert.VertY);
-                    bw.Write(vert.VertZ);
+                    bw.Write(vert.X);
+                    bw.Write(vert.Y);
+                    bw.Write(vert.Z);
                 }
                 buffer12Offset = (int)bw.BaseStream.Position;
 
@@ -266,18 +246,18 @@ namespace Mackiloha.Wpf.Extensions
                 {
                     Name = mesh.Name + "_normals",
                     ComponentType = ComponentType.Float,
-                    Count = mesh.Vertices.Length,
+                    Count = mesh.Vertices.Count,
                     Min = new double[]
                     {
-                        mesh.Vertices.Select(x => x.NormX).Min(),
-                        mesh.Vertices.Select(x => x.NormY).Min(),
-                        mesh.Vertices.Select(x => x.NormZ).Min()
+                        mesh.Vertices.Select(x => x.NormalX).Min(),
+                        mesh.Vertices.Select(x => x.NormalY).Min(),
+                        mesh.Vertices.Select(x => x.NormalZ).Min()
                     },
                     Max = new double[]
                     {
-                        mesh.Vertices.Select(x => x.NormX).Max(),
-                        mesh.Vertices.Select(x => x.NormY).Max(),
-                        mesh.Vertices.Select(x => x.NormZ).Max()
+                        mesh.Vertices.Select(x => x.NormalX).Max(),
+                        mesh.Vertices.Select(x => x.NormalY).Max(),
+                        mesh.Vertices.Select(x => x.NormalZ).Max()
                     },
                     Type = GLType.Vector3,
                     BufferView = 0,
@@ -286,9 +266,9 @@ namespace Mackiloha.Wpf.Extensions
                 bw.BaseStream.Seek(buffer12Offset, SeekOrigin.Begin);
                 foreach (var vert in mesh.Vertices)
                 {
-                    bw.Write(vert.NormX);
-                    bw.Write(vert.NormY);
-                    bw.Write(vert.NormZ);
+                    bw.Write(vert.NormalX);
+                    bw.Write(vert.NormalY);
+                    bw.Write(vert.NormalZ);
                 }
                 buffer12Offset = (int)bw.BaseStream.Position;
 
@@ -297,7 +277,7 @@ namespace Mackiloha.Wpf.Extensions
                 {
                     Name = mesh.Name + "_texcoords",
                     ComponentType = ComponentType.Float,
-                    Count = mesh.Vertices.Length,
+                    Count = mesh.Vertices.Count,
                     Min = new double[]
                     {
                         mesh.Vertices.Select(x => x.U).Min(),
@@ -325,14 +305,14 @@ namespace Mackiloha.Wpf.Extensions
                 {
                     Name = mesh.Name + "_indicies",
                     ComponentType = ComponentType.UnsignedShort,
-                    Count = mesh.Faces.Length * 3,
+                    Count = mesh.Faces.Count * 3,
                     Min = new double[]
                     {
-                        mesh.Faces.SelectMany(x => x).Min()
+                        mesh.Faces.SelectMany(x => new [] { x.V1, x.V2, x.V3 }).Min()
                     },
                     Max = new double[]
                     {
-                        mesh.Faces.SelectMany(x => x).Max()
+                        mesh.Faces.SelectMany(x => new [] { x.V1, x.V2, x.V3 }).Max()
                     },
                     Type = GLType.Scalar,
                     BufferView = 2,
@@ -341,20 +321,20 @@ namespace Mackiloha.Wpf.Extensions
                 bw.BaseStream.Seek(buffer4Offset, SeekOrigin.Begin);
                 foreach (var face in mesh.Faces)
                 {
-                    bw.Write(face[0]);
-                    bw.Write(face[1]);
-                    bw.Write(face[2]);
+                    bw.Write(face.V1);
+                    bw.Write(face.V2);
+                    bw.Write(face.V3);
                 }
                 buffer4Offset = (int)bw.BaseStream.Position;
             }
-            
+
             scene.Accessors = accessors.ToArray();
             scene.Meshes = sceneMeshes.ToArray();
-            
+
             var nodes = new List<Node>();
             var nodeIndex = new Dictionary<string, int>();
 
-            // TODO: Make milo objects with transforms data
+            /* // TODO: Make milo objects with transforms data
             MiloOG.AbstractEntry GetAbstractEntry(string name)
             {
                 var entry = milo.Entries.FirstOrDefault(x => x.Name == name);
@@ -371,9 +351,9 @@ namespace Mackiloha.Wpf.Extensions
                     default:
                         return null;
                 }
-            }
-            
-            Matrix4<float>? GetTransform(string transform)
+            } */
+
+            /* Matrix4<float>? GetTransform(string transform)
             {
                 var transEntry = milo.Entries.FirstOrDefault(y => y.Name == transform);
                 if (transEntry == null) return null;
@@ -392,9 +372,9 @@ namespace Mackiloha.Wpf.Extensions
                     default:
                         return null;
                 }
-            }
+            } */
 
-            string GetTransformName(MiloOG.AbstractEntry entry)
+            /* string GetTransformName(MiloOG.AbstractEntry entry)
             {
                 switch (entry.Type)
                 {
@@ -410,40 +390,51 @@ namespace Mackiloha.Wpf.Extensions
                     default:
                         return null;
                 }
-            }
+            } */
 
-            var children = new Dictionary<string, List<string>>();
-            foreach (var entry in meshes.Union<MiloOG.AbstractEntry>(views).Union<MiloOG.AbstractEntry>(transforms))
+            var children = transEntries
+                .Select(x => new
+                {
+                    Name = (string)x.Name,
+                    Trans = (string)(x as Mackiloha.Render.Interfaces.ITrans).Trans.Transform
+                })
+                .Where(y => !string.IsNullOrEmpty(y.Trans))
+                .GroupBy(z => z.Trans)
+                .ToDictionary(g => g.Key, g => g.Select(w => w.Name)
+                    .OrderBy(s => s)
+                .ToList());
+
+            /* foreach (var entry in meshes.Union<MiloObject>(views)) // TODO: Union w/ trans
             {
-                var trans = GetTransformName(entry);
-                if (trans == null) continue;
+                var transName = (entry as Mackiloha.Render.Interfaces.ITrans)
+                    .Trans
+                    .Transform;
+                
+                if (!children.ContainsKey(transName))
+                    children.Add(transName, new List<string>(new string[] { entry.Name }));
+                else if (!children[transName].Contains(entry.Name))
+                    children[transName].Add(entry.Name);
+            } */
 
-                if (!children.ContainsKey(trans))
-                    children.Add(trans, new List<string>(new string[] { entry.Name }));
-                else if (!children[trans].Contains(entry.Name))
-                    children[trans].Add(entry.Name);
-            }
-
-
+            
             var rootIndex = new List<int>();
             foreach (var key in children.Keys)
             {
                 rootIndex.Add(nodes.Count);
-
-                dynamic entry = GetAbstractEntry(key);
-
+                var entry = transEntries.First(x => x.Name == key);
+                
                 var node = new Node()
                 {
                     Name = "Root_" + entry.Name,
                     //Mesh = meshIndex.ContainsKey(key) ? (int?)meshIndex[key] : null,
-                    Matrix = ToGLMatrix(entry.Mat2),
+                    Matrix = ToGLMatrix((entry as Mackiloha.Render.Interfaces.ITrans).Trans.Mat2),
                     Children = Enumerable.Range(nodes.Count + 1, children[key].Count).ToArray()
                 };
                 nodes.Add(node);
 
                 foreach (var child in children[key])
                 {
-                    dynamic subEntry = GetAbstractEntry(child);
+                    var subEntry = transEntries.First(x => x.Name == child);
 
                     var subNode = new Node()
                     {
@@ -456,20 +447,21 @@ namespace Mackiloha.Wpf.Extensions
                 }
             }
 
+            
             int CreateNode(string name) // Returns index of node
             {
                 if (nodeIndex.ContainsKey(name))
                     return nodeIndex[name];
                 
-                dynamic entry = GetAbstractEntry(name);
-                dynamic transformEntry = GetAbstractEntry(entry.Transform);
-                List<string> subNodes = entry.Meshes;
+                var entry = transEntries.First(x => x.Name == name) as Mackiloha.Render.Interfaces.IDraw;
+                var transformEntry = transEntries.First(x => x.Name == (entry as Mackiloha.Render.Interfaces.ITrans).Trans.Transform);
+                List<string> subNodes = entry.Draw.Drawables.Select(x => (string)x).ToList();
 
                 var node = new Node()
                 {
                     Name = name,
                     Mesh = meshIndex.ContainsKey(name) ? (int?)meshIndex[name] : null,
-                    Matrix = ToGLMatrix(entry.Mat1),
+                    Matrix = ToGLMatrix((entry as Mackiloha.Render.Interfaces.ITrans).Trans.Mat1),
                     //Matrix = GetTransform(entry.Transform),
                     Children = (subNodes.Count > 0) ? subNodes.Select(x => CreateNode(x)).ToArray() : null
                 };
@@ -495,11 +487,15 @@ namespace Mackiloha.Wpf.Extensions
             // scene.Scene = 0;
             // scene.Scenes = new Scene[] { new Scene() { Nodes = new int[] { rootIdx } } };
 
-            List<string> GetAllSubs(MiloOG.AbstractEntry aEntry)
+            List<string> GetAllSubs(MiloObject entry)
             {
-                dynamic entry = aEntry;
-                List<string> subsEntriesNames = entry.Meshes;
-                dynamic subEntries = subsEntriesNames.Select(x => GetAbstractEntry(x)).ToList();
+                List<string> subsEntriesNames = (entry as Mackiloha.Render.Interfaces.IDraw).Draw.Drawables
+                    .Select(x => (string)x)
+                    .ToList();
+
+                var subEntries = subsEntriesNames
+                    .Select(x => transEntries.First(y => y.Name == x))
+                    .ToList();
 
                 foreach (var subEntry in subEntries)
                     subsEntriesNames.AddRange(GetAllSubs(subEntry));
@@ -527,8 +523,32 @@ namespace Mackiloha.Wpf.Extensions
 
             var json = scene.ToJson();
             File.WriteAllText(path, json);
-            */
         }
+
+        public static Matrix4<float> ToGLMatrix(this Matrix4 miloMatrix) =>
+            new Matrix4<float>()
+            {
+                // Swaps x and y values (columns 2 and 3)
+                M11 = -miloMatrix.M11,
+                M12 = miloMatrix.M13,
+                M13 = miloMatrix.M12,
+                M14 = miloMatrix.M14,
+
+                M21 = -miloMatrix.M21,
+                M22 = miloMatrix.M23,
+                M23 = miloMatrix.M22,
+                M24 = miloMatrix.M24,
+
+                M31 = -miloMatrix.M31,
+                M32 = miloMatrix.M33,
+                M33 = miloMatrix.M32,
+                M34 = miloMatrix.M34,
+
+                M41 = -miloMatrix.M41,
+                M42 = miloMatrix.M43,
+                M43 = miloMatrix.M42,
+                M44 = miloMatrix.M44
+            };
 
         public static Matrix4<float> ToGLMatrix(this Matrix miloMatrix) =>
             new Matrix4<float>()
