@@ -41,6 +41,12 @@ namespace Mackiloha.IO.Serializers
 
             aw.Write((int)draw.Drawables.Count);
             draw.Drawables.ForEach(x => aw.Write((string)x));
+
+            // Write boundry
+            aw.Write(draw.Boundry.X);
+            aw.Write(draw.Boundry.Y);
+            aw.Write(draw.Boundry.Z);
+            aw.Write(draw.Boundry.Radius);
         }
 
         public override bool IsOfType(ISerializable data) => data is Draw;

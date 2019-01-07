@@ -57,16 +57,9 @@ namespace Mackiloha.IO.Serializers
             tex.UseExternal = ar.ReadBoolean();
             tex.Bitmap = null;
 
-            if (tex.UseExternal)
+            if (ar.BaseStream.Position == ar.BaseStream.Length)
                 return;
-
-            if (!tex.UseExternal && ar.BaseStream.Position == ar.BaseStream.Length)
-            {
-                // What the heck? Even HMX had some bad serializations
-                tex.UseExternal = true;
-                return;
-            }
-
+            
             tex.Bitmap = MiloSerializer.ReadFromStream<HMXBitmap>(ar.BaseStream);
         }
 
@@ -89,6 +82,11 @@ namespace Mackiloha.IO.Serializers
             aw.Write((float)tex.IndexF);
             aw.Write((int)tex.Index);
 
+            aw.Write((bool)tex.UseExternal);
+            if (tex.Bitmap != null)
+                MiloSerializer.WriteToStream(aw.BaseStream, tex.Bitmap);
+
+            /*
             if (!tex.UseExternal && tex.Bitmap != null)
             {
                 aw.Write(false);
@@ -97,7 +95,7 @@ namespace Mackiloha.IO.Serializers
             else
             {
                 aw.Write(true);
-            }
+            }*/
         }
 
         public override bool IsOfType(ISerializable data) => data is Tex;

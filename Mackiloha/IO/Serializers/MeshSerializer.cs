@@ -174,6 +174,7 @@ namespace Mackiloha.IO.Serializers
             MiloSerializer.WriteToStream(aw.BaseStream, mesh.Trans);
             MiloSerializer.WriteToStream(aw.BaseStream, mesh.Draw);
 
+            aw.Write((string)mesh.Material);
             aw.Write((string)mesh.MainMesh);
             aw.Write((int)mesh.Unknown);
             aw.Write((int)1);
@@ -192,6 +193,7 @@ namespace Mackiloha.IO.Serializers
                 aw.Write((float)x.NormalZ);
                 aw.Write((float)x.ColorR);
                 aw.Write((float)x.ColorG);
+                aw.Write((float)x.ColorB);
                 aw.Write((float)x.ColorA);
                 aw.Write((float)x.U);
                 aw.Write((float)x.V);
