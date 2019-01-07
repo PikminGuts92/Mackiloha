@@ -40,6 +40,11 @@ namespace Mackiloha.Wpf.Extensions
                 .Select(y => serializer.ReadFromMiloObjectBytes<Mackiloha.Render.Mesh>(y as MiloObjectBytes))
                 .ToList();
 
+            var materials = milo.Entries
+                .Where(x => "Mat".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
+                .Select(y => serializer.ReadFromMiloObjectBytes<Mackiloha.Render.Mat>(y as MiloObjectBytes))
+                .ToList();
+
             /*
             var pathDirectory = Path.GetDirectoryName(path);
 

@@ -377,7 +377,7 @@ namespace Boom.Controllers
 
         [HttpPost]
         [Route("TestSerialization")]
-        public IActionResult TestSerialization([FromBody] ScanRequest request)
+        public IActionResult TestSerialization([FromBody] ScanRequest request, bool testSerialize)
         {
             if (!Directory.Exists(request.InputPath))
                 return BadRequest($"Directory \"{request.InputPath}\" does not exist!");
@@ -405,7 +405,7 @@ namespace Boom.Controllers
 
             //var groupedEntries = miloEntries.GroupBy(x => x.MiloEntryType).ToDictionary(g => g.Key, g => g.ToList());
             MiloSerializer serializer = new MiloSerializer(new SystemInfo() { Version = 10, Platform = Platform.PS2, BigEndian = false });
-            var supportedTypes = new [] { "Mesh", "Tex", "View" };
+            var supportedTypes = new [] { "Mat", "Mesh", "Tex", "View" };
 
             var results = miloEntries
                 .Where(w => supportedTypes.Contains(w.MiloEntryType))
@@ -416,11 +416,15 @@ namespace Boom.Controllers
                     ISerializable data = null;
                     string message = "";
                     bool converted = false;
+                    bool perfectSerialize = true;
 
                     try
                     {
                         switch (z.MiloEntryType)
                         {
+                            case "Mat":
+                                data = serializer.ReadFromFile<Mat>(z.FullPath);
+                                break;
                             case "Mesh":
                                 data = serializer.ReadFromFile<Mesh>(z.FullPath);
                                 break;
@@ -444,8 +448,37 @@ namespace Boom.Controllers
 
                         message = $"{name}: {ex.Message}";
                     }
-                    
-                    return new { Entry = z, Data = data, Message = message, Converted = converted };
+
+                    if (testSerialize)
+                    {
+                        try
+                        {
+                            byte[] bytes;
+
+                            using (var ms = new MemoryStream())
+                            {
+                                serializer.WriteToStream(ms, data);
+                                bytes = ms.ToArray();
+                            }
+
+                            var origBytes = System.IO.File.ReadAllBytes(z.FullPath);
+
+                            if (bytes.Length != origBytes.Length)
+                                throw new Exception("Byte count doesn't match");
+
+                            for (int i = 0; i < bytes.Length; i++)
+                            {
+                                if (bytes[i] != origBytes[i])
+                                    throw new Exception("Bytes don't match");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            perfectSerialize = false;
+                        }
+                    }
+
+                    return new { Entry = z, Data = data, Message = message, Converted = converted, Serialized = perfectSerialize };
                 }).ToList();
 
             /*
@@ -485,7 +518,10 @@ namespace Boom.Controllers
                                     x.Entry.FullPath,
                                     x.Message
                                 })  
-                        })
+                        }),
+                NotSerialized = results
+                    .Where(x => !x.Serialized)
+                    .Select(y => y.Entry.FullPath)
                 //Converted = results
                 //    .Where(x => x.Converted)
                 //    .Select(x => new
