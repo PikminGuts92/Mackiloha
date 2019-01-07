@@ -24,7 +24,7 @@ namespace Mackiloha.IO.Serializers
             {
                 // Parses directory type/name
                 dirType = ar.ReadString();
-                dirName = ar.ReadString();
+                dirName = FileHelper.SanitizePath(ar.ReadString());
 
                 //ar.BaseStream.Position += 8; // Skips string count + total length
                 dir.Extras.Add("Num1", ar.ReadInt32());
@@ -35,7 +35,7 @@ namespace Mackiloha.IO.Serializers
             var entries = Enumerable.Range(0, entryCount).Select(x => new
             {
                 Type = ar.ReadString(),
-                Name = ar.ReadString()
+                Name = FileHelper.SanitizePath(ar.ReadString())
             }).ToArray();
 
             if (version == 10)

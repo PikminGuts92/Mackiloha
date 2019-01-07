@@ -5,12 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Security.AccessControl;
+using System.Text.RegularExpressions;
 
 namespace Mackiloha
 {
     // Just in case I port this to other platforms and something breaks
     public static class FileHelper
     {
+        public static string SanitizePath(string path)
+        {
+            var regex = new Regex(@"\n|\r|\t");
+            return regex.Replace(path, "");
+        }
+
         public static string GetDirectory(string filePath)
         {
             return Path.GetDirectoryName(filePath);
