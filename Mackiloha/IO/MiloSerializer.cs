@@ -19,6 +19,7 @@ namespace Mackiloha.IO
             Serializers = new AbstractSerializer[]
             {
                 new AnimSerializer(this),
+                new CamSerializer(this),
                 new DrawSerializer(this),
                 new HMXBitmapSerializer(this),
                 new MatSerializer(this),

@@ -49,10 +49,16 @@ namespace Mackiloha.Wpf.Extensions
                 //.Where(z => z.TextureEntries.Count > 0 && z.TextureEntries.Any(w => !string.IsNullOrEmpty(w.Texture))) // TODO: Idk?
                 .ToList();
 
+            var cams = milo.Entries
+                .Where(x => "Cam".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
+                .Select(y => serializer.ReadFromMiloObjectBytes<Cam>(y as MiloObjectBytes))
+                .ToList();
+
             var miloEntries = textures
                 .Union<MiloObject>(views)
                 .Union(meshes)
                 .Union(materials)
+                .Union(cams)
                 .ToList();
 
             var transEntries = miloEntries
@@ -446,7 +452,6 @@ namespace Mackiloha.Wpf.Extensions
                     nodes.Add(subNode);
                 }
             }
-
             
             int CreateNode(string name) // Returns index of node
             {

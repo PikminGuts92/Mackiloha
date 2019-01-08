@@ -405,8 +405,8 @@ namespace Boom.Controllers
 
             //var groupedEntries = miloEntries.GroupBy(x => x.MiloEntryType).ToDictionary(g => g.Key, g => g.ToList());
             MiloSerializer serializer = new MiloSerializer(new SystemInfo() { Version = 10, Platform = Platform.PS2, BigEndian = false });
-            var supportedTypes = new [] { "Mat", "Mesh", "Tex", "View" };
-
+            var supportedTypes = new [] { "Cam", "Mat", "Mesh", "Tex", "View" };
+            
             var results = miloEntries
                 .Where(w => supportedTypes.Contains(w.MiloEntryType))
                 .OrderBy(x => x.MiloEntryType)
@@ -422,6 +422,9 @@ namespace Boom.Controllers
                     {
                         switch (z.MiloEntryType)
                         {
+                            case "Cam":
+                                data = serializer.ReadFromFile<Cam>(z.FullPath);
+                                break;
                             case "Mat":
                                 data = serializer.ReadFromFile<Mat>(z.FullPath);
                                 break;
