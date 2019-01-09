@@ -16,8 +16,8 @@ namespace Mackiloha.IO.Serializers
 
             // Read anim entries
             int count = ar.ReadInt32();
-            anim.Entries.Clear();
-            anim.Entries.AddRange(
+            anim.AnimEntries.Clear();
+            anim.AnimEntries.AddRange(
                 RepeatFor(count, () => new AnimEntry()
                 {
                     Name = ar.ReadString(),
@@ -40,8 +40,8 @@ namespace Mackiloha.IO.Serializers
             var version = Magic();
             aw.Write(version);
 
-            aw.Write((int)anim.Entries.Count);
-            anim.Entries.ForEach(x =>
+            aw.Write((int)anim.AnimEntries.Count);
+            anim.AnimEntries.ForEach(x =>
             {
                 aw.Write((string)x.Name);
                 aw.Write((float)x.F1);

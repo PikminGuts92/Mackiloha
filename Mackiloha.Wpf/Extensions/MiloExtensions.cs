@@ -62,7 +62,7 @@ namespace Mackiloha.Wpf.Extensions
                 .ToList();
 
             var transEntries = miloEntries
-                .Where(x => x is Mackiloha.Render.Interfaces.ITrans)
+                .Where(x => x is ITrans)
                 .ToList();
 
             /* var transforms = milo.Entries
@@ -402,7 +402,7 @@ namespace Mackiloha.Wpf.Extensions
                 .Select(x => new
                 {
                     Name = (string)x.Name,
-                    Trans = (string)(x as Mackiloha.Render.Interfaces.ITrans).Trans.Transform
+                    Trans = (string)(x as ITrans).Transform
                 })
                 .Where(y => !string.IsNullOrEmpty(y.Trans))
                 .GroupBy(z => z.Trans)
@@ -433,7 +433,7 @@ namespace Mackiloha.Wpf.Extensions
                 {
                     Name = "Root_" + entry.Name,
                     //Mesh = meshIndex.ContainsKey(key) ? (int?)meshIndex[key] : null,
-                    Matrix = ToGLMatrix((entry as Mackiloha.Render.Interfaces.ITrans).Trans.Mat2),
+                    Matrix = ToGLMatrix((entry as ITrans).Mat2),
                     Children = Enumerable.Range(nodes.Count + 1, children[key].Count).ToArray()
                 };
                 nodes.Add(node);
@@ -458,15 +458,15 @@ namespace Mackiloha.Wpf.Extensions
                 if (nodeIndex.ContainsKey(name))
                     return nodeIndex[name];
                 
-                var entry = transEntries.First(x => x.Name == name) as Mackiloha.Render.Interfaces.IDraw;
-                var transformEntry = transEntries.First(x => x.Name == (entry as Mackiloha.Render.Interfaces.ITrans).Trans.Transform);
-                List<string> subNodes = entry.Draw.Drawables.Select(x => (string)x).ToList();
+                var entry = transEntries.First(x => x.Name == name) as IDraw;
+                var transformEntry = transEntries.First(x => x.Name == (entry as ITrans).Transform);
+                List<string> subNodes = entry.Drawables.Select(x => (string)x).ToList();
 
                 var node = new Node()
                 {
                     Name = name,
                     Mesh = meshIndex.ContainsKey(name) ? (int?)meshIndex[name] : null,
-                    Matrix = ToGLMatrix((entry as Mackiloha.Render.Interfaces.ITrans).Trans.Mat1),
+                    Matrix = ToGLMatrix((entry as ITrans).Mat1),
                     //Matrix = GetTransform(entry.Transform),
                     Children = (subNodes.Count > 0) ? subNodes.Select(x => CreateNode(x)).ToArray() : null
                 };
@@ -494,7 +494,7 @@ namespace Mackiloha.Wpf.Extensions
 
             List<string> GetAllSubs(MiloObject entry)
             {
-                List<string> subsEntriesNames = (entry as Mackiloha.Render.Interfaces.IDraw).Draw.Drawables
+                List<string> subsEntriesNames = (entry as IDraw).Drawables
                     .Select(x => (string)x)
                     .ToList();
 

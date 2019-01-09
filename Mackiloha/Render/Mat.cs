@@ -22,12 +22,21 @@ namespace Mackiloha.Render
         InvSrColor = 4
     }
 
-    public class Mat : RenderObject, ISerializable
+    public interface IMat : IRenderObject
     {
+        List<TextureEntry> TextureEntries { get; }
+
+        Color4 BaseColor { get; set; }
+        BlendFactor Blend { get; set; }
+    }
+
+    public class Mat : RenderObject, IMat
+    {
+        // Mat
         public List<TextureEntry> TextureEntries { get; } = new List<TextureEntry>();
 
-        public Color4 BaseColor;
-        public BlendFactor Blend;
+        public Color4 BaseColor { get; set; }
+        public BlendFactor Blend { get; set; }
 
         public override MiloString Type => "Mat";
     }

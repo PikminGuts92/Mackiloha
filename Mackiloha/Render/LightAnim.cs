@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Mackiloha.Render.Interfaces;
 
 namespace Mackiloha.Render
 {
@@ -11,10 +10,23 @@ namespace Mackiloha.Render
         public float KeyFrame;
     }
 
-    public class LightAnim : RenderObject, IAnim
+    public interface ILightAnim : IRenderObject
     {
-        public Anim Anim { get; } = new Anim();
+        MiloString Light { get; set; }
+        List<LightEvent> Events { get; }
 
+        MiloString LightAnimation { get; set; }
+    }
+
+    public class LightAnim : RenderObject, ILightAnim, IAnim
+    {
+        internal Anim Anim { get; } = new Anim();
+
+        // Anim
+        public List<AnimEntry> AnimEntries => Anim.AnimEntries;
+        public List<MiloString> Animatables => Anim.Animatables;
+
+        // LightAnim
         public MiloString Light { get; set; }
         public List<LightEvent> Events { get; } = new List<LightEvent>();
 

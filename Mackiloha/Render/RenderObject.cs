@@ -4,7 +4,9 @@ using System.Text;
 
 namespace Mackiloha.Render
 {
-    public abstract class RenderObject : MiloObject
+    public interface IRenderObject : IMiloObject { }
+
+    public abstract class RenderObject : MiloObject, IRenderObject
     {
         public override MiloString Type => "Render";
     }

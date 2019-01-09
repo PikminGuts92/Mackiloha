@@ -4,8 +4,14 @@ using System.Text;
 
 namespace Mackiloha
 {
-    public abstract class MiloObject
+    public interface IMiloObject : ISerializable
     {
+        MiloString Name { get; set; }
+        MiloString Type { get; }
+    }
+
+    public abstract class MiloObject : IMiloObject
+    {        
         public MiloString Name { get; set; }
         public abstract MiloString Type { get; }
 

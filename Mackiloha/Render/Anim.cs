@@ -11,9 +11,16 @@ namespace Mackiloha.Render
         public float F2;
     }
 
-    public class Anim : RenderObject, ISerializable
+    public interface IAnim : IRenderObject
     {
-        public List<AnimEntry> Entries { get; } = new List<AnimEntry>();
+        List<AnimEntry> AnimEntries { get; }
+        List<MiloString> Animatables { get; }
+    }
+
+    public class Anim : RenderObject, IAnim
+    {
+        // Anim
+        public List<AnimEntry> AnimEntries { get; } = new List<AnimEntry>();
         public List<MiloString> Animatables { get; } = new List<MiloString>();
 
         public override MiloString Type => "Anim";

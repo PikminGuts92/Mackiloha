@@ -4,8 +4,24 @@ using System.Text;
 
 namespace Mackiloha.Render
 {
-    public class Tex : RenderObject, ISerializable
+    public interface ITex : IRenderObject
     {
+        int Width { get; set; }
+        int Height { get; set; }
+        int Bpp { get; set; }
+
+        float IndexF { get; set; }
+        int Index { get; set; }
+
+        MiloString ExternalPath { get; set; }
+        bool UseExternal { get; set; }
+
+        HMXBitmap Bitmap { get; set; }
+    }
+
+    public class Tex : RenderObject, ITex
+    {
+        // Tex
         public int Width { get; set; }
         public int Height { get; set; }
         public int Bpp { get; set; }

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Mackiloha
 {
-    public class MiloObjectDir : MiloObject, ISerializable, IEnumerable<MiloObject>
+    public class MiloObjectDir : MiloObject, IEnumerable<MiloObject>
     {
         public List<MiloObject> Entries { get; } = new List<MiloObject>();
 

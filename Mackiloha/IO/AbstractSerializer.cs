@@ -26,13 +26,13 @@ namespace Mackiloha.IO
             return version;
         }
 
-        public static void RepeatFor(int count, Action readItem)
+        protected static void RepeatFor(int count, Action readItem)
         {
             for (int i = 0; i < count; i++)
                 readItem();
         }
 
-        public static IEnumerable<T> RepeatFor<T>(int count, Func<T> readItem)
+        protected static IEnumerable<T> RepeatFor<T>(int count, Func<T> readItem)
         {
             for (int i = 0; i < count; i++)
                 yield return readItem();
