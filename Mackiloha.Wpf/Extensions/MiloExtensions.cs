@@ -54,15 +54,25 @@ namespace Mackiloha.Wpf.Extensions
                 .Select(y => serializer.ReadFromMiloObjectBytes<Cam>(y as MiloObjectBytes))
                 .ToList();
 
+            var environs = milo.Entries
+                .Where(x => "Environ".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
+                .Select(y => serializer.ReadFromMiloObjectBytes<Environ>(y as MiloObjectBytes))
+                .ToList();
+
             var miloEntries = textures
                 .Union<MiloObject>(views)
                 .Union(meshes)
                 .Union(materials)
                 .Union(cams)
+                .Union(environs)
                 .ToList();
 
             var transEntries = miloEntries
                 .Where(x => x is ITrans)
+                .ToList();
+
+            var drawEntries = miloEntries
+                .Where(x => x is IDraw)
                 .ToList();
 
             /* var transforms = milo.Entries
@@ -398,7 +408,8 @@ namespace Mackiloha.Wpf.Extensions
                 }
             } */
 
-            var children = transEntries
+            var children = drawEntries
+                .Where(w => w is ITrans) // Use trans collection?
                 .Select(x => new
                 {
                     Name = (string)x.Name,
@@ -421,26 +432,25 @@ namespace Mackiloha.Wpf.Extensions
                 else if (!children[transName].Contains(entry.Name))
                     children[transName].Add(entry.Name);
             } */
-
             
             var rootIndex = new List<int>();
             foreach (var key in children.Keys)
             {
                 rootIndex.Add(nodes.Count);
-                var entry = transEntries.First(x => x.Name == key);
+                var drawEntry = drawEntries.First(x => x.Name == key);
                 
                 var node = new Node()
                 {
-                    Name = "Root_" + entry.Name,
+                    Name = "Root_" + drawEntry.Name,
                     //Mesh = meshIndex.ContainsKey(key) ? (int?)meshIndex[key] : null,
-                    Matrix = ToGLMatrix((entry as ITrans).Mat2),
+                    Matrix = drawEntry is ITrans ? (Matrix4<float>?)ToGLMatrix((drawEntry as ITrans).Mat2) : null,
                     Children = Enumerable.Range(nodes.Count + 1, children[key].Count).ToArray()
                 };
                 nodes.Add(node);
 
                 foreach (var child in children[key])
                 {
-                    var subEntry = transEntries.First(x => x.Name == child);
+                    var subEntry = drawEntries.First(x => x.Name == child);
 
                     var subNode = new Node()
                     {
@@ -458,8 +468,8 @@ namespace Mackiloha.Wpf.Extensions
                 if (nodeIndex.ContainsKey(name))
                     return nodeIndex[name];
                 
-                var entry = transEntries.First(x => x.Name == name) as IDraw;
-                var transformEntry = transEntries.First(x => x.Name == (entry as ITrans).Transform);
+                var entry = drawEntries.First(x => x.Name == name) as IDraw;
+                var transformEntry = drawEntries.First(x => x.Name == (entry as ITrans).Transform);
                 List<string> subNodes = entry.Drawables.Select(x => (string)x).ToList();
 
                 var node = new Node()
@@ -499,7 +509,7 @@ namespace Mackiloha.Wpf.Extensions
                     .ToList();
 
                 var subEntries = subsEntriesNames
-                    .Select(x => transEntries.First(y => y.Name == x))
+                    .Select(x => drawEntries.First(y => y.Name == x))
                     .ToList();
 
                 foreach (var subEntry in subEntries)
