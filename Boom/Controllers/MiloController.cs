@@ -444,6 +444,7 @@ namespace Boom.Controllers
                                 throw new Exception("Not Supported");
                         }
 
+                        (data as IMiloObject).Name = z.MiloEntryName;
                         converted = true;
                     }
                     catch (Exception ex)
@@ -486,7 +487,7 @@ namespace Boom.Controllers
 
                     return new { Entry = z, Data = data, Message = message, Converted = converted, Serialized = perfectSerialize };
                 }).ToList();
-
+            
             /*
             var textures = groupedEntries["Tex"]
                 .Select(x => serializer.ReadFromFile<Tex>(x.FullPath))

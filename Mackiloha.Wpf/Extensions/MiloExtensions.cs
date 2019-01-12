@@ -132,7 +132,7 @@ namespace Mackiloha.Wpf.Extensions
                     RoughnessFactor = (x.TextureEntries.Any(w => !string.IsNullOrEmpty(w.Texture)) && x.TextureEntries.First(y => !string.IsNullOrEmpty(y.Texture)).Unknown2 == 2) ? 0 : 1
                 },
                 EmissiveFactor = new Vector3<double>(),
-                AlphaMode = x.Blend == BlendFactor.One ? AlphaMode.Blend : AlphaMode.Opaque,
+                AlphaMode = AlphaMode.Mask, // x.Blend == BlendFactor.One ? AlphaMode.Blend : AlphaMode.Opaque,
                 DoubleSided = true
             }).ToArray();
 
@@ -145,7 +145,7 @@ namespace Mackiloha.Wpf.Extensions
 
             var accessors = new List<Accessor>();
             var sceneMeshes = new List<GLTFTools.Mesh>();
-
+            
             int bufferSize12 = meshes.Select(x => x.Vertices.Count * 12 * 2).Sum(); // Verts + norms
             int bufferSize8 = meshes.Select(x => x.Vertices.Count * 8).Sum(); // UV
             int bufferSize4 = meshes.Select(x => x.Faces.Count * 6).Sum(); // Faces
@@ -185,7 +185,7 @@ namespace Mackiloha.Wpf.Extensions
                     ByteStride = null
                 }
             };
-
+            
             int buffer12Offset = scene.BufferViews[0].ByteOffset.Value;
             int buffer8Offset = scene.BufferViews[1].ByteOffset.Value;
             int buffer4Offset = scene.BufferViews[2].ByteOffset.Value;
@@ -225,7 +225,7 @@ namespace Mackiloha.Wpf.Extensions
                         }
                     }
                 });
-
+                
                 // Vertices
                 accessors.Add(new Accessor()
                 {
@@ -521,10 +521,16 @@ namespace Mackiloha.Wpf.Extensions
             scene.Scene = 0;
             //scene.Scenes = new Scene[] { new Scene() { Nodes = rootIndex.ToArray() } };
 
-            scene.Scenes = views.Select(x => new Scene()
-            {
-                Nodes = GetAllSubs(x).Select(y => nodeIndex[y]).Distinct().ToArray()
-            }).ToArray();
+            scene.Scenes = views
+                .Select(x => new Scene()
+                {
+                    Nodes = GetAllSubs(x)
+                        .Select(y => nodeIndex[y])
+                        .Distinct()
+                        .ToArray()
+                })
+                .OrderByDescending(x => x.Nodes.Length)
+                .ToArray();
 
             scene.Nodes = nodes.ToArray();
             
