@@ -8,7 +8,7 @@ namespace Mackiloha.Render
     {
         bool Showing { get; set; }
 
-        List<MiloString> Drawables { get; }
+        List<string> Drawables { get; }
         Sphere Boundry { get; set; }
     }
 
@@ -17,9 +17,9 @@ namespace Mackiloha.Render
         // Draw
         public bool Showing { get; set; } = true;
 
-        public List<MiloString> Drawables { get; } = new List<MiloString>();
+        public List<string> Drawables { get; } = new List<string>();
         public Sphere Boundry { get; set; }
 
-        public override MiloString Type => "Draw";
+        public override string Type => "Draw";
     }
 }

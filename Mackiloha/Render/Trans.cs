@@ -9,13 +9,13 @@ namespace Mackiloha.Render
         Matrix4 Mat1 { get; set; }
         Matrix4 Mat2 { get; set; }
 
-        List<MiloString> Transformables { get; }
+        List<string> Transformables { get; }
 
         int UnknownInt { get; set; }
-        MiloString Camera { get; set; }
+        string Camera { get; set; }
         bool UnknownBool { get; set; }
 
-        MiloString Transform { get; set; }
+        string Transform { get; set; }
     }
 
     public class Trans : RenderObject, ITrans
@@ -24,14 +24,14 @@ namespace Mackiloha.Render
         public Matrix4 Mat1 { get; set; } = Matrix4.Identity();
         public Matrix4 Mat2 { get; set; } = Matrix4.Identity();
 
-        public List<MiloString> Transformables { get; } = new List<MiloString>();
+        public List<string> Transformables { get; } = new List<string>();
 
         public int UnknownInt { get; set; }
-        public MiloString Camera { get; set; }
+        public string Camera { get; set; }
         public bool UnknownBool { get; set; }
 
-        public MiloString Transform { get; set; }
+        public string Transform { get; set; }
 
-        public override MiloString Type => "Trans";
+        public override string Type => "Trans";
     }
 }

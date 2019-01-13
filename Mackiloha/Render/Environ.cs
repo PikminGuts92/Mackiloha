@@ -6,7 +6,7 @@ namespace Mackiloha.Render
 {
     public interface IEnviron : IRenderObject
     {
-        List<MiloString> Lights { get; }
+        List<string> Lights { get; }
         Color4 AmbientColor { get; set; }
 
         float FogStart { get; set; }
@@ -23,11 +23,11 @@ namespace Mackiloha.Render
         // Draw
         public bool Showing { get => Draw.Showing; set => Draw.Showing = value; }
 
-        public List<MiloString> Drawables => Draw.Drawables;
+        public List<string> Drawables => Draw.Drawables;
         public Sphere Boundry { get => Draw.Boundry; set => Draw.Boundry = value; }
 
         // Environ
-        public List<MiloString> Lights { get; } = new List<MiloString>();
+        public List<string> Lights { get; } = new List<string>();
         public Color4 AmbientColor { get; set; }
 
         public float FogStart { get; set; }
@@ -36,6 +36,6 @@ namespace Mackiloha.Render
 
         public bool EnableFog { get; set; }
 
-        public override MiloString Type => "Environ";
+        public override string Type => "Environ";
     }
 }

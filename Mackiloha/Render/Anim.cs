@@ -6,7 +6,7 @@ namespace Mackiloha.Render
 {
     public struct AnimEntry
     {
-        public MiloString Name;
+        public string Name;
         public float F1;
         public float F2;
     }
@@ -14,15 +14,15 @@ namespace Mackiloha.Render
     public interface IAnim : IRenderObject
     {
         List<AnimEntry> AnimEntries { get; }
-        List<MiloString> Animatables { get; }
+        List<string> Animatables { get; }
     }
 
     public class Anim : RenderObject, IAnim
     {
         // Anim
         public List<AnimEntry> AnimEntries { get; } = new List<AnimEntry>();
-        public List<MiloString> Animatables { get; } = new List<MiloString>();
+        public List<string> Animatables { get; } = new List<string>();
 
-        public override MiloString Type => "Anim";
+        public override string Type => "Anim";
     }
 }

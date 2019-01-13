@@ -39,14 +39,14 @@ namespace Mackiloha.Render
 
     public struct Bone
     {
-        public MiloString Name;
+        public string Name;
         public Matrix4 Mat;
     }
     
     public interface IMesh : IRenderObject
     {
-        MiloString Material { get; set; }
-        MiloString MainMesh { get; set; }
+        string Material { get; set; }
+        string MainMesh { get; set; }
 
         int Unknown { get; set; }
 
@@ -66,23 +66,23 @@ namespace Mackiloha.Render
         public Matrix4 Mat1 { get => Trans.Mat1; set => Trans.Mat1 = value; }
         public Matrix4 Mat2 { get => Trans.Mat2; set => Trans.Mat2 = value; }
 
-        public List<MiloString> Transformables => Trans.Transformables;
+        public List<string> Transformables => Trans.Transformables;
 
         public int UnknownInt { get => Trans.UnknownInt; set => Trans.UnknownInt = value; }
-        public MiloString Camera { get => Trans.Camera; set => Trans.Camera = value; }
+        public string Camera { get => Trans.Camera; set => Trans.Camera = value; }
         public bool UnknownBool { get => Trans.UnknownBool; set => Trans.UnknownBool = value; }
 
-        public MiloString Transform { get => Trans.Transform; set => Trans.Transform = value; }
+        public string Transform { get => Trans.Transform; set => Trans.Transform = value; }
 
         // Draw
         public bool Showing { get => Draw.Showing; set => Draw.Showing = value; }
 
-        public List<MiloString> Drawables => Draw.Drawables;
+        public List<string> Drawables => Draw.Drawables;
         public Sphere Boundry { get => Draw.Boundry; set => Draw.Boundry = value; }
         
         // Mesh
-        public MiloString Material { get; set; }
-        public MiloString MainMesh { get; set; }
+        public string Material { get; set; }
+        public string MainMesh { get; set; }
 
         public int Unknown { get; set; }
 
@@ -92,6 +92,6 @@ namespace Mackiloha.Render
         public List<FaceGroup> Groups { get; } = new List<FaceGroup>();
         public List<Bone> Bones { get; } = new List<Bone>();
 
-        public override MiloString Type => "Mesh";
+        public override string Type => "Mesh";
     }
 }

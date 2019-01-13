@@ -19,7 +19,7 @@ namespace Mackiloha.IO.Serializers
             // Read lights
             var lightCount = ar.ReadInt32();
             env.Lights.Clear();
-            env.Lights.AddRange(RepeatFor(lightCount, () => (MiloString)ar.ReadString()));
+            env.Lights.AddRange(RepeatFor(lightCount, () => ar.ReadString()));
 
             env.AmbientColor = new Color4()
             {

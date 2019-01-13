@@ -90,7 +90,7 @@ namespace Mackiloha.IO.Serializers
             if (charCount > 0)
             {
                 const int boneCount = 4; // Always 4?
-                var boneNames = RepeatFor(boneCount, () => (MiloString)ar.ReadString()).ToArray(); // Either 3 or none (Last one is always empty?)
+                var boneNames = RepeatFor(boneCount, () => ar.ReadString()).ToArray(); // Either 3 or none (Last one is always empty?)
                 var boneMats = RepeatFor(boneCount, () => ReadMatrix(ar)).ToArray();
                                 
                 for (int i = 0; i < boneCount; i++)

@@ -6,8 +6,8 @@ namespace Mackiloha.Render
 {
     public interface ICamAnim : IRenderObject
     {
-        MiloString Camera { get; set; }
-        MiloString Animation { get; set; }
+        string Camera { get; set; }
+        string Animation { get; set; }
     }
 
     public class CamAnim : RenderObject, ICamAnim, IAnim
@@ -16,12 +16,12 @@ namespace Mackiloha.Render
 
         // Anim
         public List<AnimEntry> AnimEntries => Anim.AnimEntries;
-        public List<MiloString> Animatables => Anim.Animatables;
+        public List<string> Animatables => Anim.Animatables;
 
         // CamAnim
-        public MiloString Camera { get; set; }
-        public MiloString Animation { get; set; }
+        public string Camera { get; set; }
+        public string Animation { get; set; }
 
-        public override MiloString Type => "CamAnim";
+        public override string Type => "CamAnim";
     }
 }

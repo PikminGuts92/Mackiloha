@@ -29,7 +29,7 @@ namespace Mackiloha.IO.Serializers
             count = ar.ReadInt32();
             anim.Animatables.Clear();
             anim.Animatables.AddRange(
-                RepeatFor(count, () => (MiloString)ar.ReadString()));
+                RepeatFor(count, () => ar.ReadString()));
         }
         
         public override void WriteToStream(AwesomeWriter aw, ISerializable data)

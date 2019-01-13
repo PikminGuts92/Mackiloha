@@ -13,7 +13,7 @@ namespace Mackiloha.Render
         float IndexF { get; set; }
         int Index { get; set; }
 
-        MiloString ExternalPath { get; set; }
+        string ExternalPath { get; set; }
         bool UseExternal { get; set; }
 
         HMXBitmap Bitmap { get; set; }
@@ -29,11 +29,11 @@ namespace Mackiloha.Render
         public float IndexF { get; set; }
         public int Index { get; set; } = 1;
 
-        public MiloString ExternalPath { get; set; }
+        public string ExternalPath { get; set; }
         public bool UseExternal { get; set; }
 
         public HMXBitmap Bitmap { get; set; }
 
-        public override MiloString Type => "Tex";
+        public override string Type => "Tex";
     }
 }

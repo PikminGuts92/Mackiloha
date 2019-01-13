@@ -6,7 +6,7 @@ namespace Mackiloha
 {
     public class MiloObjectBytes : MiloObject, ISerializable
     {
-        private readonly MiloString _type;
+        private readonly string _type;
 
         public MiloObjectBytes(string type) : base()
         {
@@ -15,6 +15,6 @@ namespace Mackiloha
         
         public byte[] Data { get; set; }
 
-        public override MiloString Type => _type;
+        public override string Type => _type;
     }
 }

@@ -12,10 +12,10 @@ namespace Mackiloha.Render
 
     public interface ILightAnim : IRenderObject
     {
-        MiloString Light { get; set; }
+        string Light { get; set; }
         List<LightEvent> Events { get; }
 
-        MiloString LightAnimation { get; set; }
+        string LightAnimation { get; set; }
     }
 
     public class LightAnim : RenderObject, ILightAnim, IAnim
@@ -24,14 +24,14 @@ namespace Mackiloha.Render
 
         // Anim
         public List<AnimEntry> AnimEntries => Anim.AnimEntries;
-        public List<MiloString> Animatables => Anim.Animatables;
+        public List<string> Animatables => Anim.Animatables;
 
         // LightAnim
-        public MiloString Light { get; set; }
+        public string Light { get; set; }
         public List<LightEvent> Events { get; } = new List<LightEvent>();
 
-        public MiloString LightAnimation { get; set; }
+        public string LightAnimation { get; set; }
 
-        public override MiloString Type => "LightAnim";
+        public override string Type => "LightAnim";
     }
 }

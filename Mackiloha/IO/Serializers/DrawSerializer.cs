@@ -18,7 +18,7 @@ namespace Mackiloha.IO.Serializers
 
             var drawableCount = ar.ReadInt32();
             draw.Drawables.Clear();
-            draw.Drawables.AddRange(RepeatFor(drawableCount, () => (MiloString)ar.ReadString()));
+            draw.Drawables.AddRange(RepeatFor(drawableCount, () => ar.ReadString()));
 
             draw.Boundry = new Sphere()
             {

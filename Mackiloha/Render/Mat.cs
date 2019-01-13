@@ -10,7 +10,7 @@ namespace Mackiloha.Render
         public int Unknown2;
         public Matrix4 Mat;
         public int Unknown3;
-        public MiloString Texture;
+        public string Texture;
     }
 
     public enum BlendFactor : int
@@ -38,6 +38,6 @@ namespace Mackiloha.Render
         public Color4 BaseColor { get; set; }
         public BlendFactor Blend { get; set; }
 
-        public override MiloString Type => "Mat";
+        public override string Type => "Mat";
     }
 }

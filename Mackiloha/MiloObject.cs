@@ -6,16 +6,16 @@ namespace Mackiloha
 {
     public interface IMiloObject : ISerializable
     {
-        MiloString Name { get; set; }
-        MiloString Type { get; }
+        string Name { get; set; }
+        string Type { get; }
     }
 
     public abstract class MiloObject : IMiloObject
     {        
-        public MiloString Name { get; set; }
-        public abstract MiloString Type { get; }
+        public string Name { get; set; }
+        public abstract string Type { get; }
 
         public override string ToString()
-            => Name != "" ? $"{Type}: {Name}" : (string)Type;
+            => Name != "" ? $"{Type}: {Name}" : Type;
     }
 }

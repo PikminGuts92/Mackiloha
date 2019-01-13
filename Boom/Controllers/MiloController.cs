@@ -318,8 +318,8 @@ namespace Boom.Controllers
                 contextEntry.Version = mf.Version;
                 contextEntry.TotalSize = mf.Data.Length;
 
-                contextEntry.Name = (string)milo.Name ?? "";
-                contextEntry.Type = (string)milo.Type ?? "";
+                contextEntry.Name = milo.Name ?? "";
+                contextEntry.Type = milo.Type ?? "";
 
                 var dirEntry = milo.Entries
                     .Where(x => ((string)x.Type).EndsWith("Dir") && x is MiloObjectBytes)
@@ -352,8 +352,8 @@ namespace Boom.Controllers
                         _miloContext.SaveChanges();
                     }
 
-                    contextMEntry.Name = (string)mEntry.Name ?? "";
-                    contextMEntry.Type = (string)mEntry.Type ?? "";
+                    contextMEntry.Name = mEntry.Name ?? "";
+                    contextMEntry.Type = mEntry.Type ?? "";
                     contextMEntry.Size = mEntry.Data.Length;
                     contextMEntry.Magic = mEntry.GetMagic();
 

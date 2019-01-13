@@ -8,6 +8,6 @@ namespace Mackiloha.Render
 
     public abstract class RenderObject : MiloObject, IRenderObject
     {
-        public override MiloString Type => "Render";
+        public override string Type => "Render";
     }
 }
