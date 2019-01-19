@@ -86,6 +86,16 @@ namespace Mackiloha.Wpf.Extensions
             if (bpp == 32)
             {
                 Array.Copy(raw, image, image.Length);
+
+                // Updates alpha channels (7-bit -> 8-bit)
+                byte al;
+                for (int p = 0; p < image.Length; p += 4)
+                {
+                    // Set to max (0xFF) if 128 or multiply by 2
+                    al = image[p + 3];
+                    image[p + 3] = ((al & 0x80) != 0) ? (byte)0xFF : (byte)(al << 1);
+                }
+
                 return image;
             }
             else if (bpp == 24)
@@ -117,6 +127,38 @@ namespace Mackiloha.Wpf.Extensions
                 }
                 return image;
             }
+            else if (bpp == 16)
+            {
+                // Grayscale?
+                int r = 0;
+                for (int i = 0; i < image.Length; i += 16)
+                {
+                    // Pixel 1
+                    image[i    ]  = raw[r     ];
+                    image[i + 1]  = raw[r     ];
+                    image[i + 2]  = raw[r     ];
+                    image[i + 3]  = ((raw[r +  1] & 0x80) != 0) ? (byte)0xFF : (byte)(raw[r + 1] << 1);
+                    // Pixel 2
+                    image[i + 4]  = raw[r +  2];
+                    image[i + 5]  = raw[r +  2];
+                    image[i + 6]  = raw[r +  2];
+                    image[i + 7]  = ((raw[r +  3] & 0x80) != 0) ? (byte)0xFF : (byte)(raw[r + 3] << 1);
+                    // Pixel 3
+                    image[i +  8] = raw[r +  4];
+                    image[i +  9] = raw[r +  4];
+                    image[i + 10] = raw[r +  4];
+                    image[i + 11] = ((raw[r +  5] & 0x80) != 0) ? (byte)0xFF : (byte)(raw[r + 5] << 1);
+                    // Pixel 4
+                    image[i + 12] = raw[r +  6];
+                    image[i + 13] = raw[r +  6];
+                    image[i + 14] = raw[r +  6];
+                    image[i + 15] = ((raw[r +  7] & 0x80) != 0) ? (byte)0xFF : (byte)(raw[r + 7] << 1);
+                    r += 8;
+                }
+
+                return image;
+            }
+
             byte[] palette = new byte[1 << (bpp + 2)];
             Array.Copy(raw, palette, palette.Length);
             var o = palette.Length; // Pixel start offset
