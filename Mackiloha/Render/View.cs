@@ -7,6 +7,8 @@ namespace Mackiloha.Render
     public interface IView : IRenderObject
     {
         string MainView { get; set; }
+        float LODHeight { get; set; }
+        float LODWidth { get; set; }
     }
 
     public class View : RenderObject, IView, IAnim, ITrans, IDraw
@@ -39,6 +41,8 @@ namespace Mackiloha.Render
 
         // View
         public string MainView { get; set; }
+        public float LODHeight { get; set; }
+        public float LODWidth { get; set; }
 
         public override string Type => "View";
     }

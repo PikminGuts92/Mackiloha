@@ -35,8 +35,8 @@ namespace Mackiloha.IO.Serializers
             }                
 
             var num = ar.ReadInt32();
-            if (num != 1)
-                throw new Exception($"This should be 1, got {num}");
+            if (!(num == 0 || num == 1))
+                throw new Exception($"This should be 0 or 1, got {num}");
 
             num = ar.ReadByte();
             if (num != 0)

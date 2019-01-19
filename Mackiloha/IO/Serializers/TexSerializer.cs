@@ -29,24 +29,14 @@ namespace Mackiloha.IO.Serializers
 
             tex.IndexF = ar.ReadSingle();
 
-            switch (tex.IndexF)
-            {
-                case -10.0f:
-                case  -9.0f:
-                case  -8.0f:
-                case  -7.0f:
-                case  -6.0f:
-                case  -0.5f:
-                case   0.0f:
-                    break;
-                default:
-                    throw new NotSupportedException($"Expected number between -10.0 <-> 0.0, got {tex.IndexF}");
-            }
+            if (tex.IndexF < -13.0f || tex.IndexF > 0.0f)
+                throw new NotSupportedException($"Expected number between -13.0 <-> 0.0, got {tex.IndexF}");
 
             tex.Index = ar.ReadInt32();
             switch(tex.Index)
             {
                 case 1:
+                case 2:
                 case 4:
                 case 34:
                     break;

@@ -33,10 +33,12 @@ namespace Mackiloha.IO.Serializers
             var num = ar.ReadInt32();
             switch (num)
             {
+                case 0:
                 case 1:
                 case 2:
                 case 3:
                 case 4:
+                case 5:
                     break;
                 default:
                     throw new Exception($"Unexpected number, got {num}");

@@ -19,14 +19,15 @@ namespace Mackiloha.IO.Serializers
             MiloSerializer.ReadFromStream(ar.BaseStream, view.Draw);
 
             view.MainView = ar.ReadString();
+            
+            // Ratio is usually 4:3
+            view.LODHeight = ar.ReadSingle();
+            view.LODWidth = ar.ReadSingle();
 
-            var always0 = ar.ReadInt32();
-            if (always0 != 0)
-                throw new Exception("This should be 0");
-
-            always0 = ar.ReadInt32();
-            if (always0 != 0)
-                throw new Exception("This should be 0");
+            /*
+            if (view.ScreenHeight > 0.0f && (view.ScreenWidth / view.ScreenHeight) != (4.0f / 3.0f))
+                throw new Exception($"Aspect ratio should be {(4.0f / 3.0f):F2}, got {(view.ScreenWidth / view.ScreenHeight):F2}");
+            */
         }
 
         public override void WriteToStream(AwesomeWriter aw, ISerializable data)
@@ -42,7 +43,8 @@ namespace Mackiloha.IO.Serializers
             MiloSerializer.WriteToStream(aw.BaseStream, view.Draw);
 
             aw.Write((string)view.MainView);
-            aw.Write((long)0); // Unknown
+            aw.Write((float)view.LODHeight);
+            aw.Write((float)view.LODWidth);
         }
 
         public override bool IsOfType(ISerializable data) => data is View;

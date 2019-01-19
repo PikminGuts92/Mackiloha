@@ -26,8 +26,12 @@ namespace Mackiloha.IO.Serializers
             switch (trans.UnknownInt)
             {
                 case 0:
+                case 1:
+                case 2:
+                case 3:
                 case 5:
                 case 7:
+                case 6:
                 case 8:
                     break;
                 default:
