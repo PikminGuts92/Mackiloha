@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27004.2006
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mackiloha", "Mackiloha\Mackiloha.csproj", "{6F65B855-4191-45BD-956C-6D1513AFDADB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFreq", "SuperFreq\SuperFreq.csproj", "{45FB4506-5EB0-4259-8CA5-389BE08644A6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFreq_Orig", "SuperFreq_Orig\SuperFreq_Orig.csproj", "{45FB4506-5EB0-4259-8CA5-389BE08644A6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChunkyBear", "ChunkyBear\ChunkyBear.csproj", "{907246A3-C743-4F93-942D-7F9C405A0737}"
 EndProject
