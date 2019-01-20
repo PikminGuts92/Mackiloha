@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GLTFTools", "GLTFTools\GLTF
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Boom", "Boom\Boom.csproj", "{37D0BE92-0C3C-4750-A379-727ECA7F79F2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFreq", "SuperFreq\SuperFreq.csproj", "{5CE6FF0A-3EF1-4CC9-8C93-F1990EC15CBC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{37D0BE92-0C3C-4750-A379-727ECA7F79F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37D0BE92-0C3C-4750-A379-727ECA7F79F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37D0BE92-0C3C-4750-A379-727ECA7F79F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CE6FF0A-3EF1-4CC9-8C93-F1990EC15CBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CE6FF0A-3EF1-4CC9-8C93-F1990EC15CBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CE6FF0A-3EF1-4CC9-8C93-F1990EC15CBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CE6FF0A-3EF1-4CC9-8C93-F1990EC15CBC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

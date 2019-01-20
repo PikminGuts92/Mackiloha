@@ -509,7 +509,8 @@ namespace Mackiloha.Wpf.Extensions
                     .ToList();
 
                 var subEntries = subsEntriesNames
-                    .Select(x => drawEntries.First(y => y.Name == x))
+                    .Select(x => drawEntries.FirstOrDefault(y => y.Name == x))
+                    .Where(y => y != null)
                     .ToList();
 
                 foreach (var subEntry in subEntries)
@@ -525,7 +526,8 @@ namespace Mackiloha.Wpf.Extensions
                 .Select(x => new Scene()
                 {
                     Nodes = GetAllSubs(x)
-                        .Select(y => nodeIndex[y])
+                        .Select(y => nodeIndex.ContainsKey(y) ? nodeIndex[y] : -1)
+                        .Where(z => z != -1)
                         .Distinct()
                         .ToArray()
                 })
