@@ -101,9 +101,7 @@ namespace SuperFreq
                 byte[] ret = new byte[s.Length];
                 s.Read(ret, 0, (int)s.Length);
                 
-                return Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(ret));
-
-                //return ret;
+                return ret;
             }
         }
 
