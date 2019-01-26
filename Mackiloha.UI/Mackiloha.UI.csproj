@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ImGui.NET" Version="1.67.0" />
+    <PackageReference Include="Veldrid" Version="4.5.0" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.7" />
+    <PackageReference Include="Veldrid.StartupUtilities" Version="4.5.0" />
+    <PackageReference Include="Veldrid.Utilities" Version="4.5.0" />
+  </ItemGroup>
+
+</Project>
