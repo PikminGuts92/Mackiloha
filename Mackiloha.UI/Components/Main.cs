@@ -11,9 +11,9 @@ using Mackiloha;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
 using Mackiloha.Render;
-using SuperFreq.Extensions;
+using Mackiloha.UI.Extensions;
 
-namespace SuperFreq.Components
+namespace Mackiloha.UI.Components
 {
     public class Main
     {
@@ -262,7 +262,7 @@ namespace SuperFreq.Components
 
                 string GetStackPath(Stack<string> stack)
                 {
-                    return string.Join('.', stack.Reverse().ToArray());
+                    return string.Join(".", stack.Reverse().ToArray());
                 }
 
                 void RenderObject(string objName, ref object obj, Stack<string> stack)

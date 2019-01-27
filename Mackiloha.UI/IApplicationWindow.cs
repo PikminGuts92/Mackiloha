@@ -7,7 +7,7 @@ namespace Mackiloha.UI
 {
     public interface IApplicationWindow
     {
-        event Action<float> Rendering;
+        event Action<float, long> Rendering;
         event Action<GraphicsDevice, ResourceFactory, Swapchain> GraphicsDeviceCreated;
         event Action GraphicsDeviceDestroyed;
         event Action Resized;

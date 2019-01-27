@@ -1,15 +1,29 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Shaders\fragment.glsl">
+      <LogicalName>fragment.glsl</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Shaders\vertex.glsl">
+      <LogicalName>vertex.glsl</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ImGui.NET" Version="1.67.0" />
     <PackageReference Include="Veldrid" Version="4.5.0" />
+    <PackageReference Include="Veldrid.ImGui" Version="5.67.0" />
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.7" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="4.5.0" />
     <PackageReference Include="Veldrid.Utilities" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mackiloha\Mackiloha.csproj" />
   </ItemGroup>
 
 </Project>

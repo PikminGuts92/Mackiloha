@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Mackiloha;
 using Mackiloha.IO;
 
-namespace SuperFreq.Extensions
+namespace Mackiloha.UI.Extensions
 {
     public static class SerializerExtensions
     {

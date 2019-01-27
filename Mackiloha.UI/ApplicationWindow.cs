@@ -11,12 +11,12 @@ namespace Mackiloha.UI
 {
     public class ApplicationWindow : IApplicationWindow
     {
-        private readonly Sdl2Window Window;
+        internal readonly Sdl2Window Window;
         private GraphicsDevice GraphicsDevice;
         private DisposeCollectorResourceFactory ResourceFactory;
         private bool WindowResized = true;
 
-        public event Action<float> Rendering;
+        public event Action<float, long> Rendering;
         public event Action<GraphicsDevice, ResourceFactory, Swapchain> GraphicsDeviceCreated;
         public event Action GraphicsDeviceDestroyed;
         public event Action Resized;
@@ -34,7 +34,7 @@ namespace Mackiloha.UI
                 Y = 100,
                 WindowWidth = 1280,
                 WindowHeight = 720,
-                WindowInitialState = WindowState.FullScreen, // TODO: Read from config
+                WindowInitialState = WindowState.Maximized, // TODO: Read from config
                 WindowTitle = name
             };
             Window = VeldridStartup.CreateWindow(ref info);
@@ -62,29 +62,63 @@ namespace Mackiloha.UI
             GraphicsDevice = VeldridStartup.CreateGraphicsDevice(Window, options, GraphicsBackend.OpenGL);
             ResourceFactory = new DisposeCollectorResourceFactory(GraphicsDevice.ResourceFactory);
             GraphicsDeviceCreated?.Invoke(GraphicsDevice, ResourceFactory, GraphicsDevice.MainSwapchain);
+            var commandList = ResourceFactory.CreateCommandList();
 
+            // Setup imgui
+            //ImGuiRenderer renderer = new ImGuiRenderer(
+            //    GraphicsDevice,
+            //    GraphicsDevice.MainSwapchain.Framebuffer.OutputDescription,
+            //    Window.Width,
+            //    Window.Height);
+            
             var sw = Stopwatch.StartNew();
-            var previousElapsed = sw.Elapsed.TotalSeconds;
-
+            var prevElapsed = sw.Elapsed.TotalSeconds;
+            var prevElapsedTicks = sw.Elapsed.Ticks;
+            
             // Main loop
             while (Window.Exists)
             {
                 double newElapsed = sw.Elapsed.TotalSeconds;
-                float deltaSeconds = (float)(newElapsed - previousElapsed);
+                long newElapsedTicks = sw.Elapsed.Ticks; 
 
-                InputSnapshot inputSnapshot = Window.PumpEvents();
+                float deltaSeconds = (float)(newElapsed - prevElapsed);
+                var deltaTicks = newElapsedTicks = prevElapsedTicks;
+
+                //InputSnapshot snapshot = Window.PumpEvents();
                 if (!Window.Exists) continue;
+
+                // Feed the input events to our ImGui controller, which passes them through to ImGui
+                //renderer.Update(1.0f / 60.0f, snapshot);
                 
-                previousElapsed = newElapsed;
+                prevElapsed = newElapsed;
                 if (WindowResized)
                 {
                     WindowResized = false;
                     GraphicsDevice.ResizeMainWindow((uint)Window.Width, (uint)Window.Height);
+                    //renderer.WindowResized(Window.Width, Window.Height);
                     Resized?.Invoke();
                 }
 
-                Rendering?.Invoke(deltaSeconds);
+                Rendering?.Invoke(deltaSeconds, deltaTicks);
+                
+                // Draw imgui
+                //commandList.Begin();
+                
+                //renderer.Render(GraphicsDevice, commandList);
+                //commandList.End();
+
+                //GraphicsDevice.SubmitCommands(commandList);
+                //GraphicsDevice.SwapBuffers(GraphicsDevice.MainSwapchain);
+                //GraphicsDevice.WaitForIdle();
             }
+
+            // Clean up resources
+            GraphicsDevice.WaitForIdle();
+            //renderer.Dispose();
+            commandList.Dispose();
+            ResourceFactory.DisposeCollector.DisposeAll();
+            GraphicsDevice.Dispose();
+            GraphicsDeviceDestroyed?.Invoke();
         }
 
         protected void OnKeyDown(KeyEvent keyEvent)

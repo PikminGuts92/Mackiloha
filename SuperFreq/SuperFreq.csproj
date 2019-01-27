@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
     <TrimUnusedDependencies>true</TrimUnusedDependencies>
@@ -10,19 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ImGui.NET" Version="1.67.0" />
-    <PackageReference Include="Veldrid" Version="4.5.0" />
-    <PackageReference Include="Veldrid.ImGui" Version="5.67.0" />
-    <PackageReference Include="Veldrid.SPIRV" Version="1.0.6" />
-    <PackageReference Include="Veldrid.StartupUtilities" Version="4.5.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Shaders/vertex.glsl" LogicalName="vertex.glsl" />
-    <EmbeddedResource Include="Shaders/fragment.glsl" LogicalName="fragment.glsl" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\Mackiloha.UI\Mackiloha.UI.csproj" />
     <ProjectReference Include="..\Mackiloha\Mackiloha.csproj" />
   </ItemGroup>
 
