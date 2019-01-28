@@ -48,18 +48,19 @@ namespace Mackiloha.UI
             var options = new GraphicsDeviceOptions
             {
                 Debug = false,
-                SwapchainDepthFormat = null, // PixelFormat.R16_UNorm,
+                SwapchainDepthFormat = PixelFormat.R16_UNorm, // PixelFormat.R16_UNorm,
                 SyncToVerticalBlank = true,
                 ResourceBindingModel = ResourceBindingModel.Improved,
                 PreferDepthRangeZeroToOne = true,
-                PreferStandardClipSpaceYDirection = true
+                PreferStandardClipSpaceYDirection = true,
+                HasMainSwapchain = true
             };
 #if DEBUG
             options.Debug = true;
 #endif
 
             // Setup graphics device
-            GraphicsDevice = VeldridStartup.CreateGraphicsDevice(Window, options, GraphicsBackend.OpenGL);
+            GraphicsDevice = VeldridStartup.CreateGraphicsDevice(Window, options, GraphicsBackend.Direct3D11);
             ResourceFactory = new DisposeCollectorResourceFactory(GraphicsDevice.ResourceFactory);
             GraphicsDeviceCreated?.Invoke(GraphicsDevice, ResourceFactory, GraphicsDevice.MainSwapchain);
             var commandList = ResourceFactory.CreateCommandList();

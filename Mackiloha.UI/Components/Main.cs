@@ -19,21 +19,26 @@ namespace Mackiloha.UI.Components
     {
         private string MiloPath { get; set; }
         private MiloSerializer Serializer { get; set; }
-        private MiloObjectDir Milo { get; set; }
+
+        private MiloObjectDir _milo;
+        private MiloObjectDir Milo { get => _milo; set { _milo = value; MiloChanged?.Invoke(value); } }
 
         private string SelectedType { get; set; }
         private MiloObject SelectedEntry { get; set; }
+        
+        public event Action<MiloObjectDir> MiloChanged;
 
-        public Main()
+        public Main() { }
+
+        public void LoadMilo(string path)
         {
-            var miloPath = Environment.GetCommandLineArgs()
-                .Skip(1)
-                .FirstOrDefault();
-
-            if (miloPath == null)
+            if (path == null)
+            {
+                Milo = null;
                 return;
+            }
 
-            var miloFile = MiloFile.ReadFromFile(miloPath);
+            var miloFile = MiloFile.ReadFromFile(path);
 
             Serializer = new MiloSerializer(new SystemInfo()
             {
@@ -43,12 +48,16 @@ namespace Mackiloha.UI.Components
 
             using (var ms = new MemoryStream(miloFile.Data))
             {
-                Milo = Serializer.ReadFromStream<MiloObjectDir>(ms);
-                if (Milo == null) return;
-                
+                var milo = Serializer.ReadFromStream<MiloObjectDir>(ms);
+                if (milo == null)
+                {
+                    Milo = null;
+                    return;
+                };
+
                 List<MiloObject> miloObjects = new List<MiloObject>();
 
-                foreach (var entry in Milo.Entries)
+                foreach (var entry in milo.Entries)
                 {
                     var entryBytes = entry as MiloObjectBytes;
                     if (entryBytes == null)
@@ -60,6 +69,12 @@ namespace Mackiloha.UI.Components
 
                         switch (entry.Type)
                         {
+                            case "Cam":
+                                miloObj = Serializer.ReadFromMiloObjectBytes<Cam>(entryBytes);
+                                break;
+                            case "Environ":
+                                miloObj = Serializer.ReadFromMiloObjectBytes<Environ>(entryBytes);
+                                break;
                             case "Mat":
                                 miloObj = Serializer.ReadFromMiloObjectBytes<Mat>(entryBytes);
                                 break;
@@ -87,13 +102,14 @@ namespace Mackiloha.UI.Components
 
                 foreach (var miloObj in miloObjects)
                 {
-                    var remObj = Milo.Entries.First(x => x.Type == miloObj.Type && x.Name == miloObj.Name);
-                    Milo.Entries.Remove(remObj);
+                    var remObj = milo.Entries.First(x => x.Type == miloObj.Type && x.Name == miloObj.Name);
+                    milo.Entries.Remove(remObj);
 
-                    Milo.Entries.Add(miloObj);
+                    milo.Entries.Add(miloObj);
                 }
-                
-                Milo.SortEntriesByType();
+
+                milo.SortEntriesByType();
+                Milo = milo;
             }
         }
 
