@@ -196,6 +196,10 @@ namespace Mackiloha.UI.Components
 
             if (SelectedEntry != null)
             {
+                ImGui.Begin("Object 2");
+                new MiloComponent(SelectedEntry).Render();
+                ImGui.End();
+
                 ImGui.Begin("Object");
 
                 string name = SelectedEntry.Name;
