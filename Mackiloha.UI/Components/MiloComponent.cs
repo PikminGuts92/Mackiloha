@@ -56,157 +56,206 @@ namespace Mackiloha.UI.Components
             ImGui.BeginGroup();
             foreach(var prop in properties)
             {
-                RenderInput(ref obj, prop);
+                var val = prop.GetValue(obj);
+                RenderInput(ref val, prop.Name);
+                
+                if (prop.CanWrite) prop.SetValue(obj, val);
                 ImGui.Separator();
             }
             ImGui.EndGroup();
             
             var fields = type.GetFields();
+            ImGui.BeginGroup();
+            foreach (var f in fields.Where(x => x.IsPublic))
+            {
+                var val = f.GetValue(obj);
+                RenderInput(ref val, f.Name);
+                
+                f.SetValue(obj, val);
+                ImGui.Separator();
+            }
+            ImGui.EndGroup();
         }
-
-        private void RenderInput(ref object obj, PropertyInfo info)
+        
+        private void RenderInput(ref object obj, string name)
         {
-            var propName = info.Name;
-            var propValue = info.GetValue(obj);
-            var propType = propValue.GetType();
+            var objType = obj.GetType();
 
-            if (propType.IsPrimitive || propType == typeof(string))
+            if (objType.IsPrimitive || objType == typeof(string))
             {
                 int i = 0;
                 float f = 0.0f;
                 double d = 0.0d;
                 bool b = false;
 
-                switch (propValue)
+                switch (obj)
                 {
                     case byte ub:
                         i = ub;
 
-                        if (ImGui.InputInt(propName, ref i)
+                        if (ImGui.InputInt(name, ref i)
                             && (i >= byte.MinValue && i <= byte.MaxValue))
-                            info.SetValue(obj, i);
+                            obj = i;
                         break;
                     case sbyte sb:
                         i = sb;
 
-                        if (ImGui.InputInt(propName, ref i)
+                        if (ImGui.InputInt(name, ref i)
                             && (i >= sbyte.MinValue && i <= sbyte.MaxValue))
-                            info.SetValue(obj, i);
+                            obj = i;
                         break;
                     case ushort us:
                         i = us;
 
-                        if (ImGui.InputInt(propName, ref i)
+                        if (ImGui.InputInt(name, ref i)
                             && (i >= ushort.MinValue && i <= ushort.MaxValue))
-                            info.SetValue(obj, i);
+                            obj = i;
                         break;
                     case short ss:
                         i = ss;
 
-                        if (ImGui.InputInt(propName, ref i)
+                        if (ImGui.InputInt(name, ref i)
                             && (i >= short.MinValue && i <= short.MaxValue))
-                            info.SetValue(obj, i);
+                            obj = i;
                         break;
                     case uint ui:
                         i = (int)ui;
 
-                        if (ImGui.InputInt(propName, ref i)
+                        if (ImGui.InputInt(name, ref i)
                             && i >= uint.MinValue)
-                            info.SetValue(obj, i);
+                            obj = i;
                         break;
                     case int si:
                         i = si;
 
-                        if (ImGui.InputInt(propName, ref i)
+                        if (ImGui.InputInt(name, ref i)
                             && (i >= int.MinValue && i <= int.MaxValue))
-                            info.SetValue(obj, i);
+                            obj = i;
                         break;
                     case ulong ul:
                         i = (int)ul;
 
-                        if (ImGui.InputInt(propName, ref i)
+                        if (ImGui.InputInt(name, ref i)
                             && i >= uint.MinValue)
-                            info.SetValue(obj, i);
+                            obj = i;
                         break;
                     case long sl:
                         i = (int)sl;
 
-                        if (ImGui.InputInt(propName, ref i)
+                        if (ImGui.InputInt(name, ref i)
                             && (i >= int.MinValue && i <= int.MaxValue))
-                            info.SetValue(obj, i);
+                            obj = i;
                         break;
                     case float f2:
                         f = f2;
-                        
-                        if (ImGui.DragFloat(propName, ref f))
-                            info.SetValue(obj, f);
+
+                        if (ImGui.DragFloat(name, ref f))
+                            obj = f;
                         break;
                     case double d2:
                         d = d2;
 
-                        if (ImGui.InputDouble(propName, ref d))
-                            info.SetValue(obj, d);
+                        if (ImGui.InputDouble(name, ref d))
+                            obj = d;
                         break;
                     case bool b2:
                         b = b2;
 
-                        if (ImGui.Checkbox(propName, ref b))
-                            info.SetValue(obj, b);
+                        if (ImGui.Checkbox(name, ref b))
+                            obj = b;
                         break;
                     case string s2:
                         string s = s2;
-                        
-                        if (ImGui.InputText(propName, ref s, 0xFF))
-                            info.SetValue(obj, s);
+
+                        if (ImGui.InputText(name, ref s, 0xFF))
+                            obj = s;
                         break;
                 }
 
                 return;
             }
 
-            int[] nums = new[] { 0 };
-            var num_ints = nums.GetType().GetInterfaces();
-
-            //var ints = propType.GetInterfaces().Contains(x => x == typeof(ICollection));
-            var nums2 = nums as ICollection<int>;
-            //nums2.Add(40);
-            List<int> num3 = new List<int>();
-            //num3.IsFixedSize;
-            var read = nums2.IsReadOnly;
-            if (propType == typeof(Matrix4))
+            if (obj is ICollection collection)
             {
-                var mat = (Matrix4)propValue;
+                if (!ImGui.TreeNodeEx(name))
+                    return;
+
+                var idx = 0;
+                foreach (var item in collection)
+                {
+                    var temp = item;
+
+                    //RenderObject(ref temp, item.GetType()); // What if a struct?
+                    RenderInput(ref temp, $"[{idx++}]");
+                }
+
+                ImGui.TreePop();
+                return;
+            }
+
+            if (objType == typeof(Matrix4))
+            {
+                var mat = (Matrix4)obj;
                 var r1 = new System.Numerics.Vector3(mat.M11, mat.M12, mat.M13);
                 var r2 = new System.Numerics.Vector3(mat.M21, mat.M22, mat.M23);
                 var r3 = new System.Numerics.Vector3(mat.M31, mat.M32, mat.M33);
 
-                if (!ImGui.TreeNodeEx(propName, ImGuiTreeNodeFlags.DefaultOpen))
+                if (!ImGui.TreeNodeEx(name, ImGuiTreeNodeFlags.DefaultOpen))
                     return;
 
                 //ImGui.Text(propName);
-                if (ImGui.InputFloat3($"[0]##{propName}", ref r1))
+                if (ImGui.InputFloat3($"[0]##{name}", ref r1))
                 {
                     mat.M11 = r1.X;
                     mat.M12 = r1.Y;
                     mat.M13 = r1.Z;
                 }
-                if (ImGui.InputFloat3($"[1]##{propName}", ref r2))
+                if (ImGui.InputFloat3($"[1]##{name}", ref r2))
                 {
                     mat.M21 = r2.X;
                     mat.M22 = r2.Y;
                     mat.M23 = r2.Z;
                 }
-                if (ImGui.InputFloat3($"[2]##{propName}", ref r3))
+                if (ImGui.InputFloat3($"[2]##{name}", ref r3))
                 {
                     mat.M31 = r3.X;
                     mat.M32 = r3.Y;
                     mat.M33 = r3.Z;
                 }
-
-                info.SetValue(obj, mat);
+                
+                obj = mat;
                 ImGui.TreePop();
                 return;
             }
+
+            if (objType.IsEnum)
+            {
+                var selectedName = objType.GetEnumName(obj);
+                var selectedInt = Convert.ChangeType(obj, objType.GetEnumUnderlyingType());
+                var enumValues = objType.GetEnumValues();
+                
+                if (ImGui.BeginCombo(name, $"{selectedName} ({selectedInt})"))
+                {
+                    foreach (var v in enumValues)
+                    {
+                        var enumName = objType.GetEnumName(v);
+                        var enumInt = Convert.ChangeType(v, objType.GetEnumUnderlyingType());
+
+                        if (ImGui.Selectable($"{enumName} ({enumInt})", obj.Equals(v)))
+                            obj = v;
+                    }
+                    ImGui.EndCombo();
+                }
+                return;
+            }
+
+            // Assume class/struct
+            if (!ImGui.TreeNodeEx(name))
+                return;
+
+            //RenderObject(ref propValue, propType);
+            RenderObject(ref obj, objType);
+            ImGui.TreePop();
         }
     }
 }
