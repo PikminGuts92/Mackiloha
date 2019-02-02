@@ -28,6 +28,8 @@ namespace Mackiloha.UI.Components
         
         public event Action<MiloObjectDir> MiloChanged;
 
+        public OpenFileDialog FileDialog = new OpenFileDialog();
+
         public Main() { }
 
         public void LoadMilo(string path)
@@ -115,14 +117,16 @@ namespace Mackiloha.UI.Components
 
         public void Render()
         {
+            var openMiloModal = false;
+
             // Menu bar
             {
                 ImGui.BeginMainMenuBar();
-
+                
                 if (ImGui.BeginMenu("File"))
                 {
                     if (ImGui.MenuItem("Open"))
-                        OpenMilo();
+                        openMiloModal = true;
 
                     ImGui.Separator();
                     ImGui.MenuItem("Save");
@@ -138,6 +142,20 @@ namespace Mackiloha.UI.Components
                 ImGui.MenuItem("Help");
 
                 ImGui.EndMainMenuBar();
+            }
+
+            if (openMiloModal)
+                ImGui.OpenPopup("OpenMiloFile");
+
+            bool open = true;
+            ImGui.SetNextWindowSize(new Numerics.Vector2(600, 400), ImGuiCond.FirstUseEver);
+
+            if (ImGui.BeginPopupModal("OpenMiloFile", ref open,
+                ImGuiWindowFlags.NoTitleBar))
+            {
+                FileDialog.Render();
+
+                ImGui.EndPopup();
             }
 
             // Archive explorer
@@ -207,6 +225,22 @@ namespace Mackiloha.UI.Components
             // TODO: Integrate OpenFileDialog somehow
             //ImGui.OpenPopup("OpenFile");
 
+            //ImGui.OpenPopup("Open");
+
+            ImGui.OpenPopup("OpenMiloFile");
+
+            bool open = false;
+            if (ImGui.BeginPopupModal("OpenMiloFile", ref open,
+                ImGuiWindowFlags.AlwaysAutoResize))
+            {
+                var ofd = new OpenFileDialog();
+                ofd.Render();
+
+                ImGui.EndPopup();
+            }
+
+            
+            //ImGui.EndPopup();
         }
     }
 }
