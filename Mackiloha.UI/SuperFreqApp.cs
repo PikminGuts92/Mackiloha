@@ -56,6 +56,18 @@ namespace Mackiloha.UI
 
         protected void LoadMilo(MiloObjectDir milo)
         {
+            if (milo == null)
+            {
+                ProjectionMatrix = Matrix4x4.Identity;
+                ViewMatrix = Matrix4x4.Identity;
+                WorldMatrix = Matrix4x4.Identity;
+
+                VertexBuffer?.Dispose();
+                IndexBuffer?.Dispose();
+                IndexSize = 0;
+                return;
+            }
+
             var textures = milo.Entries
                 .Where(x => x is Tex)
                 .Select(y => y as Tex)
