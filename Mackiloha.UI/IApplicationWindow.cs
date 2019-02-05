@@ -16,6 +16,7 @@ namespace Mackiloha.UI
         uint Width { get; }
         uint Height { get; }
 
+        IApplicationWindow Init(string name);
         void Run();
     }
 }

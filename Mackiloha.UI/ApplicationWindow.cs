@@ -11,7 +11,6 @@ namespace Mackiloha.UI
 {
     public class ApplicationWindow : IApplicationWindow
     {
-        internal readonly Sdl2Window Window;
         private GraphicsDevice GraphicsDevice;
         private DisposeCollectorResourceFactory ResourceFactory;
         private bool WindowResized = true;
@@ -22,10 +21,13 @@ namespace Mackiloha.UI
         public event Action Resized;
         public event Action<KeyEvent> KeyPressed;
 
+        internal Sdl2Window Window { get; private set; }
         public uint Width => (uint)Window.Width;
         public uint Height => (uint)Window.Height;
-        
-        public ApplicationWindow(string name)
+
+        public ApplicationWindow() { }
+
+        public IApplicationWindow Init(string name)
         {
             // Create window
             var info = new WindowCreateInfo
@@ -40,6 +42,8 @@ namespace Mackiloha.UI
             Window = VeldridStartup.CreateWindow(ref info);
             Window.Resized += () => WindowResized = true;
             Window.KeyDown += OnKeyDown;
+
+            return this;
         }
 
         public void Run()
