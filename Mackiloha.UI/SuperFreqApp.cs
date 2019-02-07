@@ -26,7 +26,7 @@ namespace Mackiloha.UI
     {
         private long TotalTicks;
         private readonly System.Numerics.Vector3 ClearColor = new System.Numerics.Vector3(0.2f, 0.2f, 0.3f); // Purple
-        private readonly Main Main = new Main();
+        private readonly MainComponent Main;
 
         private ImGuiRenderer Renderer;
 
@@ -49,8 +49,10 @@ namespace Mackiloha.UI
         private Pipeline Pipeline;
         private Shader[] Shaders;
 
-        public SuperFreqApp(IApplicationWindow window) : base(window)
+        public SuperFreqApp(IApplicationWindow window, MainComponent main) : base(window)
         {
+            Main = main;
+
             Main.MiloChanged += LoadMilo;
         }
 

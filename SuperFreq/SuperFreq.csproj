@@ -7,7 +7,6 @@
     <TrimUnusedDependencies>true</TrimUnusedDependencies>
     <ApplicationIcon />
     <StartupObject />
-    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>

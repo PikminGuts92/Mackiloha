@@ -8,7 +8,7 @@ using ImGuiNET;
 
 namespace Mackiloha.UI.Components
 {
-    public class OpenFileDialog
+    public class OpenFileDialogImGui
     {
         public string CurrentDirectory { get; set; } = Directory.GetCurrentDirectory();
         public string StartDirectory { get; set; } = Directory.GetCurrentDirectory();

@@ -15,7 +15,7 @@ using Mackiloha.UI.Extensions;
 
 namespace Mackiloha.UI.Components
 {
-    public class Main
+    public class MainComponent
     {
         private string MiloPath { get; set; }
         private MiloSerializer Serializer { get; set; }
@@ -28,9 +28,12 @@ namespace Mackiloha.UI.Components
         
         public event Action<MiloObjectDir> MiloChanged;
 
-        public OpenFileDialog FileDialog = new OpenFileDialog();
+        private readonly IFileDialog FileDialog;
 
-        public Main() { }
+        public MainComponent(IFileDialog fileDialog)
+        {
+            FileDialog = fileDialog;
+        }
 
         public void LoadMilo(string path)
         {
@@ -144,19 +147,26 @@ namespace Mackiloha.UI.Components
                 ImGui.EndMainMenuBar();
             }
 
-            if (openMiloModal)
+            if (openMiloModal && FileDialog.OpenFile())
+            {
+                openMiloModal = false;
+                if (FileDialog.Selection.Length > 0)
+                    LoadMilo(FileDialog.Selection[0]);
+            }
+
+            /* if (openMiloModal)
                 ImGui.OpenPopup("OpenMiloFile");
 
             bool open = true;
             ImGui.SetNextWindowSize(new Numerics.Vector2(600, 400), ImGuiCond.FirstUseEver);
-
+            
             if (ImGui.BeginPopupModal("OpenMiloFile", ref open,
                 ImGuiWindowFlags.NoTitleBar))
             {
                 FileDialog.Render();
 
                 ImGui.EndPopup();
-            }
+            }*/
 
             // Archive explorer
             if (Milo != null)
@@ -233,7 +243,7 @@ namespace Mackiloha.UI.Components
             if (ImGui.BeginPopupModal("OpenMiloFile", ref open,
                 ImGuiWindowFlags.AlwaysAutoResize))
             {
-                var ofd = new OpenFileDialog();
+                var ofd = new OpenFileDialogImGui();
                 ofd.Render();
 
                 ImGui.EndPopup();
