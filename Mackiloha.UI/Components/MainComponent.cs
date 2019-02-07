@@ -24,19 +24,25 @@ namespace Mackiloha.UI.Components
         private MiloObjectDir Milo { get => _milo; set { _milo = value; MiloChanged?.Invoke(value); } }
 
         private string SelectedType { get; set; }
-        private MiloObject SelectedEntry { get; set; }
+
+        private MiloObject _selectedEntry;
+        private MiloObject SelectedEntry { get => _selectedEntry; set { _selectedEntry = value; MiloComponent.Milo = value; } }
         
         public event Action<MiloObjectDir> MiloChanged;
 
         private readonly IFileDialog FileDialog;
+        private readonly MiloComponent MiloComponent;
 
-        public MainComponent(IFileDialog fileDialog)
+        public MainComponent(IFileDialog fileDialog, MiloComponent miloComponent)
         {
             FileDialog = fileDialog;
+            MiloComponent = miloComponent;
         }
 
         public void LoadMilo(string path)
         {
+            SelectedEntry = null;
+
             if (path == null)
             {
                 Milo = null;
@@ -118,9 +124,25 @@ namespace Mackiloha.UI.Components
             }
         }
 
+        public void SaveMilo(string path)
+        {
+            // TODO: Set block compression type
+            MiloFile mf = new MiloFile();
+            
+            using (var ms = new MemoryStream())
+            {
+                Serializer.WriteToStream(ms, Milo);
+                ms.Seek(0, SeekOrigin.Begin);
+                mf.Data = ms.ToArray();
+            }
+
+            mf.WriteToFile(path);
+        }
+
         public void Render()
         {
             var openMiloModal = false;
+            var saveMiloModal = false;
 
             // Menu bar
             {
@@ -132,8 +154,10 @@ namespace Mackiloha.UI.Components
                         openMiloModal = true;
 
                     ImGui.Separator();
-                    ImGui.MenuItem("Save");
-                    ImGui.MenuItem("Save As");
+                    //ImGui.MenuItem("Save");
+                    if (ImGui.MenuItem("Save As"))
+                        saveMiloModal = true;
+
                     ImGui.Separator();
                     if (ImGui.MenuItem("Exit"))
                         Environment.Exit(0);
@@ -152,6 +176,13 @@ namespace Mackiloha.UI.Components
                 openMiloModal = false;
                 if (FileDialog.Selection.Length > 0)
                     LoadMilo(FileDialog.Selection[0]);
+            }
+
+            if (saveMiloModal && FileDialog.SaveFile())
+            {
+                saveMiloModal = false;
+                if (FileDialog.Selection.Length > 0)
+                    SaveMilo(FileDialog.Selection[0]);
             }
 
             /* if (openMiloModal)
@@ -225,7 +256,7 @@ namespace Mackiloha.UI.Components
             if (SelectedEntry != null)
             {
                 ImGui.Begin("Object");
-                new MiloComponent(SelectedEntry).Render();
+                MiloComponent.Render();
                 ImGui.End();
             }
         }

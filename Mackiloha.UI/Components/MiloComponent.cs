@@ -11,15 +11,18 @@ namespace Mackiloha.UI.Components
 {
     public class MiloComponent
     {
-        private readonly MiloObject Milo;
+        public MiloObject Milo;
 
-        public MiloComponent(MiloObject milo)
+        public MiloComponent()
         {
-            Milo = milo;
+
         }
 
         public void Render()
         {
+            if (Milo == null)
+                return;
+
             string name = Milo.Name;
             if (ImGui.InputText("Name", ref name, 0xFF)) Milo.Name = name;
             ImGui.LabelText("Type", Milo.Type);

@@ -15,6 +15,7 @@ namespace SuperFreq
             // Components
             services.AddSingleton<IFileDialog, WinFileDialog>();
             services.AddSingleton<MainComponent>();
+            services.AddSingleton<MiloComponent>();
 
             services.AddSingleton<IApplicationWindow, ApplicationWindow>();
             services.AddSingleton<BaseApp, SuperFreqApp>();
