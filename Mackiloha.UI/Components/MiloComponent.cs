@@ -173,6 +173,12 @@ namespace Mackiloha.UI.Components
                         if (ImGui.InputText(name, ref s, 0xFF))
                             obj = s;
                         break;
+                    case char c:
+                        string sTemp = new string(new[] { c });
+
+                        if (ImGui.InputText(name, ref sTemp, 0x01))
+                            c = sTemp.FirstOrDefault();
+                            break;
                 }
 
                 return;

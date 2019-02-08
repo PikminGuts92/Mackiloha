@@ -86,6 +86,9 @@ namespace Mackiloha.UI.Components
                             case "Environ":
                                 miloObj = Serializer.ReadFromMiloObjectBytes<Environ>(entryBytes);
                                 break;
+                            case "Font":
+                                miloObj = Serializer.ReadFromMiloObjectBytes<Font>(entryBytes);
+                                break;
                             case "Mat":
                                 miloObj = Serializer.ReadFromMiloObjectBytes<Mat>(entryBytes);
                                 break;
