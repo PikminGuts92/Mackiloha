@@ -13,7 +13,7 @@
     <EmbeddedResource Include="Assets\*" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia.Desktop" Version="0.7.1-cibuild0001610-beta" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.7.1-cibuild0001610-beta" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.7.1-build989-beta" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.7.1-build989-beta" />
   </ItemGroup>
 </Project>

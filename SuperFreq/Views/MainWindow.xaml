@@ -3,8 +3,7 @@
         xmlns:vm="clr-namespace:SuperFreq.ViewModels;assembly=SuperFreq"
         Icon="resm:SuperFreq.Assets.judy_blue_face.ico"
         Title="SuperFreq"
-        Height="500" Width="800"
-        WindowState="Maximized">
+        Height="500" Width="800">
 
   <Design.DataContext>
     <vm:MainWindowViewModel/>
@@ -13,10 +12,10 @@
   <Grid RowDefinitions="30, 433*">
     <Menu Grid.Row="0">
       <MenuItem Header="File">
-        <MenuItem Header="Open" Click="Menu_File_Open_Click"/>
-        <MenuItem Header="Save"/>
+        <MenuItem Name="Menu_File_Open" Header="Open"/>
+        <MenuItem Name="Menu_File_Save" Header="Save"/>
         <Separator/>
-        <MenuItem Header="Exit" Click="Menu_File_Exit_Click"/>
+        <MenuItem Name="Menu_File_Exit" Header="Exit"/>
       </MenuItem>
     </Menu>
     <Grid Grid.Row="1" ColumnDefinitions="8*, 121*, 267*">

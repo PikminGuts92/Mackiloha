@@ -15,6 +15,9 @@ namespace SuperFreq.Views
         {
             InitializeComponent();
             OrigTitle = this.Title;
+
+            this.FindControl<MenuItem>("Menu_File_Open").Click += Menu_File_Open_Click;
+            this.FindControl<MenuItem>("Menu_File_Exit").Click += Menu_File_Exit_Click;
         }
 
         private void InitializeComponent()
