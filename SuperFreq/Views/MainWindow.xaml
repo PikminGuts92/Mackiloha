@@ -1,7 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:SuperFreq.ViewModels;assembly=SuperFreq"
-        Icon="resm:SuperFreq.Assets.judy.ico"
+        Icon="resm:SuperFreq.Assets.judy_blue_face.ico"
         Title="SuperFreq"
         Height="500" Width="800"
         WindowState="Maximized">
@@ -19,6 +19,11 @@
         <MenuItem Header="Exit" Click="Menu_File_Exit_Click"/>
       </MenuItem>
     </Menu>
+    <Grid Grid.Row="1" ColumnDefinitions="8*, 121*, 267*">
+      <TreeView Grid.Column="0" Grid.ColumnSpan="2" Margin="5" BorderThickness="5" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+        
+      </TreeView>
+    </Grid>
   </Grid>
   <!--TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/-->
 </Window>
