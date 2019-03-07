@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GLTFTools", "GLTFTools\GLTF
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Boom", "Boom\Boom.csproj", "{37D0BE92-0C3C-4750-A379-727ECA7F79F2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SuperFreq", "SuperFreq\SuperFreq.csproj", "{5CE6FF0A-3EF1-4CC9-8C93-F1990EC15CBC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SuperFreq_Core3", "SuperFreq_Core3\SuperFreq_Core3.csproj", "{5CE6FF0A-3EF1-4CC9-8C93-F1990EC15CBC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mackiloha.UI", "Mackiloha.UI\Mackiloha.UI.csproj", "{1ABFF15B-B8D5-4F5A-B35F-9A341886225F}"
 EndProject
