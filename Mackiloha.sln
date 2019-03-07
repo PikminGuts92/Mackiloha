@@ -19,7 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Boom", "Boom\Boom.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SuperFreq_Core3", "SuperFreq_Core3\SuperFreq_Core3.csproj", "{5CE6FF0A-3EF1-4CC9-8C93-F1990EC15CBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mackiloha.UI", "Mackiloha.UI\Mackiloha.UI.csproj", "{1ABFF15B-B8D5-4F5A-B35F-9A341886225F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mackiloha.UI", "Mackiloha.UI\Mackiloha.UI.csproj", "{1ABFF15B-B8D5-4F5A-B35F-9A341886225F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SuperFreq", "SuperFreq\SuperFreq.csproj", "{C8EA9EFC-9EB8-4DE2-829E-63085C6347E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{1ABFF15B-B8D5-4F5A-B35F-9A341886225F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1ABFF15B-B8D5-4F5A-B35F-9A341886225F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1ABFF15B-B8D5-4F5A-B35F-9A341886225F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8EA9EFC-9EB8-4DE2-829E-63085C6347E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8EA9EFC-9EB8-4DE2-829E-63085C6347E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8EA9EFC-9EB8-4DE2-829E-63085C6347E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8EA9EFC-9EB8-4DE2-829E-63085C6347E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
