@@ -16,4 +16,7 @@
     <PackageReference Include="Avalonia.Desktop" Version="0.7.1-build989-beta" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.7.1-build989-beta" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mackiloha\Mackiloha.csproj" />
+  </ItemGroup>
 </Project>
