@@ -45,7 +45,9 @@ namespace SuperFreq.Views
             viewModel.Archive = ArkFile.FromFile(results.First());
 
             var treeView = this.FindControl<TreeView>("TreeView_Archive");
-            treeView.DataContext = viewModel.Root;
+
+            //treeView.DataContext = viewModel.Root;
+            treeView.Items = new [] { viewModel.Root };
         }
 
         private void Menu_File_Exit_Click(object sender, RoutedEventArgs e)
