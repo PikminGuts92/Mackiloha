@@ -32,26 +32,7 @@ namespace SuperFreq.ViewModels
                     if (ark == null)
                         return;
 
-                    var directories = ark.Entries
-                        .Select(x => (x.Directory ?? "")
-                        .ToLower())
-                        .Distinct()
-                        .SelectMany(w =>
-                        {
-                            var subDirs = w
-                                .Split('/')
-                                .ToList();
-
-                            return Enumerable
-                                .Range(1, subDirs.Count)
-                                .Select(s => string.Join('/', subDirs.Take(s)))
-                                .ToList();
-                        })
-                        .Distinct()
-                        .OrderBy(x => x)
-                        .ToList();
-
-                    ProcessDirectories(directories, ark.Entries, "", this.Root);
+                    ProcessDirectories(ark.Entries, "", this.Root);
                 });
             
             /*
@@ -84,10 +65,32 @@ namespace SuperFreq.ViewModels
                 });*/
         }
 
-        private static void ProcessDirectories(IList<string> subDirectories, IList<ArkEntry> entries, string currentPath, TreeViewItem currentNode)
+        private static void ProcessDirectories(IList<ArkEntry> entries, string currentPath, TreeViewItem currentNode)
         {
-            var immediateDirs = subDirectories
-                .Select(x => x.Contains('/') ? x.Substring(0, x.IndexOf('/')) : x)
+            /*
+            var directories = entries
+                        .Select(x => (x.Directory ?? "")
+                        .ToLower())
+                        .Distinct()
+                        .SelectMany(w =>
+                        {
+                            var subDirs = w
+                                .Split('/')
+                                .ToList();
+
+                            return Enumerable
+                                .Range(1, subDirs.Count)
+                                .Select(s => string.Join('/', subDirs.Take(s)))
+                                .ToList();
+                        })
+                        .Distinct()
+                        .OrderBy(x => x)
+                        .ToList();*/
+
+
+            var immediateDirs = entries
+                .Where(x => !x.Directory.Equals(currentPath, StringComparison.CurrentCultureIgnoreCase))
+                .Select(x => GetTopDirectory(x.Directory.Substring(currentPath.Length + (currentPath.Length > 0 ? 1 : 0))))
                 .Distinct()
                 .OrderBy(x => x)
                 .ToList();
@@ -99,17 +102,13 @@ namespace SuperFreq.ViewModels
 
             var subItems = new List<TreeViewItem>();
 
+            
             foreach (var dir in immediateDirs)
             {
                 var subDir = currentPath.Length > 0 ? $"{currentPath}/{dir}" : dir;
-                var subDirs = subDirectories
-                    .Where(x => x.StartsWith($"{subDir}/", StringComparison.CurrentCultureIgnoreCase))
-                    .Select(x => x.Remove(0, x.IndexOf('/') + 1))
-                    .OrderBy(x => x)
-                    .ToList();
 
                 var subEntries = entries
-                    .Where(x => x.Directory.Equals(subDir, StringComparison.CurrentCultureIgnoreCase))
+                    .Where(x => x.Directory.StartsWith(subDir, StringComparison.CurrentCultureIgnoreCase))
                     .OrderBy(x => x.FullPath)
                     .ToList();
 
@@ -119,15 +118,33 @@ namespace SuperFreq.ViewModels
                 //subNode.Name = "_";
                 subItems.Add(subNode);
 
-                ProcessDirectories(subDirs, subEntries, subDir, subNode);
+                ProcessDirectories(subEntries, subDir, subNode);
             }
 
             foreach (var entry in immediateEntries)
             {
-
+                var subNode = new TreeViewItem();
+                subNode.Header = entry.FileName;
+                //subNode.Tag = ark;
+                //subNode.Name = "_";
+                subItems.Add(subNode);
             }
 
             currentNode.Items = subItems;
+        }
+
+        private static string GetTopDirectory(string path)
+        {
+            if (path == null)
+            {
+                return null;
+            }
+            else if (path == "")
+            {
+                return "";
+            }
+
+            return path.Contains('/') ? path.Split('/').First() : path;
         }
 
         public Archive Archive
