@@ -20,7 +20,14 @@
     </Menu>
     <Grid Grid.Row="1" ColumnDefinitions="8*, 121*, 267*">
       <TreeView Name="TreeView_Archive" Grid.Column="0" Grid.ColumnSpan="2" Margin="5" BorderThickness="5" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-        
+        <TreeView.Styles>
+          <Style Selector="TreeViewItem.directory">
+            <Setter Property="FontSize" Value="16" />
+          </Style>
+          <Style Selector="TreeViewItem.file">
+            <Setter Property="FontSize" Value="12" />
+          </Style>
+        </TreeView.Styles>
       </TreeView>
     </Grid>
   </Grid>

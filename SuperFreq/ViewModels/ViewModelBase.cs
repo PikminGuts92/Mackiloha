@@ -25,6 +25,8 @@ namespace SuperFreq.ViewModels
 
                     TreeViewItem root = new TreeViewItem();
                     root.Header = Path.GetFileNameWithoutExtension(ark?.FileName);
+                    root.Classes.Add("root");
+
                     root.Tag = ark;
                     root.Name = "_";
                     this.Root = root;
@@ -114,6 +116,8 @@ namespace SuperFreq.ViewModels
 
                 var subNode = new TreeViewItem();
                 subNode.Header = dir;
+                subNode.Classes.Add("directory");
+
                 //subNode.Tag = ark;
                 //subNode.Name = "_";
                 subItems.Add(subNode);
@@ -125,6 +129,8 @@ namespace SuperFreq.ViewModels
             {
                 var subNode = new TreeViewItem();
                 subNode.Header = entry.FileName;
+                subNode.Classes.Add("file");
+
                 //subNode.Tag = ark;
                 //subNode.Name = "_";
                 subItems.Add(subNode);
