@@ -473,7 +473,7 @@ namespace Mackiloha.Wpf.Extensions
         {
             var rgba = bitmap.ToRGBA(info);
 
-            return new MagickImage(rgba, new PixelStorageSettings(bitmap.Width, bitmap.Height, StorageType.Char, PixelMapping.RGBA))
+            return new MagickImage(rgba, new PixelReadSettings(bitmap.Width, bitmap.Height, StorageType.Char, PixelMapping.RGBA))
                 .ToBitmapSource();
         }
 
@@ -481,7 +481,7 @@ namespace Mackiloha.Wpf.Extensions
         {
             var rgba = bitmap.ToRGBA(info);
 
-            new MagickImage(rgba, new PixelStorageSettings(bitmap.Width, bitmap.Height, StorageType.Char, PixelMapping.RGBA))
+            new MagickImage(rgba, new PixelReadSettings(bitmap.Width, bitmap.Height, StorageType.Char, PixelMapping.RGBA))
                 .Write(path);
         }
     }

@@ -157,7 +157,7 @@ namespace Mackiloha
                     }
                 }
                 
-                return new MagickImage(imageBytes, new PixelStorageSettings((int)width, (int)height, StorageType.Char, PixelMapping.RGBA));
+                return new MagickImage(imageBytes, new PixelReadSettings((int)width, (int)height, StorageType.Char, PixelMapping.RGBA));
             }
             else if (encoding == ImageEncoding.ATI2)
             {
@@ -309,7 +309,7 @@ namespace Mackiloha
                     }
                 }
 
-                return new MagickImage(imageBytes, new PixelStorageSettings((int)width, (int)height, StorageType.Char, PixelMapping.RGBA));
+                return new MagickImage(imageBytes, new PixelReadSettings((int)width, (int)height, StorageType.Char, PixelMapping.RGBA));
             }
 
             byte[] dds = new byte[128 + imageSize];
@@ -496,7 +496,7 @@ namespace Mackiloha
                 }
             }
 
-            return new MagickImage(imageBytes, new PixelStorageSettings((int)width, (int)height, StorageType.Char, PixelMapping.RGBA));
+            return new MagickImage(imageBytes, new PixelReadSettings((int)width, (int)height, StorageType.Char, PixelMapping.RGBA));
         }
 
         private static Color[] GetColorPaletteBGRa(AwesomeReader ar, uint count)

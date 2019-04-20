@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mackiloha", "Mackiloha\Mack
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFreq_Orig", "SuperFreq_Orig\SuperFreq_Orig.csproj", "{45FB4506-5EB0-4259-8CA5-389BE08644A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChunkyBear", "ChunkyBear\ChunkyBear.csproj", "{907246A3-C743-4F93-942D-7F9C405A0737}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiloStardust", "MiloStardust\MiloStardust.csproj", "{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mackiloha.Wpf", "Mackiloha.Wpf\Mackiloha.Wpf.csproj", "{D7AACE79-4EED-4F0E-A22F-2EFC6610845F}"
@@ -23,7 +21,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mackiloha.UI", "Mackiloha.U
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SuperFreq", "SuperFreq\SuperFreq.csproj", "{C8EA9EFC-9EB8-4DE2-829E-63085C6347E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperFreqCLI", "SuperFreqCLI\SuperFreqCLI.csproj", "{9C672ED2-8C14-47D3-9869-9B418977CFDE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SuperFreqCLI", "SuperFreqCLI\SuperFreqCLI.csproj", "{9C672ED2-8C14-47D3-9869-9B418977CFDE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mackiloha.App", "Mackiloha.App\Mackiloha.App.csproj", "{508FDBB0-649B-4E2B-9FD9-1725387A37A9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,10 +39,6 @@ Global
 		{45FB4506-5EB0-4259-8CA5-389BE08644A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45FB4506-5EB0-4259-8CA5-389BE08644A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45FB4506-5EB0-4259-8CA5-389BE08644A6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{907246A3-C743-4F93-942D-7F9C405A0737}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{907246A3-C743-4F93-942D-7F9C405A0737}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{907246A3-C743-4F93-942D-7F9C405A0737}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{907246A3-C743-4F93-942D-7F9C405A0737}.Release|Any CPU.Build.0 = Release|Any CPU
 		{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84175D3E-B9CF-47D0-A959-6A1153B9E7D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -75,6 +71,10 @@ Global
 		{9C672ED2-8C14-47D3-9869-9B418977CFDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C672ED2-8C14-47D3-9869-9B418977CFDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C672ED2-8C14-47D3-9869-9B418977CFDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{508FDBB0-649B-4E2B-9FD9-1725387A37A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{508FDBB0-649B-4E2B-9FD9-1725387A37A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{508FDBB0-649B-4E2B-9FD9-1725387A37A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{508FDBB0-649B-4E2B-9FD9-1725387A37A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
