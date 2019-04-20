@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GLTFTools\GLTFTools.csproj" />
     <ProjectReference Include="..\Mackiloha\Mackiloha.csproj" />
   </ItemGroup>
 

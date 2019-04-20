@@ -9,4 +9,8 @@
     <PackageReference Include="CommandLineParser" Version="2.4.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Mackiloha.App\Mackiloha.App.csproj" />
+  </ItemGroup>
+
 </Project>
