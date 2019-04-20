@@ -9,4 +9,9 @@
   <ItemGroup>
     <Resource Include="Assets\*" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AdonisUI" Version="1.10.0" />
+    <PackageReference Include="AdonisUI.ClassicTheme" Version="1.10.0" />
+  </ItemGroup>
 </Project>
