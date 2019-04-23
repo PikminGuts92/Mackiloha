@@ -597,6 +597,44 @@ namespace Mackiloha.App.Extensions
                 M43 = miloMatrix.M42,
                 M44 = miloMatrix.M44
             };
+
+        public static void ExtractToDirectory(this MiloObjectDir milo, string path, bool convertTextures)
+        {
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            /*
+            var entriesByType = milo.Entries
+                .GroupBy(x => x.Type)
+                .ToDictionary(x => Path.Combine(path, x.Key), y => y.ToList())
+                .ToList();*/
+
+            milo.SortEntriesByType();
+
+            var typeDirs = milo.Entries
+                .Select(x => Path.Combine(path, x.Type))
+                .Distinct()
+                .ToList();
+
+            foreach (var dir in typeDirs)
+            {
+                if (Directory.Exists(dir))
+                    continue;
+
+                Directory.CreateDirectory(dir);
+            }
+
+            foreach (var entry in milo.Entries)
+            {
+                // TODO: Sanitize file name
+                var filePath = Path.Combine(path, entry.Type, entry.Name);
+                if (entry is MiloObjectBytes miloBytes)
+                {
+                    File.WriteAllBytes(filePath, miloBytes.Data);
+                }
+            }
+        }
+
         /*
         public static void WriteTree(this MiloObjectDir milo, string path)
         {

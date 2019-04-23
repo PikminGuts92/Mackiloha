@@ -1,5 +1,8 @@
 ﻿using System;
+using System.IO;
 using CommandLine;
+using Mackiloha.App;
+using Mackiloha.App.Extensions;
 using SuperFreqCLI.Options;
 
 namespace SuperFreqCLI
@@ -12,7 +15,8 @@ namespace SuperFreqCLI
                 .WithParsed<Dir2MiloOptions>(OperatingSystem => { })
                 .WithParsed<Milo2DirOptions>(op =>
                 {
-
+                    var appState = new AppState(Path.GetDirectoryName(op.InputPath));
+                    appState.ExtractMiloContents(op.InputPath, op.OutputPath, true);
                 })
                 .WithNotParsed(errors => { });
         }
