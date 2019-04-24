@@ -17,11 +17,14 @@ namespace Mackiloha.App.Extensions
                 miloFile = MiloFile.ReadFromStream(fileStream);
             }
 
-            var serializer = new MiloSerializer(new SystemInfo()
+            state.UpdateSystemInfo(new SystemInfo()
             {
                 Version = miloFile.Version,
-                BigEndian = miloFile.BigEndian
+                BigEndian = miloFile.BigEndian,
+                Platform = Platform.PS2 // TODO: Get platform from file extension
             });
+
+            var serializer = state.GetSerializer();
 
             MiloObjectDir milo;
             using (var miloStream = new MemoryStream(miloFile.Data))
@@ -29,7 +32,9 @@ namespace Mackiloha.App.Extensions
                 milo = serializer.ReadFromStream<MiloObjectDir>(miloStream);
             }
 
-            milo.ExtractToDirectory(outputDir, convertTextures);
+            milo.ExtractToDirectory(outputDir, convertTextures, state);
         }
+
+        public static MiloSerializer GetSerializer(this AppState state) => new MiloSerializer(state.SystemInfo);
     }
 }
