@@ -598,7 +598,7 @@ namespace Mackiloha.App.Extensions
                 M44 = miloMatrix.M44
             };
 
-        public static void ExtractToDirectory(this MiloObjectDir milo, string path, bool convertTextures)
+        public static void ExtractToDirectory(this MiloObjectDir milo, string path, bool convertTextures, AppState state, IDirectory directory)
         {
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
@@ -624,7 +624,12 @@ namespace Mackiloha.App.Extensions
                 Directory.CreateDirectory(dir);
             }
 
-            foreach (var entry in milo.Entries)
+            // Filter out textures if converting
+            var entries = milo.Entries
+                .Where(x => !convertTextures || x.Type != "Tex")
+                .ToList();
+
+            foreach (var entry in entries)
             {
                 // TODO: Sanitize file name
                 var filePath = Path.Combine(path, entry.Type, entry.Name);
@@ -632,6 +637,27 @@ namespace Mackiloha.App.Extensions
                 {
                     File.WriteAllBytes(filePath, miloBytes.Data);
                 }
+            }
+
+            if (!convertTextures)
+                return;
+
+            var serializer = state.GetSerializer();
+
+            var textureEntries = milo.Entries
+                .Where(x => x.Type == "Tex")
+                .Select(x => x is Tex ? x as Tex : serializer.ReadFromMiloObjectBytes<Tex>(x as MiloObjectBytes))
+                .ToList();
+
+            foreach (var texEntry in textureEntries)
+            {
+                if (texEntry.UseExternal)
+                    throw new NotSupportedException("Can't extract external textures yet");
+
+                var fileName = $"{Path.GetFileNameWithoutExtension(texEntry.Name)}.png";
+
+                var filePath = Path.Combine(path, texEntry.Type, fileName);
+                texEntry.Bitmap.SaveAs(state.SystemInfo, filePath);
             }
         }
 

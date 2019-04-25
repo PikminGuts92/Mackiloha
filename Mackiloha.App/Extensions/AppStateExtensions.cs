@@ -32,7 +32,7 @@ namespace Mackiloha.App.Extensions
                 milo = serializer.ReadFromStream<MiloObjectDir>(miloStream);
             }
 
-            milo.ExtractToDirectory(outputDir, convertTextures, state);
+            milo.ExtractToDirectory(outputDir, convertTextures, state, state.GetWorkingDirectory());
         }
 
         public static MiloSerializer GetSerializer(this AppState state) => new MiloSerializer(state.SystemInfo);
