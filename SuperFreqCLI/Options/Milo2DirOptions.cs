@@ -10,10 +10,13 @@ namespace SuperFreqCLI.Options
     [Verb("milo2dir", HelpText = "Extracts content of milo archive to directory")]
     internal class Milo2DirOptions
     {
-        [Value(0, Required = true, MetaName = "Input Path", MetaValue = "STRING", HelpText = "Path to input milo archive")]
+        [Value(0, Required = true, MetaName = "miloPath", HelpText = "Path to input milo archive")]
         public string InputPath { get; set; }
 
-        [Value(1, Required = true, MetaName = "Output Path", MetaValue = "STRING", HelpText = "Path to output directory")]
+        [Value(1, Required = true, MetaName = "dirPath", HelpText = "Path to output directory")]
         public string OutputPath { get; set; }
+
+        [Option("convertTextures", HelpText = "Automatically convert textures to PNG")]
+        public bool ConvertTextures { get; set; }
     }
 }

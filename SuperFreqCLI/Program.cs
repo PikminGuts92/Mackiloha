@@ -16,7 +16,7 @@ namespace SuperFreqCLI
                 .WithParsed<Milo2DirOptions>(op =>
                 {
                     var appState = new AppState(Path.GetDirectoryName(op.InputPath));
-                    appState.ExtractMiloContents(op.InputPath, op.OutputPath, true);
+                    appState.ExtractMiloContents(op.InputPath, op.OutputPath, op.ConvertTextures);
                 })
                 .WithNotParsed(errors => { });
         }
