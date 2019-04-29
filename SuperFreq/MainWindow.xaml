@@ -3,14 +3,39 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:adonisUi="clr-namespace:AdonisUI;assembly=AdonisUI"
         xmlns:local="clr-namespace:SuperFreq"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
+        Title="SuperFreq" Height="450" Width="800"
         Icon="Assets/judy_dark.ico">
     <Window.Style>
         <Style TargetType="Window" BasedOn="{StaticResource {x:Type Window}}"/>
     </Window.Style>
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="433*"/>
+        </Grid.RowDefinitions>
         
+        <!--Toolbar with all the cool functions-->
+        <ToolBar x:Name="ToolBar" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ToolBarTray.IsLocked="True" Margin="-3,0,0,0" Grid.Row="0"
+                 Loaded="ToolBar_Loaded"
+                 Style="{DynamicResource ToolBarStyle}">
+            <Menu Style="{DynamicResource MenuStyle}">
+                <MenuItem Header="File" Style="{DynamicResource MenuItemStyle}">
+                    <MenuItem x:Name="Menu_File_Open" Header="Open" Style="{DynamicResource MenuItemStyle}"/>
+                    <MenuItem x:Name="Menu_File_OpenDirectory" Header="Open Directory" Style="{DynamicResource MenuItemStyle}"/>
+                    <MenuItem x:Name="Menu_File_SaveChanges" Header="Save Changes" Style="{DynamicResource MenuItemStyle}"/>
+                    <MenuItem x:Name="Menu_File_ExportHeader" Header="Export Header" Style="{DynamicResource MenuItemStyle}"/>
+                    <MenuItem x:Name="Menu_File_Exit" Header="Exit" Style="{DynamicResource MenuItemStyle}"/>
+                </MenuItem>
+                <MenuItem Header="Tools" Style="{DynamicResource MenuItemStyle}">
+                    <MenuItem x:Name="Menu_Tools_Options" Header="Options" Style="{DynamicResource MenuItemStyle}"/>
+                </MenuItem>
+                <MenuItem Header="Help" Style="{DynamicResource MenuItemStyle}">
+                    <MenuItem x:Name="Menu_Help_About" Header="About" Style="{DynamicResource MenuItemStyle}"/>
+                </MenuItem>
+            </Menu>
+        </ToolBar>
     </Grid>
 </Window>

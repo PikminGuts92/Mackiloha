@@ -10,6 +10,15 @@
                 <ResourceDictionary Source="pack://application:,,,/AdonisUI;component/ColorSchemes/Dark.xaml"/>
                 <ResourceDictionary Source="pack://application:,,,/AdonisUI.ClassicTheme;component/Resources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <Style x:Key="ToolBarStyle" TargetType="ToolBar" BasedOn="{StaticResource {x:Type ToolBar}}">
+                <Setter Property="Background" Value="{DynamicResource {x:Static adonisUi:Brushes.AccentBrush}}"/>
+            </Style>
+            <Style x:Key="MenuStyle" TargetType="Menu" BasedOn="{StaticResource {x:Type Menu}}">
+                <Setter Property="Background" Value="Transparent"/>
+            </Style>
+            <Style x:Key="MenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}"/>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
