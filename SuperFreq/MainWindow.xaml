@@ -12,6 +12,17 @@
     <Window.Style>
         <Style TargetType="Window" BasedOn="{StaticResource {x:Type Window}}"/>
     </Window.Style>
+    <Window.Resources>
+        <Style x:Key="ToolBarStyle" TargetType="ToolBar" BasedOn="{StaticResource {x:Type ToolBar}}">
+            <Setter Property="Background" Value="{DynamicResource {x:Static adonisUi:Brushes.AccentBrush}}"/>
+        </Style>
+        <Style x:Key="MenuStyle" TargetType="Menu" BasedOn="{StaticResource {x:Type Menu}}">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style x:Key="MenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}"/>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="25"/>
@@ -25,10 +36,19 @@
             <Menu Style="{DynamicResource MenuStyle}">
                 <MenuItem Header="File" Style="{DynamicResource MenuItemStyle}">
                     <MenuItem x:Name="Menu_File_Open" Header="Open" Style="{DynamicResource MenuItemStyle}">
+                        <MenuItem x:Name="Menu_File_Open_Ark" Header="Archive (.ark, .hdr)" Style="{DynamicResource MenuItemStyle}" IsEnabled="False">
+                            <MenuItem.Icon>
+                                <iconPacks:PackIconFontAwesome Width="12"
+                                       Height="12"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Kind="ArchiveSolid"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
                         <MenuItem x:Name="Menu_File_Open_Scene" Header="Scene (.gh, .kr, .milo, .rnd)" Style="{DynamicResource MenuItemStyle}">
                             <MenuItem.Icon>
-                                <iconPacks:PackIconFontAwesome Width="16"
-                                       Height="16"
+                                <iconPacks:PackIconFontAwesome Width="12"
+                                       Height="12"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center"
                                        Kind="CubesSolid"/>
@@ -41,8 +61,8 @@
                     <Separator/>
                     <MenuItem x:Name="Menu_File_Exit" Header="Exit" Style="{DynamicResource MenuItemStyle}">
                         <MenuItem.Icon>
-                            <iconPacks:PackIconFontAwesome Width="16"
-                                       Height="16"
+                            <iconPacks:PackIconFontAwesome Width="12"
+                                       Height="12"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center"
                                        Kind="DoorOpenSolid"/>
@@ -50,10 +70,26 @@
                     </MenuItem>
                 </MenuItem>
                 <MenuItem Header="Tools" Style="{DynamicResource MenuItemStyle}">
-                    <MenuItem x:Name="Menu_Tools_Options" Header="Options" Style="{DynamicResource MenuItemStyle}"/>
+                    <MenuItem x:Name="Menu_Tools_Options" Header="Options" Style="{DynamicResource MenuItemStyle}">
+                        <MenuItem.Icon>
+                            <iconPacks:PackIconFontAwesome Width="12"
+                                       Height="12"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Kind="CogSolid"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
                 </MenuItem>
                 <MenuItem Header="Help" Style="{DynamicResource MenuItemStyle}">
-                    <MenuItem x:Name="Menu_Help_About" Header="About" Style="{DynamicResource MenuItemStyle}"/>
+                    <MenuItem x:Name="Menu_Help_About" Header="About" Style="{DynamicResource MenuItemStyle}">
+                        <MenuItem.Icon>
+                            <iconPacks:PackIconFontAwesome Width="12"
+                                       Height="12"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Kind="InfoSolid"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
                 </MenuItem>
             </Menu>
         </ToolBar>
