@@ -13,5 +13,6 @@
   <ItemGroup>
     <PackageReference Include="AdonisUI" Version="1.10.0" />
     <PackageReference Include="AdonisUI.ClassicTheme" Version="1.10.0" />
+    <PackageReference Include="MahApps.Metro.IconPacks.FontAwesome" Version="2.3.0" />
   </ItemGroup>
 </Project>

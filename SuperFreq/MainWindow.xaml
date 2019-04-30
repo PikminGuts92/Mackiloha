@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:adonisUi="clr-namespace:AdonisUI;assembly=AdonisUI"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:local="clr-namespace:SuperFreq"
         mc:Ignorable="d"
         Title="SuperFreq" Height="450" Width="800"
@@ -23,11 +24,30 @@
                  Style="{DynamicResource ToolBarStyle}">
             <Menu Style="{DynamicResource MenuStyle}">
                 <MenuItem Header="File" Style="{DynamicResource MenuItemStyle}">
-                    <MenuItem x:Name="Menu_File_Open" Header="Open" Style="{DynamicResource MenuItemStyle}"/>
+                    <MenuItem x:Name="Menu_File_Open" Header="Open" Style="{DynamicResource MenuItemStyle}">
+                        <MenuItem x:Name="Menu_File_Open_Scene" Header="Scene (.gh, .kr, .milo, .rnd)" Style="{DynamicResource MenuItemStyle}">
+                            <MenuItem.Icon>
+                                <iconPacks:PackIconFontAwesome Width="16"
+                                       Height="16"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Kind="CubesSolid"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
                     <MenuItem x:Name="Menu_File_OpenDirectory" Header="Open Directory" Style="{DynamicResource MenuItemStyle}"/>
                     <MenuItem x:Name="Menu_File_SaveChanges" Header="Save Changes" Style="{DynamicResource MenuItemStyle}"/>
                     <MenuItem x:Name="Menu_File_ExportHeader" Header="Export Header" Style="{DynamicResource MenuItemStyle}"/>
-                    <MenuItem x:Name="Menu_File_Exit" Header="Exit" Style="{DynamicResource MenuItemStyle}"/>
+                    <Separator/>
+                    <MenuItem x:Name="Menu_File_Exit" Header="Exit" Style="{DynamicResource MenuItemStyle}">
+                        <MenuItem.Icon>
+                            <iconPacks:PackIconFontAwesome Width="16"
+                                       Height="16"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Kind="DoorOpenSolid"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
                 </MenuItem>
                 <MenuItem Header="Tools" Style="{DynamicResource MenuItemStyle}">
                     <MenuItem x:Name="Menu_Tools_Options" Header="Options" Style="{DynamicResource MenuItemStyle}"/>
