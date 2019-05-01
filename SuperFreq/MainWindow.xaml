@@ -22,6 +22,10 @@
         <Style x:Key="MenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
             <Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}"/>
         </Style>
+        <Style x:Key="TabControlStyle" TargetType="TabControl" BasedOn="{StaticResource {x:Type TabControl}}">
+            <!--<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}"/>-->
+        </Style>
+        <Style x:Key="TabItemStyle" TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}"/>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -93,5 +97,13 @@
                 </MenuItem>
             </Menu>
         </ToolBar>
+
+        <TabControl Grid.Row="1" Style="{DynamicResource TabControlStyle}" Margin="5" BorderThickness="5">
+            <TabControl.Items>
+                <TabItem Header="Scene" Style="{DynamicResource TabItemStyle}">
+                    
+                </TabItem>
+            </TabControl.Items>
+        </TabControl>
     </Grid>
 </Window>
