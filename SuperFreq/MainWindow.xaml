@@ -13,6 +13,11 @@
         <Style TargetType="Window" BasedOn="{StaticResource {x:Type Window}}"/>
     </Window.Style>
     <Window.Resources>
+        <Style x:Key="ControlStyle" TargetType="{x:Type Control}">
+            <Setter Property="Background" Value="{DynamicResource {x:Static adonisUi:Brushes.Layer1BackgroundBrush}}"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource {x:Static adonisUi:Brushes.Layer1BorderBrush}}"/>
+        </Style>
         <Style x:Key="ToolBarStyle" TargetType="ToolBar" BasedOn="{StaticResource {x:Type ToolBar}}">
             <Setter Property="Background" Value="{DynamicResource {x:Static adonisUi:Brushes.AccentBrush}}"/>
         </Style>
@@ -22,10 +27,38 @@
         <Style x:Key="MenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
             <Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}"/>
         </Style>
-        <Style x:Key="TabControlStyle" TargetType="TabControl" BasedOn="{StaticResource {x:Type TabControl}}">
-            <!--<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}"/>-->
+        <Style x:Key="TabControlStyle" TargetType="TabControl" BasedOn="{StaticResource ControlStyle}">
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="BorderThickness" Value="5"/>
         </Style>
-        <Style x:Key="TabItemStyle" TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}"/>
+        <Style x:Key="TabItemStyle" TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border Name="Border" BorderThickness="1,1,1,0" BorderBrush="{DynamicResource {x:Static adonisUi:Brushes.Layer4BorderBrush}}" CornerRadius="2,2,0,0" Margin="0,0,5,0">
+                            <ContentPresenter x:Name="ContentSite"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        ContentSource="Header"
+                                        Margin="5,2"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource {x:Static adonisUi:Brushes.Layer1BorderBrush}}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="False">
+                                <Setter TargetName="Border" Property="Background" Value="Transparent" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="TreeViewStyle" TargetType="TreeView" BasedOn="{StaticResource {x:Type TreeView}}">
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="BorderThickness" Value="3"/>
+            <Setter Property="Background" Value="{DynamicResource {x:Static adonisUi:Brushes.Layer3BackgroundBrush}}"/>
+        </Style>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -98,10 +131,48 @@
             </Menu>
         </ToolBar>
 
-        <TabControl Grid.Row="1" Style="{DynamicResource TabControlStyle}" Margin="5" BorderThickness="5">
+        <TabControl Grid.Row="1" Style="{DynamicResource TabControlStyle}">
             <TabControl.Items>
                 <TabItem Header="Scene" Style="{DynamicResource TabItemStyle}">
-                    
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition MinHeight="200" Height="*"/>
+                            <RowDefinition MinHeight="100" Height="*"/>
+                        </Grid.RowDefinitions>
+                        <!-- GL View -->
+                        <Grid Grid.Row="0">
+                            
+                        </Grid>
+                        <!-- Milo Explorer -->
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition MinWidth="200" Width="*"/>
+                                <ColumnDefinition MinWidth="200" Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TreeView Style="{DynamicResource TreeViewStyle}">
+                                
+                            </TreeView>
+
+                            <GridSplitter Grid.Column="1"
+                                          Background="{DynamicResource {x:Static adonisUi:Brushes.AccentHighlightBrush}}"
+                                          ResizeDirection="Columns"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Left"
+                                          Height="100"
+                                          Width="2"
+                                          Margin="-1,0" />
+                        </Grid>
+
+                        <GridSplitter Grid.Row="0"
+                                      Background="{DynamicResource {x:Static adonisUi:Brushes.AccentHighlightBrush}}"
+                                      ResizeDirection="Rows"
+                                      VerticalAlignment="Bottom"
+                                      HorizontalAlignment="Center"
+                                      Height="2"
+                                      Width="100"
+                                      Margin="-1,0" />
+                    </Grid>
                 </TabItem>
             </TabControl.Items>
         </TabControl>
