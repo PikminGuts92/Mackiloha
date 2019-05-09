@@ -13,6 +13,8 @@
         <Style TargetType="Window" BasedOn="{StaticResource {x:Type Window}}"/>
     </Window.Style>
     <Window.Resources>
+        <local:IconConverter x:Key="iconConverter"/>
+
         <Style x:Key="ControlStyle" TargetType="{x:Type Control}">
             <Setter Property="Background" Value="{DynamicResource {x:Static adonisUi:Brushes.Layer1BackgroundBrush}}"/>
             <Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" />
@@ -58,6 +60,25 @@
             <Setter Property="Margin" Value="0"/>
             <Setter Property="BorderThickness" Value="3"/>
             <Setter Property="Background" Value="{DynamicResource {x:Static adonisUi:Brushes.Layer3BackgroundBrush}}"/>
+        </Style>
+        <Style x:Key="TreeViewItemStyle" TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}"/>
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="HeaderTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconFontAwesome Width="12"
+                                       Height="12"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Kind="FolderSolid"/>
+                            <TextBlock Text="{Binding}" Margin="5,0,0,0" />
+                        </StackPanel>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
     <Grid>
@@ -150,8 +171,47 @@
                                 <ColumnDefinition MinWidth="200" Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <TreeView Style="{DynamicResource TreeViewStyle}">
-                                
+                            <TreeView x:Name="TreeView_MiloEntries" Style="{DynamicResource TreeViewStyle}" ItemsSource="{Binding Children}">
+                                <TreeView.ItemContainerStyle>
+                                    <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                                        <Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}"/>
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="Margin" Value="0" />
+                                        <!--<Style.Triggers>
+                                            <Trigger Property="IsExpanded" Value="True">
+                                                <Setter TargetName="Icon" Property="Kind" Value="TemplatedParent"></Setter>
+                                            </Trigger>
+                                        </Style.Triggers>-->
+                                    </Style>
+                                </TreeView.ItemContainerStyle>
+                                <TreeView.ItemTemplate>
+                                    <HierarchicalDataTemplate x:Name="Node" DataType="{x:Type local:Node}" ItemsSource="{Binding Children}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <iconPacks:PackIconFontAwesome
+                                                x:Name="Icon"
+                                                Width="12"
+                                                Height="12"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Kind="{Binding Converter={StaticResource iconConverter}}"
+                                                DataContext="{Binding}">
+                                                <!--<iconPacks:PackIconFontAwesome.Style>
+                                                    <Style TargetType="iconPacks:PackIconFontAwesome">
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsFocused" Value="False">
+                                                                <Setter Property="Kind" Value="FolderOpenSolid"/>
+                                                            </Trigger>
+                                                            <<DataTrigger Binding="{Binding RelativeSource={RelativeSource Mode=FindAncestor, }, Path=}" Value="0">
+
+                                                                </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </iconPacks:PackIconFontAwesome.Style>-->
+                                            </iconPacks:PackIconFontAwesome>
+                                            <TextBlock Text="{Binding Name}" Margin="5,0,0,0" />
+                                        </StackPanel>
+                                    </HierarchicalDataTemplate>
+                                </TreeView.ItemTemplate>
                             </TreeView>
 
                             <GridSplitter Grid.Column="1"

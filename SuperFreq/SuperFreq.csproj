@@ -15,4 +15,9 @@
     <PackageReference Include="AdonisUI.ClassicTheme" Version="1.10.0" />
     <PackageReference Include="MahApps.Metro.IconPacks.FontAwesome" Version="2.3.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mackiloha.App\Mackiloha.App.csproj" />
+    <ProjectReference Include="..\Mackiloha\Mackiloha.csproj" />
+  </ItemGroup>
 </Project>
