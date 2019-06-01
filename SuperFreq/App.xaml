@@ -1,15 +1,12 @@
-﻿<Application x:Class="SuperFreq.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:adonisUi="clr-namespace:AdonisUI;assembly=AdonisUI"
-             xmlns:local="clr-namespace:SuperFreq"
-             StartupUri="MainWindow.xaml">
-    <Application.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/AdonisUI;component/ColorSchemes/Dark.xaml"/>
-                <ResourceDictionary Source="pack://application:,,,/AdonisUI.ClassicTheme;component/Resources.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Application.Resources>
+             xmlns:local="clr-namespace:SuperFreq">
+  <Application.DataTemplates>
+    <local:ViewLocator/>
+  </Application.DataTemplates>
+  
+  <Application.Styles>
+    <StyleInclude Source="resm:Avalonia.Themes.Default.DefaultTheme.xaml?assembly=Avalonia.Themes.Default"/>
+    <StyleInclude Source="resm:Avalonia.Themes.Default.Accents.BaseDark.xaml?assembly=Avalonia.Themes.Default"/>
+  </Application.Styles>
 </Application>
