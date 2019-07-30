@@ -12,6 +12,28 @@ using Avalonia.Controls;
 
 namespace SuperFreq.ViewModels
 {
+    public abstract class Node
+    {
+        public string Name { get; set; }
+        public bool IsSelected { get; set; }
+    }
+
+    public class DirectoryNode : Node
+    {
+        public List<Node> Children { get; } = new List<Node>();
+        public bool IsExpanded { get; set; }
+    }
+
+    public class PackageNode : DirectoryNode
+    {
+
+    }
+
+    public class FileNode : Node
+    {
+        public string Extension => Name.Contains(".") ? Path.GetExtension(Name) : "";
+    }
+
     public class ViewModelBase : ReactiveObject
     {
         private Archive _ark;
@@ -36,7 +58,34 @@ namespace SuperFreq.ViewModels
 
                     ProcessDirectories(ark.Entries, "", this.Root);
                 });
-            
+
+            this.WhenAnyValue(x => x.Archive)
+                .Subscribe(y =>
+                {
+                    ArkNodes.Clear();
+
+                    var packages = new[] { y }
+                        .Select(x =>
+                        {
+                            var root = new PackageNode()
+                            {
+                                Name = y?.FileName ?? "Root"
+                            };
+
+                            if (y != null)
+                                ProcessDirectories(y.Entries, "", root);
+                            
+                            return root;
+                        });
+
+                    foreach (var pack in packages)
+                        ArkNodes.Add(pack);
+                });
+
+            //var t = this.WhenAnyValue(x => x.Archive)
+                //.SelectMany(x => x.Entries);
+
+
             /*
             RootObservable = this.WhenAnyValue(x => x.Archive)
                 .AsObservable<Archive>()
@@ -65,6 +114,51 @@ namespace SuperFreq.ViewModels
 
                     return root;
                 });*/
+        }
+
+        private static DirectoryNode ProcessDirectories(IList<ArkEntry> entries, string currentPath, DirectoryNode currentNode)
+        {
+            var immediateDirs = entries
+                .Where(x => !x.Directory.Equals(currentPath, StringComparison.CurrentCultureIgnoreCase))
+                .Select(x => GetTopDirectory(x.Directory.Substring(currentPath.Length + (currentPath.Length > 0 ? 1 : 0))))
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            var immediateEntries = entries?
+                .Where(x => x.Directory.Equals(currentPath, StringComparison.CurrentCultureIgnoreCase))
+                .OrderBy(x => x.FullPath)
+                .ToList();
+            
+            foreach (var dir in immediateDirs)
+            {
+                var subDir = currentPath.Length > 0 ? $"{currentPath}/{dir}" : dir;
+
+                var subEntries = entries
+                    .Where(x => x.Directory.StartsWith(subDir, StringComparison.CurrentCultureIgnoreCase))
+                    .OrderBy(x => x.FullPath)
+                    .ToList();
+
+                var subNode = new DirectoryNode()
+                {
+                    Name = dir
+                };
+
+                currentNode.Children.Add(subNode);
+                ProcessDirectories(subEntries, subDir, subNode);
+            }
+
+            foreach (var entry in immediateEntries)
+            {
+                var subNode = new FileNode()
+                {
+                    Name = entry.FileName
+                };
+
+                currentNode.Children.Add(subNode);
+            }
+
+            return currentNode;
         }
 
         private static void ProcessDirectories(IList<ArkEntry> entries, string currentPath, TreeViewItem currentNode)
@@ -161,5 +255,7 @@ namespace SuperFreq.ViewModels
         
         //public IObservable<TreeViewItem> RootObservable { get; }
         public TreeViewItem Root { get; private set; }
+
+        public ObservableCollection<Node> ArkNodes { get; } = new ObservableCollection<Node>();
     }
 }
