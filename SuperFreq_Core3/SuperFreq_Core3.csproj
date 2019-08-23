@@ -4,8 +4,9 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <UseWPF>true</UseWPF>
-    <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
-    <TrimUnusedDependencies>true</TrimUnusedDependencies>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <ApplicationIcon />
     <StartupObject />
   </PropertyGroup>

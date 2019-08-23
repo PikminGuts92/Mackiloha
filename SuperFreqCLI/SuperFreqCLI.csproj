@@ -2,9 +2,18 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
+    <TargetFrameworks>net48;netcoreapp3.0</TargetFrameworks>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
-
+  <Choose>
+    <When Condition=" '$(TargetFramework)' == 'netcoreapp3.0'">
+      <PropertyGroup>
+        <PublishSingleFile>true</PublishSingleFile>
+        <PublishTrimmed>false</PublishTrimmed>
+      </PropertyGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.4.3" />
   </ItemGroup>
