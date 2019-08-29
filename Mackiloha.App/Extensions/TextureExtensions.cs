@@ -15,7 +15,6 @@ namespace Mackiloha.App.Extensions
             switch (bitmap.Encoding)
             {
                 case 3:
-                case 8:
                     var image = DecodeBitmap(bitmap.RawData, bitmap.Width, bitmap.Height, bitmap.MipMaps, bitmap.Bpp);
 
                     // Converts BGRa -> RGBa if needed
@@ -24,7 +23,15 @@ namespace Mackiloha.App.Extensions
                         SwapRBColors(image);
 
                     return image;
-                case 24:
+                case 8: // DXT1 or Bitmap
+                case 24: // DXT5
+                    if (bitmap.Encoding == 8 && info.Platform == Platform.XBOX)
+                    {
+                        var image2 = DecodeBitmap(bitmap.RawData, bitmap.Width, bitmap.Height, bitmap.MipMaps, bitmap.Bpp);
+                        SwapRBColors(image2);
+                        return image2;
+                    }
+
                     var tempData = new byte[bitmap.RawData.Length];
                     Array.Copy(bitmap.RawData, tempData, tempData.Length);
 

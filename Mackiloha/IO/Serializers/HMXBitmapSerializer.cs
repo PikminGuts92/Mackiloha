@@ -48,7 +48,7 @@ namespace Mackiloha.IO.Serializers
             aw.Write(bytes);
         }
 
-        private static int CalculateTextureByteSize(int encoding, int w, int h, int bpp, int mips)
+        private int CalculateTextureByteSize(int encoding, int w, int h, int bpp, int mips)
         {
             int bytes = 0;
 
@@ -57,6 +57,10 @@ namespace Mackiloha.IO.Serializers
             {
                 case 3:
                 case 8:
+                    // Check if DXT1
+                    if (MiloSerializer.Info.Platform == Platform.X360 || MiloSerializer.Info.Platform == Platform.PS3)
+                        break;
+
                     // Each color is 32 bits 
                     bytes += (bpp == 4 || bpp == 8) ? 1 << (bpp + 2) : 0;
                     break;
