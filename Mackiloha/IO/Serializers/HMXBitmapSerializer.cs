@@ -56,6 +56,7 @@ namespace Mackiloha.IO.Serializers
             switch (encoding)
             {
                 case 3:
+                case 8:
                     // Each color is 32 bits 
                     bytes += (bpp == 4 || bpp == 8) ? 1 << (bpp + 2) : 0;
                     break;

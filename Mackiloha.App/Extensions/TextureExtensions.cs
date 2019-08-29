@@ -15,6 +15,7 @@ namespace Mackiloha.App.Extensions
             switch (bitmap.Encoding)
             {
                 case 3:
+                case 8:
                     var image = DecodeBitmap(bitmap.RawData, bitmap.Width, bitmap.Height, bitmap.MipMaps, bitmap.Bpp);
 
                     // Converts BGRa -> RGBa if needed
@@ -23,7 +24,6 @@ namespace Mackiloha.App.Extensions
                         SwapRBColors(image);
 
                     return image;
-                case 8:
                 case 24:
                     var tempData = new byte[bitmap.RawData.Length];
                     Array.Copy(bitmap.RawData, tempData, tempData.Length);
