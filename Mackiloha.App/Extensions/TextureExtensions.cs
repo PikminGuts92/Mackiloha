@@ -268,12 +268,53 @@ namespace Mackiloha.App.Extensions
             int i = 0, x, y;
             ushort packed0, packed1;
 
+            // For DXT5
+            byte[] alphas = new byte[8];
+            byte[] alphaPixels = new byte[16];
+
             for (int by = 0; by < blockY; by++)
             {
                 for (int bx = 0; bx < blockX; bx++)
                 {
                     if (dxt5)
+                    {
+                        alphas[0] = raw[i    ];
+                        alphas[1] = raw[i + 1];
+
+                        if (alphas[0] > alphas[1])
+                        {
+                            // 6-bit interpolated alpha values
+                            alphas[2] = (byte)(((6.0 / 7.0) * alphas[0]) + ((1.0 / 7.0) * alphas[1]));
+                            alphas[3] = (byte)(((5.0 / 7.0) * alphas[0]) + ((2.0 / 7.0) * alphas[1]));
+                            alphas[4] = (byte)(((4.0 / 7.0) * alphas[0]) + ((3.0 / 7.0) * alphas[1]));
+                            alphas[5] = (byte)(((3.0 / 7.0) * alphas[0]) + ((4.0 / 7.0) * alphas[1]));
+                            alphas[6] = (byte)(((2.0 / 7.0) * alphas[0]) + ((5.0 / 7.0) * alphas[1]));
+                            alphas[7] = (byte)(((1.0 / 7.0) * alphas[0]) + ((6.0 / 7.0) * alphas[1]));
+                        }
+                        else
+                        {
+                            // 4-bit interpolated alpha values
+                            alphas[2] = (byte)(((4.0 / 5.0) * alphas[0]) + ((1.0 / 5.0) * alphas[1]));
+                            alphas[3] = (byte)(((3.0 / 5.0) * alphas[0]) + ((2.0 / 5.0) * alphas[1]));
+                            alphas[4] = (byte)(((2.0 / 5.0) * alphas[0]) + ((3.0 / 5.0) * alphas[1]));
+                            alphas[5] = (byte)(((1.0 / 5.0) * alphas[0]) + ((4.0 / 5.0) * alphas[1]));
+                            alphas[6] = 0x00;
+                            alphas[7] = 0xFF;
+                        }
+
+                        int packedAlpha0 = (raw[i + 4] << 16) | (raw[i + 3] << 8) | (raw[i + 2]);
+                        int packedAlpha1 = (raw[i + 7] << 16) | (raw[i + 6] << 8) | (raw[i + 5]);
+
+                        var alphaInd = Unpack24BitAlphaIndicies(packedAlpha0);
+                        for (int id = 0; id < alphaInd.Length; id++)
+                            alphaPixels[id] = alphas[alphaInd[id]];
+
+                        alphaInd = Unpack24BitAlphaIndicies(packedAlpha1);
+                        for (int id = 0; id < alphaInd.Length; id++)
+                            alphaPixels[id + 8] = alphas[alphaInd[id]];
+
                         i += blockSize;
+                    }
 
                     packed0 = (ushort)(raw[i    ] | raw[i + 1] << 8);
                     packed1 = (ushort)(raw[i + 2] | raw[i + 3] << 8);
@@ -416,6 +457,29 @@ namespace Mackiloha.App.Extensions
                     Array.Copy(colorRgba, pixelIndices[14] << 2, image, LinearOffset(x + 2, y + 3, width), 4);
                     Array.Copy(colorRgba, pixelIndices[15] << 2, image, LinearOffset(x + 3, y + 3, width), 4);
 
+                    if (dxt5)
+                    {
+                        image[LinearOffset(x    , y    , width) + 3] = alphaPixels[ 0];
+                        image[LinearOffset(x + 1, y    , width) + 3] = alphaPixels[ 1];
+                        image[LinearOffset(x + 2, y    , width) + 3] = alphaPixels[ 2];
+                        image[LinearOffset(x + 3, y    , width) + 3] = alphaPixels[ 3];
+                        
+                        image[LinearOffset(x    , y + 1, width) + 3] = alphaPixels[ 4];
+                        image[LinearOffset(x + 1, y + 1, width) + 3] = alphaPixels[ 5];
+                        image[LinearOffset(x + 2, y + 1, width) + 3] = alphaPixels[ 6];
+                        image[LinearOffset(x + 3, y + 1, width) + 3] = alphaPixels[ 7];
+                        
+                        image[LinearOffset(x    , y + 2, width) + 3] = alphaPixels[ 8];
+                        image[LinearOffset(x + 1, y + 2, width) + 3] = alphaPixels[ 9];
+                        image[LinearOffset(x + 2, y + 2, width) + 3] = alphaPixels[10];
+                        image[LinearOffset(x + 3, y + 2, width) + 3] = alphaPixels[11];
+
+                        image[LinearOffset(x    , y + 3, width) + 3] = alphaPixels[12];
+                        image[LinearOffset(x + 1, y + 3, width) + 3] = alphaPixels[13];
+                        image[LinearOffset(x + 2, y + 3, width) + 3] = alphaPixels[14];
+                        image[LinearOffset(x + 3, y + 3, width) + 3] = alphaPixels[15];
+                    }
+
                     i += blockSize;
                 }
             }
@@ -474,6 +538,19 @@ namespace Mackiloha.App.Extensions
             combined[2] = (byte)(c1[2] + c2[2]);
             combined[3] = (byte)(c1[3] + c2[3]);
         }
+
+        private static byte[] Unpack24BitAlphaIndicies(int packed) =>
+            new byte[]
+            {
+                (byte)( packed &  0b0111              ),
+                (byte)((packed & (0b0111 <<  3)) >>  3),
+                (byte)((packed & (0b0111 <<  6)) >>  6),
+                (byte)((packed & (0b0111 <<  9)) >>  9),
+                (byte)((packed & (0b0111 << 12)) >> 12),
+                (byte)((packed & (0b0111 << 15)) >> 15),
+                (byte)((packed & (0b0111 << 18)) >> 18),
+                (byte)((packed & (0b0111 << 21)) >> 21),
+            };
 
         public static void SaveAs(this HMXBitmap bitmap, SystemInfo info, string path)
         {
