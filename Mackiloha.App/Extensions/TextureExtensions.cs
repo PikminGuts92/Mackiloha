@@ -10,6 +10,13 @@ namespace Mackiloha.App.Extensions
 {
     public static class TextureExtensions
     {
+        private enum DxEncoding : int
+        {
+            DXGI_FORMAT_BC1_UNORM =  8, // DXT1
+            DXGI_FORMAT_BC3_UNORM = 24, // DXT5
+            DXGI_FORMAT_BC5_UNORM = 32  // ATI2
+        }
+
         public static byte[] ToRGBA(this HMXBitmap bitmap, SystemInfo info)
         {
             switch (bitmap.Encoding)
@@ -25,6 +32,7 @@ namespace Mackiloha.App.Extensions
                     return image;
                 case 8: // DXT1 or Bitmap
                 case 24: // DXT5
+                case 32: // ATI2
                     if (bitmap.Encoding == 8 && info.Platform == Platform.XBOX)
                     {
                         var image2 = DecodeBitmap(bitmap.RawData, bitmap.Width, bitmap.Height, bitmap.MipMaps, bitmap.Bpp);
@@ -38,7 +46,7 @@ namespace Mackiloha.App.Extensions
                     if (info.Platform == Platform.X360)
                         SwapBytes(tempData);
 
-                    return DecodeDXT1(tempData, bitmap.Width, bitmap.Height, bitmap.MipMaps, bitmap.Encoding == 24);
+                    return DecodeDxImage(tempData, bitmap.Width, bitmap.Height, bitmap.MipMaps, (DxEncoding)bitmap.Encoding);
                 default:
                     return null;
             }
@@ -248,7 +256,7 @@ namespace Mackiloha.App.Extensions
             return image;
         }
 
-        private static byte[] DecodeDXT1(byte[] raw, int width, int height, int mips, bool dxt5)
+        private static byte[] DecodeDxImage(byte[] raw, int width, int height, int mips, DxEncoding encoding)
         {
             byte[] image = new byte[width * height * 4]; // 32 bpp
 
@@ -276,7 +284,48 @@ namespace Mackiloha.App.Extensions
             {
                 for (int bx = 0; bx < blockX; bx++)
                 {
-                    if (dxt5)
+                    x = bx << 2;
+                    y = by << 2;
+
+                    if (encoding == DxEncoding.DXGI_FORMAT_BC5_UNORM)
+                    {
+                        var reds = UnpackIndexedInterpolatedColors(raw , i);
+                        var greens = UnpackIndexedInterpolatedColors(raw, i + 8);
+                        var nomalColors = new byte[64];
+
+                        for (int c = 0; c < reds.Length; c++)
+                        {
+                            nomalColors[(c << 2)    ] =   reds[c];
+                            nomalColors[(c << 2) + 1] = greens[c];
+                            nomalColors[(c << 2) + 2] =      0x00;
+                            nomalColors[(c << 2) + 3] =      0xFF;
+                        }
+
+                        Array.Copy(nomalColors, 0, image, LinearOffset(x    , y    , width), 4);
+                        Array.Copy(nomalColors, 4, image, LinearOffset(x + 1, y    , width), 4);
+                        Array.Copy(nomalColors, 8, image, LinearOffset(x + 2, y    , width), 4);
+                        Array.Copy(nomalColors, 12, image, LinearOffset(x + 3, y    , width), 4);
+
+                        Array.Copy(nomalColors, 16, image, LinearOffset(x    , y + 1, width), 4);
+                        Array.Copy(nomalColors, 20, image, LinearOffset(x + 1, y + 1, width), 4);
+                        Array.Copy(nomalColors, 24, image, LinearOffset(x + 2, y + 1, width), 4);
+                        Array.Copy(nomalColors, 28, image, LinearOffset(x + 3, y + 1, width), 4);
+
+                        Array.Copy(nomalColors, 32, image, LinearOffset(x    , y + 2, width), 4);
+                        Array.Copy(nomalColors, 36, image, LinearOffset(x + 1, y + 2, width), 4);
+                        Array.Copy(nomalColors, 40, image, LinearOffset(x + 2, y + 2, width), 4);
+                        Array.Copy(nomalColors, 44, image, LinearOffset(x + 3, y + 2, width), 4);
+
+                        Array.Copy(nomalColors, 48, image, LinearOffset(x    , y + 3, width), 4);
+                        Array.Copy(nomalColors, 52, image, LinearOffset(x + 1, y + 3, width), 4);
+                        Array.Copy(nomalColors, 56, image, LinearOffset(x + 2, y + 3, width), 4);
+                        Array.Copy(nomalColors, 60, image, LinearOffset(x + 3, y + 3, width), 4);
+
+                        i += blockSize << 1;
+                        continue;
+                    }
+
+                    if (encoding == DxEncoding.DXGI_FORMAT_BC3_UNORM)
                     {
                         alphas[0] = raw[i    ];
                         alphas[1] = raw[i + 1];
@@ -305,11 +354,11 @@ namespace Mackiloha.App.Extensions
                         int packedAlpha0 = (raw[i + 4] << 16) | (raw[i + 3] << 8) | (raw[i + 2]);
                         int packedAlpha1 = (raw[i + 7] << 16) | (raw[i + 6] << 8) | (raw[i + 5]);
 
-                        var alphaInd = Unpack24BitAlphaIndicies(packedAlpha0);
+                        var alphaInd = Unpack24Bitndicies(packedAlpha0);
                         for (int id = 0; id < alphaInd.Length; id++)
                             alphaPixels[id] = alphas[alphaInd[id]];
 
-                        alphaInd = Unpack24BitAlphaIndicies(packedAlpha1);
+                        alphaInd = Unpack24Bitndicies(packedAlpha1);
                         for (int id = 0; id < alphaInd.Length; id++)
                             alphaPixels[id + 8] = alphas[alphaInd[id]];
 
@@ -326,7 +375,7 @@ namespace Mackiloha.App.Extensions
                     colors2[0] = RGBAFromRGB565(packed0);
                     colors2[1] = RGBAFromRGB565(packed1);
 
-                    if (!dxt5 && packed0 <= packed1)
+                    if (!(encoding == DxEncoding.DXGI_FORMAT_BC3_UNORM) && packed0 <= packed1)
                     {
                         colors[2] = AddRGBAColors(MultiplyRGBAColors(colors[0], 0.5f), MultiplyRGBAColors(colors[1], 0.5f));
                         colors[3] = 0;
@@ -434,9 +483,6 @@ namespace Mackiloha.App.Extensions
                     pixelIndices[14] = (raw[i + 7] & 0b00_11_00_00) >> 4;
                     pixelIndices[15] = (raw[i + 7] & 0b11_00_00_00) >> 6;
 
-                    x = bx << 2;
-                    y = by << 2;
-
                     Array.Copy(colorRgba, pixelIndices[ 0] << 2, image, LinearOffset(x    , y    , width), 4);
                     Array.Copy(colorRgba, pixelIndices[ 1] << 2, image, LinearOffset(x + 1, y    , width), 4);
                     Array.Copy(colorRgba, pixelIndices[ 2] << 2, image, LinearOffset(x + 2, y    , width), 4);
@@ -457,7 +503,7 @@ namespace Mackiloha.App.Extensions
                     Array.Copy(colorRgba, pixelIndices[14] << 2, image, LinearOffset(x + 2, y + 3, width), 4);
                     Array.Copy(colorRgba, pixelIndices[15] << 2, image, LinearOffset(x + 3, y + 3, width), 4);
 
-                    if (dxt5)
+                    if (encoding == DxEncoding.DXGI_FORMAT_BC3_UNORM)
                     {
                         image[LinearOffset(x    , y    , width) + 3] = alphaPixels[ 0];
                         image[LinearOffset(x + 1, y    , width) + 3] = alphaPixels[ 1];
@@ -539,7 +585,7 @@ namespace Mackiloha.App.Extensions
             combined[3] = (byte)(c1[3] + c2[3]);
         }
 
-        private static byte[] Unpack24BitAlphaIndicies(int packed) =>
+        private static byte[] Unpack24Bitndicies(int packed) =>
             new byte[]
             {
                 (byte)( packed &  0b0111              ),
@@ -549,8 +595,67 @@ namespace Mackiloha.App.Extensions
                 (byte)((packed & (0b0111 << 12)) >> 12),
                 (byte)((packed & (0b0111 << 15)) >> 15),
                 (byte)((packed & (0b0111 << 18)) >> 18),
-                (byte)((packed & (0b0111 << 21)) >> 21),
+                (byte)((packed & (0b0111 << 21)) >> 21)
             };
+
+        private static byte[] InterpolateColors(byte c0, byte c1) =>
+            (c0 > c1) ?
+                new byte[]
+                {
+                    c0,
+                    c1,
+                    (byte)(((6.0 / 7.0) * c0) + ((1.0 / 7.0) * c1)),
+                    (byte)(((5.0 / 7.0) * c0) + ((2.0 / 7.0) * c1)),
+                    (byte)(((4.0 / 7.0) * c0) + ((3.0 / 7.0) * c1)),
+                    (byte)(((3.0 / 7.0) * c0) + ((4.0 / 7.0) * c1)),
+                    (byte)(((2.0 / 7.0) * c0) + ((5.0 / 7.0) * c1)),
+                    (byte)(((1.0 / 7.0) * c0) + ((6.0 / 7.0) * c1))
+                } :
+                new byte[]
+                {
+                    c0,
+                    c1,
+                    (byte)(((4.0 / 5.0) * c0) + ((1.0 / 5.0) * c1)),
+                    (byte)(((3.0 / 5.0) * c0) + ((2.0 / 5.0) * c1)),
+                    (byte)(((2.0 / 5.0) * c0) + ((3.0 / 5.0) * c1)),
+                    (byte)(((1.0 / 5.0) * c0) + ((4.0 / 5.0) * c1)),
+                    0x00,
+                    0xFF
+                };
+
+        private static byte[] UnpackIndexedInterpolatedColors(byte[] data, int i = 0)
+        {
+            byte[] pixels = new byte[16];
+
+            var colors = InterpolateColors(data[i], data[i + 1]);
+
+            var packed0 = (data[i + 4] << 16) | (data[i + 3] << 8) | (data[i + 2]);
+            var packed1 = (data[i + 7] << 16) | (data[i + 6] << 8) | (data[i + 5]);
+
+            byte[] inds = Unpack24Bitndicies(packed0);
+            pixels[ 0] = colors[inds[0]];
+            pixels[ 1] = colors[inds[1]];
+            pixels[ 2] = colors[inds[2]];
+            pixels[ 3] = colors[inds[3]];
+
+            pixels[ 4] = colors[inds[4]];
+            pixels[ 5] = colors[inds[5]];
+            pixels[ 6] = colors[inds[6]];
+            pixels[ 7] = colors[inds[7]];
+
+            inds = Unpack24Bitndicies(packed1);
+            pixels[ 8] = colors[inds[0]];
+            pixels[ 9] = colors[inds[1]];
+            pixels[10] = colors[inds[2]];
+            pixels[11] = colors[inds[3]];
+
+            pixels[12] = colors[inds[4]];
+            pixels[13] = colors[inds[5]];
+            pixels[14] = colors[inds[6]];
+            pixels[15] = colors[inds[7]];
+
+            return pixels;
+        }
 
         public static void SaveAs(this HMXBitmap bitmap, SystemInfo info, string path)
         {
