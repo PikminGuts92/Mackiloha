@@ -609,9 +609,17 @@ namespace Mackiloha.App.Extensions
                 .ToDictionary(x => Path.Combine(path, x.Key), y => y.ToList())
                 .ToList();*/
 
-            milo.SortEntriesByType();
+            var miloEntries = new List<MiloObject>();
 
-            var typeDirs = milo.Entries
+            if (milo.Extras.ContainsKey("DirectoryEntry"))
+            {
+                var dirEntry = milo.Extras["DirectoryEntry"] as MiloObjectBytes;
+                if (dirEntry != null)
+                    miloEntries.Add(dirEntry);
+            }
+            miloEntries.AddRange(milo.Entries);
+
+            var typeDirs = miloEntries
                 .Select(x => Path.Combine(path, x.Type))
                 .Distinct()
                 .ToList();
@@ -625,7 +633,7 @@ namespace Mackiloha.App.Extensions
             }
 
             // Filter out textures if converting
-            var entries = milo.Entries
+            var entries = miloEntries
                 .Where(x => !convertTextures || x.Type != "Tex")
                 .ToList();
 
@@ -644,7 +652,7 @@ namespace Mackiloha.App.Extensions
 
             var serializer = state.GetSerializer();
 
-            var textureEntries = milo.Entries
+            var textureEntries = miloEntries
                 .Where(x => x.Type == "Tex")
                 .Select(x => x is Tex ? x as Tex : serializer.ReadFromMiloObjectBytes<Tex>(x as MiloObjectBytes))
                 .ToList();
