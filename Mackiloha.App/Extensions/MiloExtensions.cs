@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Mackiloha;
+using Mackiloha.App.Metadata;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
 using Mackiloha.Render;
@@ -619,6 +622,13 @@ namespace Mackiloha.App.Extensions
             }
             miloEntries.AddRange(milo.Entries);
 
+            // Sanitize paths
+            foreach (var entry in miloEntries)
+            {
+                // TODO: Remove \t and other escape characters
+                entry.Name = entry.Name.Trim();
+            }
+
             var typeDirs = miloEntries
                 .Select(x => Path.Combine(path, x.Type))
                 .Distinct()
@@ -657,15 +667,52 @@ namespace Mackiloha.App.Extensions
                 .Select(x => x is Tex ? x as Tex : serializer.ReadFromMiloObjectBytes<Tex>(x as MiloObjectBytes))
                 .ToList();
 
+            var jsonOptions = new JsonSerializerOptions()
+            {
+                IgnoreNullValues = true,
+                WriteIndented = true
+            };
+
+            jsonOptions.Converters.Add(new JsonStringEnumConverter());
+
+
             foreach (var texEntry in textureEntries)
             {
+                var entryName = Path.GetFileNameWithoutExtension(texEntry.Name);
+
+                // TODO: Skip?
+                texEntry.UseExternal = false;
+
                 if (texEntry.UseExternal)
                     throw new NotSupportedException("Can't extract external textures yet");
 
-                var fileName = $"{Path.GetFileNameWithoutExtension(texEntry.Name)}.png";
+                // Saves png
+                var pngName = $"{entryName}.png";
+                var pngPath = Path.Combine(path, texEntry.Type, pngName);
+                texEntry.Bitmap.SaveAs(state.SystemInfo, pngPath);
 
-                var filePath = Path.Combine(path, texEntry.Type, fileName);
-                texEntry.Bitmap.SaveAs(state.SystemInfo, filePath);
+                // Saves metadata
+                var metaName = $"{entryName}.meta.json";
+                var metaPath = Path.Combine(path, texEntry.Type, metaName);
+
+                var meta = new TexMeta()
+                {
+                    Encoding = (texEntry.Bitmap.Encoding, state.SystemInfo.Platform) switch
+                    {
+                        (var enc, _) when enc == 3 => TexEncoding.Bitmap,
+                        (var enc, var plat) when enc == 8 && plat == Platform.XBOX => TexEncoding.Bitmap,
+                        (var enc, _) when enc == 8 => TexEncoding.DXT1,
+                        (var enc, _) when enc == 24 => TexEncoding.DXT5,
+                        (var enc, _) when enc == 32 => TexEncoding.ATI2,
+                        _ => (TexEncoding?)null
+                    }
+                };
+
+                if (meta.Encoding == null)
+                    continue;
+
+                var metaJson = JsonSerializer.Serialize(meta, jsonOptions);
+                File.WriteAllText(metaPath, metaJson);
             }
         }
 
