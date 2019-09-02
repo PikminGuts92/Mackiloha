@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Mackiloha.IO;
 
 namespace Mackiloha.App.Metadata
 {
@@ -12,8 +13,29 @@ namespace Mackiloha.App.Metadata
         ATI2
     }
 
-    public class TexMeta
+    public struct TexMeta
     {
         public TexEncoding? Encoding { get; set; }
+        public bool MipMaps { get; set; }
+
+        public static TexMeta DefaultFor(Platform platform)
+        {
+            switch (platform)
+            {
+                case Platform.PS3:
+                case Platform.X360:
+                    return new TexMeta()
+                    {
+                        Encoding = TexEncoding.DXT1,
+                        MipMaps = true
+                    };
+                default:
+                    return new TexMeta()
+                    {
+                        Encoding = TexEncoding.Bitmap,
+                        MipMaps = false
+                    };
+            }
+        }
     }
 }

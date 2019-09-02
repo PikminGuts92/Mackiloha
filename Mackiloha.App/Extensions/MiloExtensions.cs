@@ -667,15 +667,7 @@ namespace Mackiloha.App.Extensions
                 .Select(x => x is Tex ? x as Tex : serializer.ReadFromMiloObjectBytes<Tex>(x as MiloObjectBytes))
                 .ToList();
 
-            var jsonOptions = new JsonSerializerOptions()
-            {
-                IgnoreNullValues = true,
-                WriteIndented = true
-            };
-
-            jsonOptions.Converters.Add(new JsonStringEnumConverter());
-
-
+            var defaultMeta = TexMeta.DefaultFor(state.SystemInfo.Platform);
             foreach (var texEntry in textureEntries)
             {
                 var entryName = Path.GetFileNameWithoutExtension(texEntry.Name);
@@ -705,13 +697,14 @@ namespace Mackiloha.App.Extensions
                         (var enc, _) when enc == 24 => TexEncoding.DXT5,
                         (var enc, _) when enc == 32 => TexEncoding.ATI2,
                         _ => (TexEncoding?)null
-                    }
+                    },
+                    MipMaps = texEntry.Bitmap.MipMaps > 0
                 };
 
-                if (meta.Encoding == null)
+                if ((meta.Encoding == null || meta.Encoding == defaultMeta.Encoding) && meta.MipMaps == defaultMeta.MipMaps)
                     continue;
 
-                var metaJson = JsonSerializer.Serialize(meta, jsonOptions);
+                var metaJson = JsonSerializer.Serialize(meta, state.JsonSerializerOptions);
                 File.WriteAllText(metaPath, metaJson);
             }
         }

@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CommandLine;
+using Mackiloha.App;
+using Mackiloha.App.Extensions;
 
 namespace SuperFreqCLI.Options
 {
@@ -18,5 +18,11 @@ namespace SuperFreqCLI.Options
 
         [Option("convertTextures", HelpText = "Automatically convert textures to PNG")]
         public bool ConvertTextures { get; set; }
+
+        public static void Parse(Milo2DirOptions op)
+        {
+            var appState = new AppState(Path.GetDirectoryName(op.InputPath));
+            appState.ExtractMiloContents(op.InputPath, op.OutputPath, op.ConvertTextures);
+        }
     }
 }

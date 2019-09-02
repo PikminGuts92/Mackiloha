@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Mackiloha.IO;
 
 namespace Mackiloha.App
@@ -14,6 +16,14 @@ namespace Mackiloha.App
         {
             _workingDirectory = new FileSystemDirectory(workingDirectory);
             _systemInfo.Version = 10; // GH1
+
+            JsonSerializerOptions = new JsonSerializerOptions()
+            {
+                IgnoreNullValues = true,
+                WriteIndented = true
+            };
+
+            JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         }
 
         public void UpdateSystemInfo(SystemInfo info)
@@ -24,5 +34,7 @@ namespace Mackiloha.App
 
         public IDirectory GetWorkingDirectory() => _workingDirectory;
         public SystemInfo SystemInfo => _systemInfo;
+
+        public JsonSerializerOptions JsonSerializerOptions { get; }
     }
 }

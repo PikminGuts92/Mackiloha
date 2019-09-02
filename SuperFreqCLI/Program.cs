@@ -12,12 +12,8 @@ namespace SuperFreqCLI
         static void Main(string[] args)
         {
             Parser.Default.ParseArguments<Dir2MiloOptions, Milo2DirOptions>(args)
-                .WithParsed<Dir2MiloOptions>(OperatingSystem => { })
-                .WithParsed<Milo2DirOptions>(op =>
-                {
-                    var appState = new AppState(Path.GetDirectoryName(op.InputPath));
-                    appState.ExtractMiloContents(op.InputPath, op.OutputPath, op.ConvertTextures);
-                })
+                .WithParsed<Dir2MiloOptions>(Dir2MiloOptions.Parse)
+                .WithParsed<Milo2DirOptions>(Milo2DirOptions.Parse)
                 .WithNotParsed(errors => { });
         }
     }
