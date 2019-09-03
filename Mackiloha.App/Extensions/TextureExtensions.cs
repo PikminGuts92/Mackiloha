@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mackiloha.IO;
+using Mackiloha.Render;
 using ImageMagick;
 
 namespace Mackiloha.App.Extensions
@@ -663,6 +664,66 @@ namespace Mackiloha.App.Extensions
 
             new MagickImage(rgba, new PixelReadSettings(bitmap.Width, bitmap.Height, StorageType.Char, PixelMapping.RGBA))
                 .Write(path);
+        }
+
+        public static HMXBitmap BitmapFromImage(string imagePath)
+        {
+            using var image = new MagickImage(imagePath);
+
+            // TODO: Verify width + height are powers of 2 and at least 4px
+            var width = image.Width;
+            var height = image.Height;
+
+            var data = new byte[width * height * 4];
+            var pixels = image.GetPixels();
+            var bpp = 32;
+
+            var i = 0;
+            var pCount = image.GetPixels().Count();
+            foreach (var p in image.GetPixels())
+            {
+                var c = p.ToColor();
+
+                data[i    ] = c.R;
+                data[i + 1] = c.G;
+                data[i + 2] = c.B;
+                data[i + 3] = (c.A == 0xFF)
+                    ? (byte)0x80
+                    : (byte)(c.A >> 1);
+
+                i += 4;
+            }
+
+            var bitmap = new HMXBitmap()
+            {
+                Bpp = bpp,
+                Encoding = 3, // Bitmap
+                MipMaps = 0,
+                Width = width,
+                Height = height,
+                BPL = (width * bpp) >> 3,
+                RawData = data
+            };
+
+            return bitmap;
+        }
+
+        public static Tex TexFromImage(string imagePath)
+        {
+            var bitmap = BitmapFromImage(imagePath);
+
+            return new Tex()
+            {
+                Name = $"{System.IO.Path.GetFileNameWithoutExtension(imagePath)}.tex",
+                Width = bitmap.Width,
+                Height = bitmap.Height,
+                Bpp = bitmap.Bpp,
+                IndexF = 0.0f,
+                Index = 1,
+                ExternalPath = System.IO.Path.GetFileName(imagePath),
+                UseExternal = false,
+                Bitmap = bitmap
+            };
         }
     }
 }
