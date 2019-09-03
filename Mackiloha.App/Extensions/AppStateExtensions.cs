@@ -100,8 +100,7 @@ namespace Mackiloha.App.Extensions
                 .ToDictionary(x => x.Key, y => y.ToList());
 
             var metaRegex = new Regex("[.]meta[.]json$", RegexOptions.IgnoreCase);
-            var defaultTexMeta = TexMeta.DefaultFor(state.SystemInfo.Platform);
-
+            
             var miloDir = new MiloObjectDir();
             var miloTypes = groupedFiles.Keys.ToList();
 
@@ -127,7 +126,7 @@ namespace Mackiloha.App.Extensions
 
                 miloTypes.Remove(dirType);
             }
-
+            
             foreach (var type in miloTypes)
             {
                 var metaPaths = groupedFiles[type]
@@ -138,16 +137,50 @@ namespace Mackiloha.App.Extensions
                     .Except(metaPaths)
                     .ToList();
 
-                /*
+                
                 if (type == "Tex")
                 {
-                    var texMeta = metaPaths
-                        .ToDictionary(x => x, y => JsonSerializer.Deserialize<TexMeta>(File.ReadAllText(y), state.JsonSerializerOptions));
+                    var defaultTexMeta = TexMeta.DefaultFor(state.SystemInfo.Platform);
+                    var imageRegex = new Regex("[.]png$", RegexOptions.IgnoreCase); // TODO: Support more formats
+                    var texRegex = new Regex("[.]tex$", RegexOptions.IgnoreCase);
 
+                    var texMetas = metaPaths
+                        .ToDictionary(x => metaRegex.Replace(Path.GetFileName(x), ""), y => JsonSerializer.Deserialize<TexMeta>(File.ReadAllText(y), state.JsonSerializerOptions));
 
+                    var uniquePaths = filePaths
+                        .GroupBy(x => Path.GetFileNameWithoutExtension(x))
+                        .ToDictionary(x => x.Key, y => y.ToList());
+
+                    foreach (var uniqueEntry in uniquePaths.Keys)
+                    {
+                        // TODO: Order by preferred image format?
+                        var supportedImagePath = uniquePaths[uniqueEntry]
+                            .FirstOrDefault(x => imageRegex.IsMatch(x));
+
+                        if (supportedImagePath == null)
+                        {
+                            var rawFilePath = uniquePaths[uniqueEntry]
+                                .FirstOrDefault(x => !imageRegex.IsMatch(x));
+
+                            // Just copy the raw file
+                            var entry = new MiloObjectBytes(type)
+                            {
+                                Name = Path.GetFileName(rawFilePath),
+                                Data = File.ReadAllBytes(rawFilePath)
+                            };
+
+                            miloDir.Entries.Add(entry);
+                            continue;
+                        }
+
+                        var texMeta = texMetas.ContainsKey(uniqueEntry)
+                            ? texMetas[uniqueEntry]
+                            : defaultTexMeta;
+
+                    }
 
                     continue;
-                }*/
+                }
 
                 foreach (var entryPath in filePaths)
                 {
