@@ -670,9 +670,16 @@ namespace Mackiloha.App.Extensions
         {
             using var image = new MagickImage(imagePath);
 
-            // TODO: Verify width + height are powers of 2 and at least 4px
             var width = image.Width;
             var height = image.Height;
+
+            // Checks width + height are powers of 2 and at least 4px
+            // TODO: Use custom exception
+            if ((width < 4)
+                || ((width & (width - 1)) != 0)
+                || (height < 4)
+                || ((height & (height - 1)) != 0))
+                throw new Exception($"Inavlid image resolution of {width}x{height}. Both must be a power of 2 and at least 4px.");
 
             byte[] data;
             int bpp = image switch
