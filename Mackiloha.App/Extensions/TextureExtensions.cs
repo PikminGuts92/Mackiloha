@@ -713,36 +713,74 @@ namespace Mackiloha.App.Extensions
                 }
                 i = paletteSize;
 
-                // TODO: Swap bits differently for 4bpp
-                foreach (var p in image.GetPixels())
+                if (bpp == 8)
                 {
-                    var cIdx = paletteIndicies[p.ToColor()];
-                    var bit3 = cIdx & 0b0000_1000;
-                    var bit4 = cIdx & 0b0001_0000;
+                    foreach (var p in image.GetPixels())
+                    {
+                        var cIdx = paletteIndicies[p.ToColor()];
+                        var bit3 = cIdx & 0b0000_1000;
+                        var bit4 = cIdx & 0b0001_0000;
 
-                    cIdx = (cIdx & 0b1110_0111) | (bit3 << 1) | (bit4 >> 1);
-                    data[i    ] = (byte)cIdx;
-                    i += 1;
+                        cIdx = (cIdx & 0b1110_0111) | (bit3 << 1) | (bit4 >> 1);
+                        data[i] = (byte)cIdx;
+                        i += 1;
+                    }
+                }
+                else // bpp = 4
+                {
+                    // Encodes two pixels into single byte
+                    foreach (var p in image.GetPixels())
+                    {
+                        var cIdx = paletteIndicies[p.ToColor()];
+                        var dIdx = paletteSize + ((i - paletteSize) >> 1);
+                        var dValue = data[dIdx];
+
+                        if ((i & 1) == 0)
+                        {
+                            data[dIdx] = (byte)((dValue & 0x0F) | (cIdx << 4));
+                        }
+                        else
+                        {
+                            data[dIdx] = (byte)((dValue & 0xF0) | cIdx);
+                        }
+                        i += 1;
+                    }
                 }
             }
             else
             {
-                // TODO: Check if alpha channel isn't used to prefer 24bpp
-                data = new byte[width * height * 4];
+                data = new byte[(width * height * bpp) / 8];
 
                 var i = 0;
-                foreach (var p in image.GetPixels())
+
+                if (bpp == 32)
                 {
-                    var c = p.ToColor();
+                    foreach (var p in image.GetPixels())
+                    {
+                        var c = p.ToColor();
 
-                    data[i    ] = c.R;
-                    data[i + 1] = c.G;
-                    data[i + 2] = c.B;
-                    data[i + 3] = (c.A == 0xFF)
-                        ? (byte)0x80
-                        : (byte)(c.A >> 1);
+                        data[i] = c.R;
+                        data[i + 1] = c.G;
+                        data[i + 2] = c.B;
+                        data[i + 3] = (c.A == 0xFF)
+                            ? (byte)0x80
+                            : (byte)(c.A >> 1);
 
-                    i += 4;
+                        i += 4;
+                    }
+                }
+                else // bpp = 24
+                {
+                    foreach (var p in image.GetPixels())
+                    {
+                        var c = p.ToColor();
+
+                        data[i] = c.R;
+                        data[i + 1] = c.G;
+                        data[i + 2] = c.B;
+
+                        i += 3;
+                    }
                 }
             }
 
