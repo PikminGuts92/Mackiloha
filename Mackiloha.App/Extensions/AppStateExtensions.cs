@@ -198,8 +198,10 @@ namespace Mackiloha.App.Extensions
 
             var serializer = state.GetSerializer();
 
-            var miloFile = new MiloFile();
-            miloFile.Data = serializer.WriteToBytes(miloDir);
+            var miloFile = new MiloFile
+            {
+                Data = serializer.WriteToBytes(miloDir)
+            };
 
 
             miloFile.WriteToFile(outputPath);

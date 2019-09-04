@@ -674,24 +674,76 @@ namespace Mackiloha.App.Extensions
             var width = image.Width;
             var height = image.Height;
 
-            var data = new byte[width * height * 4];
-            var pixels = image.GetPixels();
-            var bpp = 32;
-
-            var i = 0;
-            var pCount = image.GetPixels().Count();
-            foreach (var p in image.GetPixels())
+            byte[] data;
+            int bpp = image switch
             {
-                var c = p.ToColor();
+                // TODO: Check what games support 16bpp
+                var img when img.TotalColors <= 16 => 4,
+                var img when img.TotalColors <= 256 => 8,
+                var img when img.ChannelCount <= 3 => 24,
+                _ => 32
+            };
+            
+            if (bpp <= 8)
+            {
+                // Use color palette
+                var paletteSize = (1 << bpp) * 4;
+                data = new byte[((width * height * bpp) / 8) + paletteSize];
 
-                data[i    ] = c.R;
-                data[i + 1] = c.G;
-                data[i + 2] = c.B;
-                data[i + 3] = (c.A == 0xFF)
-                    ? (byte)0x80
-                    : (byte)(c.A >> 1);
+                var i = 0;
+                var uniqueColors = image
+                    .UniqueColors()
+                    .GetPixels();
 
-                i += 4;
+                var paletteIndicies = new Dictionary<MagickColor, int>();
+
+                foreach (var p in uniqueColors)
+                {
+                    var c = p.ToColor();
+                    paletteIndicies.Add(c, i >> 2);
+
+                    data[i    ] = c.R;
+                    data[i + 1] = c.G;
+                    data[i + 2] = c.B;
+                    data[i + 3] = (c.A == 0xFF)
+                        ? (byte)0x80
+                        : (byte)(c.A >> 1);
+
+                    i += 4;
+                }
+                i = paletteSize;
+
+                // TODO: Swap bits differently for 4bpp
+                foreach (var p in image.GetPixels())
+                {
+                    var cIdx = paletteIndicies[p.ToColor()];
+                    var bit3 = cIdx & 0b0000_1000;
+                    var bit4 = cIdx & 0b0001_0000;
+
+                    cIdx = (cIdx & 0b1110_0111) | (bit3 << 1) | (bit4 >> 1);
+                    data[i    ] = (byte)cIdx;
+                    i += 1;
+                }
+            }
+            else
+            {
+                // TODO: Check if alpha channel isn't used to prefer 24bpp
+                data = new byte[width * height * 4];
+
+                var i = 0;
+                foreach (var p in image.GetPixels())
+                {
+                    var c = p.ToColor();
+
+                    data[i    ] = c.R;
+                    data[i + 1] = c.G;
+                    data[i + 2] = c.B;
+                    data[i + 3] = (c.A == 0xFF)
+                        ? (byte)0x80
+                        : (byte)(c.A >> 1);
+
+                    i += 4;
+                }
             }
 
             var bitmap = new HMXBitmap()
@@ -701,7 +753,7 @@ namespace Mackiloha.App.Extensions
                 MipMaps = 0,
                 Width = width,
                 Height = height,
-                BPL = (width * bpp) >> 3,
+                BPL = (width * bpp) / 8,
                 RawData = data
             };
 
