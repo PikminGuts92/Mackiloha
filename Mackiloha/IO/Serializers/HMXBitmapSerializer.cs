@@ -57,8 +57,8 @@ namespace Mackiloha.IO.Serializers
             {
                 case 3:
                 case 8:
-                    // Check if DXT1
-                    if (MiloSerializer.Info.Platform == Platform.X360 || MiloSerializer.Info.Platform == Platform.PS3)
+                    // Only encoding 8 is bitmap on xbox?
+                    if (encoding == 8 && MiloSerializer.Info.Platform != Platform.XBOX)
                         break;
 
                     // Each color is 32 bits 
