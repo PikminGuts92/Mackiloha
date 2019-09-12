@@ -13,7 +13,7 @@ namespace Mackiloha.App.Extensions
 {
     public static class AppStateExtensions
     {
-        public static void ExtractMiloContents(this AppState state, string miloPath, string outputDir, bool convertTextures)
+        public static MiloObjectDir OpenMiloFile(this AppState state, string miloPath)
         {
             MiloFile miloFile;
             using (var fileStream = state.GetWorkingDirectory().GetStreamForFile(miloPath))
@@ -36,6 +36,12 @@ namespace Mackiloha.App.Extensions
                 milo = serializer.ReadFromStream<MiloObjectDir>(miloStream);
             }
 
+            return milo;
+        }
+
+        public static void ExtractMiloContents(this AppState state, string miloPath, string outputDir, bool convertTextures)
+        {
+            var milo = OpenMiloFile(state, miloPath);
             milo.ExtractToDirectory(outputDir, convertTextures, state, state.GetWorkingDirectory());
         }
 
@@ -72,7 +78,7 @@ namespace Mackiloha.App.Extensions
                 "Character",
                 "ObjectDir",
                 "PanelDir",
-                "RndDir",
+                //"RndDir",
                 "WorldDir",
                 //"WorldFx" // TODO: Find better way to find directory entry
             };
@@ -141,7 +147,7 @@ namespace Mackiloha.App.Extensions
                 if (type == "Tex")
                 {
                     var defaultTexMeta = TexMeta.DefaultFor(state.SystemInfo.Platform);
-                    var imageRegex = new Regex("[.]png$", RegexOptions.IgnoreCase); // TODO: Support more formats
+                    var imageRegex = new Regex("[.]((bmp)|(jpg)|(jpeg)|(png))$", RegexOptions.IgnoreCase); // TODO: Support more formats
                     var texRegex = new Regex("[.]tex$", RegexOptions.IgnoreCase);
 
                     var texMetas = metaPaths

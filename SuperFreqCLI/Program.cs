@@ -11,9 +11,10 @@ namespace SuperFreqCLI
     {
         static void Main(string[] args)
         {
-            Parser.Default.ParseArguments<Dir2MiloOptions, Milo2DirOptions, TextureToPngOptions>(args)
+            Parser.Default.ParseArguments<Dir2MiloOptions, Milo2DirOptions, Milo2GLTFOptions, TextureToPngOptions>(args)
                 .WithParsed<Dir2MiloOptions>(Dir2MiloOptions.Parse)
                 .WithParsed<Milo2DirOptions>(Milo2DirOptions.Parse)
+                .WithParsed<Milo2GLTFOptions>(Milo2GLTFOptions.Parse)
                 .WithParsed<TextureToPngOptions>(TextureToPngOptions.Parse)
                 .WithNotParsed(errors => { });
         }
