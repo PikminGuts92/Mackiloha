@@ -22,8 +22,15 @@ namespace Mackiloha.App.Extensions
         {
             switch (bitmap.Encoding)
             {
+                case 2: // Phase
                 case 3:
-                    var image = DecodeBitmap(bitmap.RawData, bitmap.Width, bitmap.Height, bitmap.MipMaps, bitmap.Bpp);
+                    var image = DecodeBitmap(
+                        bitmap.RawData,
+                        bitmap.Width,
+                        bitmap.Height,
+                        bitmap.MipMaps,
+                        bitmap.Bpp,
+                        (info.Platform == Platform.PC) ? 16 : 32);
 
                     // Converts BGRa -> RGBa if needed
                     if (info.Platform == Platform.XBOX
@@ -93,7 +100,7 @@ namespace Mackiloha.App.Extensions
             }
         }
 
-        private static byte[] DecodeBitmap(byte[] raw, int width, int height, int mips, int bpp)
+        private static byte[] DecodeBitmap(byte[] raw, int width, int height, int mips, int bpp, int colorSize = 32)
         {
             byte[] image = new byte[width * height * 4]; // 32 bpp
 
@@ -144,30 +151,31 @@ namespace Mackiloha.App.Extensions
             }
             else if (bpp == 16)
             {
-                // Grayscale?
                 int r = 0;
                 for (int i = 0; i < image.Length; i += 16)
                 {
+                    // TODO: Figure out if big endian is encoded differently
+
                     // Pixel 1
-                    image[i    ]  = raw[r     ];
-                    image[i + 1]  = raw[r     ];
-                    image[i + 2]  = raw[r     ];
-                    image[i + 3]  = ((raw[r +  1] & 0x80) != 0) ? (byte)0xFF : (byte)(raw[r + 1] << 1);
+                    image[i    ]  = _4BitsTo8Bits(raw[r  + 1], 0xF0);
+                    image[i + 1]  = _4BitsTo8Bits(raw[r  + 1], 0x0F);
+                    image[i + 2]  = _4BitsTo8Bits(raw[r     ], 0xF0);
+                    image[i + 3]  = _4BitsTo8Bits(raw[r     ], 0x0F);
                     // Pixel 2
-                    image[i + 4]  = raw[r +  2];
-                    image[i + 5]  = raw[r +  2];
-                    image[i + 6]  = raw[r +  2];
-                    image[i + 7]  = ((raw[r +  3] & 0x80) != 0) ? (byte)0xFF : (byte)(raw[r + 3] << 1);
+                    image[i + 4]  = _4BitsTo8Bits(raw[r  + 3], 0xF0);
+                    image[i + 5]  = _4BitsTo8Bits(raw[r  + 3], 0x0F);
+                    image[i + 6]  = _4BitsTo8Bits(raw[r  + 2], 0xF0);
+                    image[i + 7]  = _4BitsTo8Bits(raw[r  + 2], 0x0F);
                     // Pixel 3
-                    image[i +  8] = raw[r +  4];
-                    image[i +  9] = raw[r +  4];
-                    image[i + 10] = raw[r +  4];
-                    image[i + 11] = ((raw[r +  5] & 0x80) != 0) ? (byte)0xFF : (byte)(raw[r + 5] << 1);
+                    image[i +  8] = _4BitsTo8Bits(raw[r  + 5], 0xF0);
+                    image[i +  9] = _4BitsTo8Bits(raw[r  + 5], 0x0F);
+                    image[i + 10] = _4BitsTo8Bits(raw[r  + 4], 0xF0);
+                    image[i + 11] = _4BitsTo8Bits(raw[r  + 4], 0x0F);
                     // Pixel 4
-                    image[i + 12] = raw[r +  6];
-                    image[i + 13] = raw[r +  6];
-                    image[i + 14] = raw[r +  6];
-                    image[i + 15] = ((raw[r +  7] & 0x80) != 0) ? (byte)0xFF : (byte)(raw[r + 7] << 1);
+                    image[i + 12] = _4BitsTo8Bits(raw[r  + 7], 0xF0);
+                    image[i + 13] = _4BitsTo8Bits(raw[r  + 7], 0x0F);
+                    image[i + 14] = _4BitsTo8Bits(raw[r  + 6], 0xF0);
+                    image[i + 15] = _4BitsTo8Bits(raw[r  + 6], 0x0F);
                     r += 8;
                 }
 
@@ -175,16 +183,52 @@ namespace Mackiloha.App.Extensions
             }
 
             byte[] palette = new byte[1 << (bpp + 2)];
-            Array.Copy(raw, palette, palette.Length);
-            var o = palette.Length; // Pixel start offset
-            // Updates alpha channels (7-bit -> 8-bit)
-            byte a;
-            for (int p = 0; p < palette.Length; p += 4)
+
+            if (colorSize == 32)
             {
-                // Set to max (0xFF) if 128 or multiply by 2
-                a = palette[p + 3];
-                palette[p + 3] = ((a & 0x80) != 0) ? (byte)0xFF : (byte)(a << 1);
+                Array.Copy(raw, palette, palette.Length);
+
+                // Updates alpha channels (7-bit -> 8-bit)
+                byte a;
+                for (int p = 0; p < palette.Length; p += 4)
+                {
+                    // Set to max (0xFF) if 128 or multiply by 2
+                    a = palette[p + 3];
+                    palette[p + 3] = ((a & 0x80) != 0) ? (byte)0xFF : (byte)(a << 1);
+                }
+            } else if (colorSize == 16)
+            {
+                int r = 0;
+                for (int i = 0; i < palette.Length; i += 16)
+                {
+                    // TODO: Figure out if big endian is encoded differently
+
+                    // Pixel 1
+                    palette[i    ]  = _4BitsTo8Bits(raw[r  + 1], 0xF0);
+                    palette[i + 1]  = _4BitsTo8Bits(raw[r  + 1], 0x0F);
+                    palette[i + 2]  = _4BitsTo8Bits(raw[r     ], 0xF0);
+                    palette[i + 3]  = _4BitsTo8Bits(raw[r     ], 0x0F);
+                    // Pixel 2
+                    palette[i + 4]  = _4BitsTo8Bits(raw[r  + 3], 0xF0);
+                    palette[i + 5]  = _4BitsTo8Bits(raw[r  + 3], 0x0F);
+                    palette[i + 6]  = _4BitsTo8Bits(raw[r  + 2], 0xF0);
+                    palette[i + 7]  = _4BitsTo8Bits(raw[r  + 2], 0x0F);
+                    // Pixel 3
+                    palette[i +  8] = _4BitsTo8Bits(raw[r  + 5], 0xF0);
+                    palette[i +  9] = _4BitsTo8Bits(raw[r  + 5], 0x0F);
+                    palette[i + 10] = _4BitsTo8Bits(raw[r  + 4], 0xF0);
+                    palette[i + 11] = _4BitsTo8Bits(raw[r  + 4], 0x0F);
+                    // Pixel 4
+                    palette[i + 12] = _4BitsTo8Bits(raw[r  + 7], 0xF0);
+                    palette[i + 13] = _4BitsTo8Bits(raw[r  + 7], 0x0F);
+                    palette[i + 14] = _4BitsTo8Bits(raw[r  + 6], 0xF0);
+                    palette[i + 15] = _4BitsTo8Bits(raw[r  + 6], 0x0F);
+                    r += 8;
+                }
             }
+            
+            var o = (palette.Length / 32) * colorSize; // Pixel start offset
+            
             if (bpp == 4)
             {
                 int r = 0, p1, p2, p3, p4;
@@ -536,6 +580,21 @@ namespace Mackiloha.App.Extensions
 
         private static int LinearOffset(int x, int y, int w) => (y * (w << 2)) + (x << 2);
 
+        private static byte _4BitsTo8Bits(int val, int andVal = 0x0F)
+        {
+            int rShift = 0;
+            while (rShift < 32)
+            {
+                if ((andVal & (1 << rShift)) != 0)
+                    break;
+
+                rShift++;
+            }
+
+            val = (val & andVal) >> rShift;
+            return (byte)(Math.Round((val / 15.0) * 255.0));
+        }
+
         private static (byte, byte, byte, byte) RGBAFromRGB565(ushort c)
         {
             return ((byte)((((c & 0b1111_1000_0000_0000) << 16) | ((c & 0b1110_0000_0000_0000) << 11)) >> 24),
@@ -661,7 +720,7 @@ namespace Mackiloha.App.Extensions
         public static void SaveAs(this HMXBitmap bitmap, SystemInfo info, string path)
         {
             var rgba = bitmap.ToRGBA(info);
-
+            if (bitmap == null || bitmap.RawData.Length <= 0) return;
             new MagickImage(rgba, new PixelReadSettings(bitmap.Width, bitmap.Height, StorageType.Char, PixelMapping.RGBA))
                 .Write(path);
         }
@@ -681,15 +740,22 @@ namespace Mackiloha.App.Extensions
                 || ((height & (height - 1)) != 0))
                 throw new Exception($"Inavlid image resolution of {width}x{height}. Both must be a power of 2 and at least 4px.");
 
+            var uniqueColors = image
+                    .GetPixels()
+                    .Select(x => x.ToColor())
+                    .Distinct()
+                    .ToList();
+
             byte[] data;
-            int bpp = image switch
+            /*int bpp = image switch
             {
                 // TODO: Check what games support 16bpp
-                var img when img.TotalColors <= 16 => 4,
-                var img when img.TotalColors <= 256 => 8,
+                var img when uniqueColors.Count <= 16 => 4,
+                var img when uniqueColors.Count <= 256 => 8,
                 var img when img.ChannelCount <= 3 => 24,
                 _ => 32
-            };
+            };*/
+            int bpp = 32;
             
             if (bpp <= 8)
             {
@@ -698,23 +764,25 @@ namespace Mackiloha.App.Extensions
                 data = new byte[((width * height * bpp) / 8) + paletteSize];
 
                 var i = 0;
-                var uniqueColors = image
-                    .UniqueColors()
-                    .GetPixels();
 
                 var paletteIndicies = new Dictionary<MagickColor, int>();
 
-                foreach (var p in uniqueColors)
+                foreach (var c in uniqueColors)
                 {
-                    var c = p.ToColor();
                     paletteIndicies.Add(c, i >> 2);
 
-                    data[i    ] = c.R;
+                    /*data[i    ] = c.R;
                     data[i + 1] = c.G;
                     data[i + 2] = c.B;
                     data[i + 3] = (c.A == 0xFF)
                         ? (byte)0x80
-                        : (byte)(c.A >> 1);
+                        : (byte)(c.A >> 1);*/
+                    
+                    data[i    ] = c.A;
+                    data[i + 1] = c.R;
+                    data[i + 2] = c.G;
+                    data[i + 3] = c.B;
+
 
                     i += 4;
                 }
@@ -728,7 +796,7 @@ namespace Mackiloha.App.Extensions
                         var bit3 = cIdx & 0b0000_1000;
                         var bit4 = cIdx & 0b0001_0000;
 
-                        cIdx = (cIdx & 0b1110_0111) | (bit3 << 1) | (bit4 >> 1);
+                        //cIdx = (cIdx & 0b1110_0111) | (bit3 << 1) | (bit4 >> 1);
                         data[i] = (byte)cIdx;
                         i += 1;
                     }
@@ -766,12 +834,19 @@ namespace Mackiloha.App.Extensions
                     {
                         var c = p.ToColor();
 
-                        data[i] = c.R;
+                        // X360
+                        data[i    ] = c.A;
+                        data[i + 1] = c.R;
+                        data[i + 2] = c.G;
+                        data[i + 3] = c.B;
+
+                        /*
+                        data[i    ] = c.R;
                         data[i + 1] = c.G;
                         data[i + 2] = c.B;
                         data[i + 3] = (c.A == 0xFF)
                             ? (byte)0x80
-                            : (byte)(c.A >> 1);
+                            : (byte)(c.A >> 1);*/
 
                         i += 4;
                     }
@@ -782,9 +857,9 @@ namespace Mackiloha.App.Extensions
                     {
                         var c = p.ToColor();
 
-                        data[i] = c.R;
+                        data[i    ] = c.B;
                         data[i + 1] = c.G;
-                        data[i + 2] = c.B;
+                        data[i + 2] = c.R;
 
                         i += 3;
                     }

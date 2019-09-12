@@ -16,7 +16,7 @@ namespace Mackiloha.IO.Serializers
             int version = ReadMagic(ar, data);
 
             // Skips zeros
-            if (version >= 10 && MiloSerializer.Info.Version >= 24)
+            if (version >= 10 && MiloSerializer.Info.Version == 24)
                 ar.BaseStream.Position += 9; // GH2 PS2
             else if (version >= 10)
                 ar.BaseStream.Position += 13; // GH2 360
