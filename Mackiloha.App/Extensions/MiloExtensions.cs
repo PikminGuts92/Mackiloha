@@ -139,6 +139,12 @@ namespace Mackiloha.App.Extensions
                 DoubleSided = true
             }).ToArray();
 
+            if (!Directory.Exists(pathDirectory))
+            {
+                // Create directory
+                Directory.CreateDirectory(pathDirectory);
+            }
+
             // Saves textures
             for (int i = 0; i < textures.Count; i++)
             {
