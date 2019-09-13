@@ -11,6 +11,7 @@ namespace Mackiloha.App
         string Name { get; }
         string[] GetFiles();
         IDirectory[] GetSubDirectories();
+        IDirectory GetParent();
         bool IsLeaf();
         Stream GetStreamForFile(string fileName);
     }

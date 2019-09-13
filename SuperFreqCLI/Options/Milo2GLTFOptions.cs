@@ -30,10 +30,9 @@ namespace SuperFreqCLI.Options
             };
 
             appState.UpdateSystemInfo(info);
-            var serializer = appState.GetSerializer();
-
+            
             var milo = appState.OpenMiloFile(op.InputPath);
-            milo.ExportToGLTF(op.OutputPath, serializer);
+            milo.ExportToGLTF(op.OutputPath, appState);
         }
     }
 }

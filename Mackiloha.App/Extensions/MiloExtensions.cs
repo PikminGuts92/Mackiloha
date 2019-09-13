@@ -26,14 +26,36 @@ namespace Mackiloha.App.Extensions
             return Path.GetExtension(entry.Name); // Returns .cs
         }
 
-        public static void ExportToGLTF(this MiloObjectDir milo, string path, MiloSerializer serializer)
+        public static void ExportToGLTF(this MiloObjectDir milo, string path, AppState appState)
         {
+            var serializer = appState.GetSerializer();
             var pathDirectory = Path.GetDirectoryName(path);
 
             var textures = milo.Entries
                 .Where(x => "Tex".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
                 .Select(y => serializer.ReadFromMiloObjectBytes<Tex>(y as MiloObjectBytes))
                 .ToList();
+
+            var extTexs = textures.Where(x => x.UseExternal).ToList();
+            var miloDir = appState.GetWorkingDirectory().FullPath;
+
+            string MakeGenPath(string path)
+            {
+                var dir = Path.GetDirectoryName(path);
+                var fileName = $"{Path.GetFileName(path)}_ps2"; // TODO: Get platform extension from app state
+
+                return Path.Combine(dir, "gen", fileName);
+            }
+
+            // Update textures
+            foreach (var texture in textures.Where(x => x.UseExternal))
+            {
+                var texPath = Path.Combine(miloDir, MakeGenPath(texture.ExternalPath));
+                var bitmap = serializer.ReadFromFile<HMXBitmap>(texPath);
+
+                texture.Bitmap = bitmap;
+                texture.UseExternal = false;
+            }
 
             var views = milo.Entries
                 .Where(x => "View".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))

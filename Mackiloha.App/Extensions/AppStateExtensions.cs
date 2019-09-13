@@ -39,6 +39,28 @@ namespace Mackiloha.App.Extensions
             return milo;
         }
 
+        public static IDirectory GetRoot(this AppState state)
+        {
+            // TODO: Set from user input
+            IDirectory dir = state.GetWorkingDirectory();
+            IDirectory[] subDirs;
+
+            do
+            {
+                subDirs = dir.GetSubDirectories();
+
+                if (subDirs.Any(x =>
+                    string.Equals(x.Name, "songs",
+                        StringComparison.CurrentCultureIgnoreCase)))
+                    return dir;
+
+                dir = dir.GetParent();
+
+            } while (dir != null);
+
+            return null;
+        }
+
         public static void ExtractMiloContents(this AppState state, string miloPath, string outputDir, bool convertTextures)
         {
             var milo = OpenMiloFile(state, miloPath);

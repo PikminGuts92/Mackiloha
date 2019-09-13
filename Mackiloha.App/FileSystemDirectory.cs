@@ -32,6 +32,15 @@ namespace Mackiloha.App
             .Select(x => new FileSystemDirectory(x))
             .ToArray();
 
+        public IDirectory GetParent()
+        {
+            var parent = Directory.GetParent(absolutePath);
+            if (parent?.FullName == null)
+                return null;
+
+            return new FileSystemDirectory(parent.FullName);
+        }
+
         public bool IsLeaf() =>
             !Directory.GetDirectories(absolutePath).Any();
 
