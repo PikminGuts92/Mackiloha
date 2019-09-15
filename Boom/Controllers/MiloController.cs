@@ -11,7 +11,9 @@ using Boom.Data;
 using Boom.Extensions;
 using Boom.Models;
 using Mackiloha;
+using Mackiloha.App.Extensions;
 using Mackiloha.Ark;
+using Mackiloha.DTB;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
 using Mackiloha.Render;
@@ -22,7 +24,8 @@ namespace Boom.Controllers
     public class MiloController : ControllerBase
     {
         private readonly MiloContext _miloContext;
-        private readonly Regex _miloRegex = new Regex("[.]((rnd([_][a-zA-Z0-9]+)?)|(gh)|(milo([_][a-zA-Z0-9]+)?))$"); // Known milo extensions
+        private readonly Regex _miloRegex = new Regex("[.]((rnd([_][a-zA-Z0-9]+)?)|(gh)|(milo([_][a-zA-Z0-9]+)?))$", RegexOptions.IgnoreCase); // Known milo extensions
+        private readonly Regex _bitmapRegex = new Regex("[.](png|bmp)_(ps2)$", RegexOptions.IgnoreCase);
 
         public MiloController(MiloContext miloContext)
         {
@@ -547,16 +550,28 @@ namespace Boom.Controllers
 
         [HttpPost]
         [Route("ExtractArk")]
-        public IActionResult ExtractFilesFromArk([FromBody] ScanRequest request, bool extractMilos, bool extractDTAs)
+        public IActionResult ExtractFilesFromArk([FromBody] ScanRequest request, bool extractMilos, bool extractDTAs, bool convertTextures)
         {
+            Archive ark;
+
             if (!System.IO.File.Exists(request.InputPath))
-                return BadRequest($"File \"{request.InputPath}\" does not exist!");
+            {
+                // Open as directory if available
+                if (Directory.Exists(request.InputPath))
+                    ark = ArkFileSystem.FromDirectory(request.InputPath);
+                else
+                    return BadRequest($"File \"{request.InputPath}\" does not exist!");
+            }
+            else
+            {
+                // Open as archive
+                ark = ArkFile.FromFile(request.InputPath);
+            }
+                
 
             if (request.OutputPath == null)
                 return BadRequest($"Output directory cannot be null!");
 
-            var ark = ArkFile.FromFile(request.InputPath);
-            
             string CombinePath(string basePath, string path)
             {
                 // Consistent slash
@@ -595,7 +610,9 @@ namespace Boom.Controllers
 
             void SaveAsFile(MiloObjectBytes miloEntry, string basePath)
             {
-                var filePath = basePath = Path.Combine(basePath, miloEntry.Type, miloEntry.Name);
+                var fileName = SanitizeFileName(miloEntry.Name);
+                var filePath = basePath = Path.Combine(basePath, miloEntry.Type, fileName);
+
                 if (!Directory.Exists(Path.GetDirectoryName(filePath)))
                     Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
@@ -604,7 +621,7 @@ namespace Boom.Controllers
             }
 
             // Extract everything
-            if (!extractDTAs && !extractMilos)
+            if (!extractDTAs && !extractMilos && !convertTextures)
             {
                 foreach (var arkEntry in ark.Entries)
                 {
@@ -627,35 +644,125 @@ namespace Boom.Controllers
                 return Ok();
             }
 
-            // Extract milos
-            foreach (var miloArkEntry in ark.Entries.Where(x => _miloRegex.IsMatch(x.FullPath)))
+            string SanitizeFileName(string fileName)
             {
-                var filePath = CombinePath(request.OutputPath, GetNonGenPath(miloArkEntry.FullPath));
+                // Sanitize file name
+                var invalidChars = new Regex($"[{new string(Path.GetInvalidFileNameChars())}]", RegexOptions.IgnoreCase);
+                return invalidChars.Replace(fileName, "");
+            }
 
-                if (!Directory.Exists(Path.GetDirectoryName(filePath)))
-                    Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-
-                using (var stream = ark.GetArkEntryFileStream(miloArkEntry))
+            // Extract milos
+            if (extractMilos || convertTextures)
+            {
+                foreach (var miloArkEntry in ark.Entries.Where(x => _miloRegex.IsMatch(x.FullPath)))
                 {
-                    var milo = MiloFile.ReadFromStream(stream);
-                    var miloSerializer = new MiloSerializer(new SystemInfo()
-                    {
-                        Version = milo.Version,
-                        BigEndian = false,
-                        Platform = Enum.Parse<Platform>(request.Platform)
-                    });
+                    var filePath = CombinePath(request.OutputPath, GetNonGenPath(miloArkEntry.FullPath));
 
-                    var miloDir = new MiloObjectDir();
-                    using (var ms = new MemoryStream(milo.Data))
+                    using (var stream = ark.GetArkEntryFileStream(miloArkEntry))
                     {
-                        miloSerializer.ReadFromStream(ms, miloDir);
+                        var milo = MiloFile.ReadFromStream(stream);
+                        var miloSerializer = new MiloSerializer(new SystemInfo()
+                        {
+                            Version = milo.Version,
+                            BigEndian = milo.BigEndian,
+                            Platform = Enum.Parse<Platform>(request.Platform)
+                        });
+
+                        var miloDir = new MiloObjectDir();
+                        using (var ms = new MemoryStream(milo.Data))
+                        {
+                            miloSerializer.ReadFromStream(ms, miloDir);
+                        }
+
+                        if (convertTextures)
+                        {
+                            var textureEntries = miloDir.Entries
+                                .Where(x => x.Type == "Tex")
+                                .Select(x => x is Tex ? x as Tex : miloSerializer.ReadFromMiloObjectBytes<Tex>(x as MiloObjectBytes))
+                                .Where(x => x.Bitmap != null && x.Bitmap.RawData?.Length > 0)
+                                .ToList();
+
+                            if (textureEntries.Count <= 0)
+                                continue;
+
+                            foreach (var texEntry in textureEntries)
+                            {
+                                var entryName = Path.GetFileNameWithoutExtension(SanitizeFileName(texEntry.Name));
+
+                                var pngName = $"{entryName}.png";
+                                var pngPath = Path.Combine(filePath, texEntry.Type, pngName);
+                                texEntry.Bitmap.SaveAs(miloSerializer.Info, pngPath);
+
+                                Console.WriteLine($"Wrote \"{pngPath}\"");
+
+                                // Write DTA script to file
+                                var scriptName = texEntry?.ScriptName ?? "";
+                                if (texEntry.Script != null)
+                                {
+                                    var dtaName = (string.IsNullOrEmpty(scriptName))
+                                        ? $"{entryName}.dta"
+                                        : $"{entryName}_{scriptName}.dta";
+
+                                    var dtaPath = Path.Combine(filePath, texEntry.Type, dtaName);
+
+                                    var parent = new ParentItem(ParentType.Default);
+                                    foreach (var item in texEntry.Script.Items)
+                                        parent.Add(item);
+
+                                    texEntry.Script.Items.Clear();
+                                    texEntry.Script.Items.Add(parent);
+
+                                    System.IO.File.WriteAllText(dtaPath, texEntry.Script.ToString());
+                                    Console.WriteLine($"Wrote \"{dtaPath}\"");
+                                }
+                            }
+                        }
+
+                        if (extractMilos)
+                        {
+                            if (miloDir.Entries.Count <= 0)
+                                continue;
+
+                            if (!Directory.Exists(Path.GetDirectoryName(filePath)))
+                                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+                            // Saves milo entries
+                            miloDir.Entries.ForEach(x =>
+                            {
+                                SaveAsFile(x as MiloObjectBytes, filePath);
+                                Console.WriteLine($"Wrote \"{filePath}\"");
+                            });
+
+                            if (miloDir.Extras.ContainsKey("DirectoryEntry"))
+                            {
+                                SaveAsFile(miloDir.Extras["DirectoryEntry"] as MiloObjectBytes, filePath);
+                                Console.WriteLine($"Wrote \"{filePath}\"");
+                            }
+                        }
                     }
+                }
+            }
 
-                    miloDir.Entries.ForEach(x => SaveAsFile(x as MiloObjectBytes, filePath));
+            // Convert textures
+            if (convertTextures)
+            {
+                foreach (var bitmapArkEntry in ark.Entries.Where(x => _bitmapRegex.IsMatch(x.FullPath)))
+                {
+                    var arkPath = GetNonGenPath(bitmapArkEntry.FullPath);
+                    var filePath = CombinePath(request.OutputPath, $"{Path.GetDirectoryName(arkPath)}\\{Path.GetFileNameWithoutExtension(bitmapArkEntry.FileName)}.png");
 
-                    if (miloDir.Extras.ContainsKey("DirectoryEntry"))
+                    using (var stream = ark.GetArkEntryFileStream(bitmapArkEntry))
                     {
-                        SaveAsFile(miloDir.Extras["DirectoryEntry"] as MiloObjectBytes, filePath);
+                        var miloSerializer = new MiloSerializer(new SystemInfo()
+                        {
+                            Version = 25, // 10 = gh1, 24 = gh2
+                            BigEndian = false, // Even on PPC it's LE
+                            Platform = Enum.Parse<Platform>(request.Platform)
+                        });
+
+                        var bitmap = miloSerializer.ReadFromStream<HMXBitmap>(stream);
+                        bitmap.SaveAs(miloSerializer.Info, filePath);
+                        Console.WriteLine($"Wrote \"{filePath}\"");
                     }
                 }
             }

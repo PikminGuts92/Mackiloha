@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Mackiloha.DTB;
 using Mackiloha.Render;
 
 namespace Mackiloha.IO.Serializers
@@ -19,7 +20,21 @@ namespace Mackiloha.IO.Serializers
             if (version >= 10 && MiloSerializer.Info.Version == 24)
                 ar.BaseStream.Position += 9; // GH2 PS2
             else if (version >= 10)
-                ar.BaseStream.Position += 13; // GH2 360
+            {
+                // GH2 360 (13 bytes when no script)
+                ar.BaseStream.Position += 4; // Should be 2
+                tex.ScriptName = ar.ReadString(); // Script name?
+
+                var hasDtb = ar.ReadBoolean();
+                if (hasDtb)
+                {
+                    ar.BaseStream.Position -= 1;
+                    tex.Script = DTBFile.FromStream(ar, DTBEncoding.Classic);
+                }
+
+                // Extra meta (comment?)
+                var meta = ar.ReadString();
+            }
 
             tex.Width = ar.ReadInt32();
             tex.Height = ar.ReadInt32();
@@ -29,7 +44,7 @@ namespace Mackiloha.IO.Serializers
 
             tex.IndexF = ar.ReadSingle();
 
-            if (tex.IndexF < -13.0f || tex.IndexF > 0.0f)
+            if (tex.IndexF < -13.0f || (tex.IndexF > 0.0f && tex.IndexF != 666.0f))
                 throw new NotSupportedException($"Expected number between -13.0 <-> 0.0, got {tex.IndexF}");
 
             tex.Index = ar.ReadInt32();
@@ -38,6 +53,7 @@ namespace Mackiloha.IO.Serializers
                 case 1:
                 case 2:
                 case 4:
+                case 8: // krpa
                 case 34:
                     break;
                 default:

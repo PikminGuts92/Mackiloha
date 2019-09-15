@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Mackiloha.DTB;
 
 namespace Mackiloha.Render
 {
@@ -19,7 +20,13 @@ namespace Mackiloha.Render
         HMXBitmap Bitmap { get; set; }
     }
 
-    public class Tex : RenderObject, ITex
+    public interface ITexNG
+    {
+        string ScriptName { get; set; }
+        DTBFile Script { get; set; }
+    }
+
+    public class Tex : RenderObject, ITex, ITexNG
     {
         // Tex
         public int Width { get; set; }
@@ -33,6 +40,10 @@ namespace Mackiloha.Render
         public bool UseExternal { get; set; }
 
         public HMXBitmap Bitmap { get; set; }
+
+        // Tex Next-Gen
+        public string ScriptName { get; set; }
+        public DTBFile Script { get; set; }
 
         public override string Type => "Tex";
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -719,8 +720,12 @@ namespace Mackiloha.App.Extensions
 
         public static void SaveAs(this HMXBitmap bitmap, SystemInfo info, string path)
         {
-            var rgba = bitmap.ToRGBA(info);
             if (bitmap == null || bitmap.RawData.Length <= 0) return;
+            var rgba = bitmap.ToRGBA(info);
+
+            if (!Directory.Exists(Path.GetDirectoryName(path)))
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+
             new MagickImage(rgba, new PixelReadSettings(bitmap.Width, bitmap.Height, StorageType.Char, PixelMapping.RGBA))
                 .Write(path);
         }

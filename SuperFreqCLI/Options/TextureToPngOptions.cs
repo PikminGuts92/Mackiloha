@@ -24,8 +24,8 @@ namespace SuperFreqCLI.Options
             var appState = new AppState(Path.GetDirectoryName(op.InputPath));
             var info = new SystemInfo()
             {
-                Version = 26,
-                Platform = Platform.PC,
+                Version = 24,
+                Platform = Platform.PS2,
                 BigEndian = false
             };
 
