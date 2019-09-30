@@ -26,6 +26,21 @@ namespace Mackiloha.App.Extensions
             return Path.GetExtension(entry.Name); // Returns .cs
         }
 
+        private static string MakeGenPath(string path, Platform platform)
+        {
+            var ext = (platform) switch
+            {
+                Platform.PS2 => "ps2",
+                Platform.X360 => "xbox",
+                _ => ""
+            };
+
+            var dir = Path.GetDirectoryName(path);
+            var fileName = $"{Path.GetFileName(path)}_{ext}"; // TODO: Get platform extension from app state
+
+            return Path.Combine(dir, "gen", fileName);
+        }
+
         public static void ExportToGLTF(this MiloObjectDir milo, string path, AppState appState)
         {
             var serializer = appState.GetSerializer();
@@ -39,18 +54,10 @@ namespace Mackiloha.App.Extensions
             var extTexs = textures.Where(x => x.UseExternal).ToList();
             var miloDir = appState.GetWorkingDirectory().FullPath;
 
-            string MakeGenPath(string path)
-            {
-                var dir = Path.GetDirectoryName(path);
-                var fileName = $"{Path.GetFileName(path)}_ps2"; // TODO: Get platform extension from app state
-
-                return Path.Combine(dir, "gen", fileName);
-            }
-
             // Update textures
             foreach (var texture in textures.Where(x => x.UseExternal))
             {
-                var texPath = Path.Combine(miloDir, MakeGenPath(texture.ExternalPath));
+                var texPath = Path.Combine(miloDir, MakeGenPath(texture.ExternalPath, appState.SystemInfo.Platform));
                 var bitmap = serializer.ReadFromFile<HMXBitmap>(texPath);
 
                 texture.Bitmap = bitmap;
@@ -629,7 +636,7 @@ namespace Mackiloha.App.Extensions
                 M44 = miloMatrix.M44
             };
 
-        public static void ExtractToDirectory(this MiloObjectDir milo, string path, bool convertTextures, AppState state, IDirectory directory)
+        public static void ExtractToDirectory(this MiloObjectDir milo, string path, bool convertTextures, AppState state)
         {
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
@@ -694,6 +701,23 @@ namespace Mackiloha.App.Extensions
                 .Where(x => x.Type == "Tex")
                 .Select(x => x is Tex ? x as Tex : serializer.ReadFromMiloObjectBytes<Tex>(x as MiloObjectBytes))
                 .ToList();
+
+            // Update textures
+            foreach (var texture in textureEntries.Where(x => x.UseExternal))
+            {
+                if (texture?.Bitmap?.RawData?.Length > 0)
+                {
+                    // Use already embedded texture instead
+                    texture.UseExternal = false;
+                    continue;
+                }
+
+                var texPath = Path.Combine(state.GetWorkingDirectory().FullPath, MakeGenPath(texture.ExternalPath, state.SystemInfo.Platform));
+                var bitmap = serializer.ReadFromFile<HMXBitmap>(texPath);
+
+                texture.Bitmap = bitmap;
+                texture.UseExternal = false;
+            }
 
             var defaultMeta = TexMeta.DefaultFor(state.SystemInfo.Platform);
             foreach (var texEntry in textureEntries)

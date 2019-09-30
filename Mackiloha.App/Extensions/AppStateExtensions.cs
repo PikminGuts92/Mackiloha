@@ -64,7 +64,7 @@ namespace Mackiloha.App.Extensions
         public static void ExtractMiloContents(this AppState state, string miloPath, string outputDir, bool convertTextures)
         {
             var milo = OpenMiloFile(state, miloPath);
-            milo.ExtractToDirectory(outputDir, convertTextures, state, state.GetWorkingDirectory());
+            milo.ExtractToDirectory(outputDir, convertTextures, state);
         }
 
         private static Platform GuessPlatform(string fileName, int version, bool endian)
