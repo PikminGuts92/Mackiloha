@@ -64,6 +64,8 @@ namespace Mackiloha.App.Extensions
         public static void ExtractMiloContents(this AppState state, string miloPath, string outputDir, bool convertTextures)
         {
             var milo = OpenMiloFile(state, miloPath);
+            milo.Name = Path.GetFileName(miloPath);
+
             milo.ExtractToDirectory(outputDir, convertTextures, state);
         }
 

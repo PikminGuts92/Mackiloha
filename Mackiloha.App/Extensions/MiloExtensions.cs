@@ -653,7 +653,15 @@ namespace Mackiloha.App.Extensions
             {
                 var dirEntry = milo.Extras["DirectoryEntry"] as MiloObjectBytes;
                 if (dirEntry != null)
+                {
+                    if (string.IsNullOrWhiteSpace(dirEntry.Name) && !string.IsNullOrWhiteSpace(dirEntry.Type))
+                    {
+                        // TODO: Handle differently?
+                        // Some directory names are empty for whatever reason
+                        dirEntry.Name = Path.GetFileNameWithoutExtension(milo.Name);
+                    }
                     miloEntries.Add(dirEntry);
+                }
             }
             miloEntries.AddRange(milo.Entries);
 
