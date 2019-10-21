@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Mackiloha.DTB;
 
 namespace Mackiloha.IO
 {
@@ -24,6 +25,32 @@ namespace Mackiloha.IO
                 throw new NotSupportedException($"{GetType().Name}: Magic 0x{version:X2} does not correspond to serializer version 0x{MiloSerializer.Info.Version:X2} (Expected 0x{magic:X2})");
 
             return version;
+        }
+
+        public MiloMeta ReadMeta(AwesomeReader ar)
+        {
+            var meta = new MiloMeta();
+
+            if (MiloSerializer.Info.Version <= 10)
+                return meta;
+
+            meta.Revision = ar.ReadInt32();
+            meta.ScriptName = ar.ReadString();
+
+            var hasDtb = ar.ReadBoolean();
+            if (hasDtb)
+            {
+                ar.BaseStream.Position -= 1;
+                meta.Script = DTBFile.FromStream(ar, DTBEncoding.Classic); // TODO: Support encodings for post-RB3 and pre-GH1 games?
+            }
+
+            if (MiloSerializer.Info.Platform != Platform.PS2)
+            {
+                // Extra meta
+                meta.Comments = ar.ReadString();
+            }
+
+            return meta;
         }
 
         protected static void RepeatFor(int count, Action readItem)

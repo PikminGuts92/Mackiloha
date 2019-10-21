@@ -22,7 +22,7 @@ namespace Mackiloha.IO.Serializers
             else if (version >= 10)
             {
                 // GH2 360 (13 bytes when no script)
-                ar.BaseStream.Position += 4; // Should be 2
+                ar.BaseStream.Position += 4; // Revision number? Usually 1 or 2
                 tex.ScriptName = ar.ReadString(); // Script name?
 
                 var hasDtb = ar.ReadBoolean();

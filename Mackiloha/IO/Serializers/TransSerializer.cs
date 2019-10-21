@@ -18,9 +18,12 @@ namespace Mackiloha.IO.Serializers
             trans.Mat1 = ReadMatrix(ar);
             trans.Mat2 = ReadMatrix(ar);
             
-            var transformableCount = ar.ReadInt32();
-            trans.Transformables.Clear();
-            trans.Transformables.AddRange(RepeatFor(transformableCount, () => ar.ReadString()));
+            if (version <= 8)
+            {
+                var transformableCount = ar.ReadInt32();
+                trans.Transformables.Clear();
+                trans.Transformables.AddRange(RepeatFor(transformableCount, () => ar.ReadString()));
+            }
 
             trans.UnknownInt = ar.ReadInt32();
             switch (trans.UnknownInt)
@@ -116,6 +119,9 @@ namespace Mackiloha.IO.Serializers
                 case 10:
                     // GH1
                     return 8;
+                case 24:
+                    // GH2
+                    return 9;
                 default:
                     return -1;
             }

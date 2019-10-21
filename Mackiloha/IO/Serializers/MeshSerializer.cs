@@ -15,6 +15,8 @@ namespace Mackiloha.IO.Serializers
             var mesh = data as Mesh;
             int version = ReadMagic(ar, data);
 
+            var meta = ReadMeta(ar);
+
             MiloSerializer.ReadFromStream(ar.BaseStream, mesh.Trans);
             MiloSerializer.ReadFromStream(ar.BaseStream, mesh.Draw);
 
@@ -274,6 +276,9 @@ namespace Mackiloha.IO.Serializers
                 case 10:
                     // GH1
                     return 25;
+                case 24:
+                    // GH2
+                    return 28;
                 default:
                     return -1;
             }

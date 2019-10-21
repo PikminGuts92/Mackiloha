@@ -16,9 +16,12 @@ namespace Mackiloha.IO.Serializers
 
             draw.Showing = ar.ReadBoolean();
 
-            var drawableCount = ar.ReadInt32();
-            draw.Drawables.Clear();
-            draw.Drawables.AddRange(RepeatFor(drawableCount, () => ar.ReadString()));
+            if (version < 3)
+            {
+                var drawableCount = ar.ReadInt32();
+                draw.Drawables.Clear();
+                draw.Drawables.AddRange(RepeatFor(drawableCount, () => ar.ReadString()));
+            }
 
             draw.Boundry = new Sphere()
             {
@@ -27,6 +30,12 @@ namespace Mackiloha.IO.Serializers
                 Z = ar.ReadSingle(),
                 Radius = ar.ReadSingle()
             };
+
+            if (version >= 3)
+            {
+                // Should always be 0
+                ar.ReadInt32();
+            }
         }
 
         public override void WriteToStream(AwesomeWriter aw, ISerializable data)
@@ -58,6 +67,9 @@ namespace Mackiloha.IO.Serializers
                 case 10:
                     // GH1
                     return 1;
+                case 24:
+                    // GH2
+                    return 3;
                 default:
                     return -1;
             }
