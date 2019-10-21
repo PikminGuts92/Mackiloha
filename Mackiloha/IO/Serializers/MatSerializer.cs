@@ -13,6 +13,13 @@ namespace Mackiloha.IO.Serializers
         {
             var mat = data as Mat;
             int version = ReadMagic(ar, data);
+            var meta = ReadMeta(ar);
+
+            if (version >= 27)
+            {
+                ReadGH2Material(ar, mat);
+                return;
+            }
 
             var textureCount = ar.ReadInt32();
             mat.TextureEntries.Clear();
@@ -64,6 +71,55 @@ namespace Mackiloha.IO.Serializers
                 throw new Exception($"Unknown blend factor of {mat.Blend}");
 
             num = ar.ReadInt16();
+        }
+
+        private void ReadGH2Material(AwesomeReader ar, Mat mat)
+        {
+            // TODO: Better figure out GH2 material structure
+            var num = ar.ReadInt32();
+            switch (num)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                    break;
+                default:
+                    throw new Exception($"Unexpected number, got {num}");
+            }
+
+            mat.BaseColor = new Color4()
+            {
+                R = ar.ReadSingle(),
+                G = ar.ReadSingle(),
+                B = ar.ReadSingle(),
+                A = ar.ReadSingle()
+            };
+
+            var alwaysT = ar.ReadBoolean();
+            var alwaysF = ar.ReadBoolean();
+
+            var textureCount = ar.ReadInt32(); // Should always be 1
+            mat.TextureEntries.Clear();
+            mat.TextureEntries.AddRange(RepeatFor(textureCount, () =>
+            {
+                ar.BaseStream.Position += 2;
+
+                var texEntry = new TextureEntry()
+                {
+                    Unknown1 = ar.ReadInt32(),
+                    Unknown2 = ar.ReadInt32(),
+                    Mat = ReadMatrix(ar),
+                    Unknown3 = 0,
+                    Texture = ar.ReadString()
+                };
+
+                // TODO: Read normal, specular, environment
+
+                return texEntry;
+            }));
         }
 
         protected static Matrix4 ReadMatrix(AwesomeReader ar)
@@ -122,6 +178,9 @@ namespace Mackiloha.IO.Serializers
                 case 10:
                     // GH1
                     return 21;
+                case 24:
+                    // GH2
+                    return 27;
                 default:
                     return -1;
             }

@@ -14,7 +14,6 @@ namespace Mackiloha.IO.Serializers
         {
             var mesh = data as Mesh;
             int version = ReadMagic(ar, data);
-
             var meta = ReadMeta(ar);
 
             MiloSerializer.ReadFromStream(ar.BaseStream, mesh.Trans);
