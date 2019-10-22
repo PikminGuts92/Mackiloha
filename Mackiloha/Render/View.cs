@@ -46,4 +46,10 @@ namespace Mackiloha.Render
 
         public override string Type => "View";
     }
+
+    // TODO: Remove/refactor
+    public class Group : View
+    {
+        public override string Type => "Group";
+    }
 }

@@ -14,6 +14,13 @@ namespace Mackiloha.IO.Serializers
             var anim = data as Anim;
             int version = ReadMagic(ar, data);
 
+            if (version >= 4)
+            {
+                // Skips anim rate + unknown
+                ar.BaseStream.Position += 8;
+                return;
+            }
+
             // Read anim entries
             int count = ar.ReadInt32();
             anim.AnimEntries.Clear();
@@ -61,6 +68,9 @@ namespace Mackiloha.IO.Serializers
                 case 10:
                     // GH1
                     return 0;
+                case 24:
+                    // GH2
+                    return 4;
                 default:
                     return -1;
             }

@@ -13,10 +13,19 @@ namespace Mackiloha.IO.Serializers
         {
             var view = data as View;
             int version = ReadMagic(ar, data);
+            var meta = ReadMeta(ar);
             
             MiloSerializer.ReadFromStream(ar.BaseStream, view.Anim);
             MiloSerializer.ReadFromStream(ar.BaseStream, view.Trans);
             MiloSerializer.ReadFromStream(ar.BaseStream, view.Draw);
+
+            if(version >= 12)
+            {
+                // Read draw group
+                var drawableCount = ar.ReadInt32();
+                view.Draw.Drawables.Clear();
+                view.Draw.Drawables.AddRange(RepeatFor(drawableCount, () => ar.ReadString()));
+            }
 
             view.MainView = ar.ReadString();
             
@@ -56,6 +65,8 @@ namespace Mackiloha.IO.Serializers
                 case 10:
                     // GH1
                     return 7;
+                case 24:
+                    return 12;
                 default:
                     return -1;
             }

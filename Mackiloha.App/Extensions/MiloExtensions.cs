@@ -69,10 +69,20 @@ namespace Mackiloha.App.Extensions
                 .Select(y => serializer.ReadFromMiloObjectBytes<View>(y as MiloObjectBytes))
                 .ToList();
 
+            views.AddRange(milo.Entries
+                .Where(x => "Group".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
+                .Select(y => serializer.ReadFromMiloObjectBytes<Group>(y as MiloObjectBytes))
+                .ToList());
+
             var meshes = milo.Entries
                 .Where(x => "Mesh".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
                 .Select(y => serializer.ReadFromMiloObjectBytes<Mackiloha.Render.Mesh>(y as MiloObjectBytes))
                 .Where(z => !string.IsNullOrEmpty(z.Material)) // Don't care about bone meshes for now
+                .ToList();
+
+            var trans = milo.Entries
+                .Where(x => "Trans".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
+                .Select(y => serializer.ReadFromMiloObjectBytes<Mackiloha.Render.TransStandalone>(y as MiloObjectBytes))
                 .ToList();
 
             var materials = milo.Entries
@@ -94,6 +104,7 @@ namespace Mackiloha.App.Extensions
             var miloEntries = textures
                 .Union<MiloObject>(views)
                 .Union(meshes)
+                .Union(trans)
                 .Union(materials)
                 .Union(cams)
                 .Union(environs)
@@ -475,13 +486,13 @@ namespace Mackiloha.App.Extensions
             foreach (var key in children.Keys)
             {
                 rootIndex.Add(nodes.Count);
-                var drawEntry = drawEntries.First(x => x.Name == key);
+                var transEntry = transEntries.FirstOrDefault(x => x.Name == key) as ITrans;
                 
                 var node = new Node()
                 {
-                    Name = "Root_" + drawEntry.Name,
+                    Name = "Root_" + key,
                     //Mesh = meshIndex.ContainsKey(key) ? (int?)meshIndex[key] : null,
-                    Matrix = drawEntry is ITrans ? (Matrix4<float>?)ToGLMatrix((drawEntry as ITrans).Mat2) : null,
+                    Matrix = ToGLMatrix((transEntry != null) ? transEntry.Mat2 : Matrix4.Identity()),
                     Children = Enumerable.Range(nodes.Count + 1, children[key].Count).ToArray()
                 };
                 nodes.Add(node);
@@ -635,6 +646,40 @@ namespace Mackiloha.App.Extensions
                 M43 = miloMatrix.M42,
                 M44 = miloMatrix.M44
             };
+
+        public static Matrix4 MatrixFromStringHex(string hex, bool bigEndian = false)
+        {
+            var data = hex
+                .Split(' ')
+                .Select(x => Convert.ToByte(x, 16))
+                .ToArray();
+
+            if (bigEndian)
+            {
+                for (int i = 0; i < data.Length; i += 4)
+                    Array.Reverse(data, i, 4);
+            }
+
+            return new Matrix4()
+            {
+                M11 = BitConverter.ToSingle(data,  0),
+                M12 = BitConverter.ToSingle(data,  4),
+                M13 = BitConverter.ToSingle(data,  8),
+
+                M21 = BitConverter.ToSingle(data, 12),
+                M22 = BitConverter.ToSingle(data, 16),
+                M23 = BitConverter.ToSingle(data, 20),
+
+                M31 = BitConverter.ToSingle(data, 24),
+                M32 = BitConverter.ToSingle(data, 28),
+                M33 = BitConverter.ToSingle(data, 32),
+
+                M41 = BitConverter.ToSingle(data, 36),
+                M42 = BitConverter.ToSingle(data, 40),
+                M43 = BitConverter.ToSingle(data, 44),
+                M44 = 1.0f
+            };
+        }
 
         public static void ExtractToDirectory(this MiloObjectDir milo, string path, bool convertTextures, AppState state)
         {

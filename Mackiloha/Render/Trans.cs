@@ -34,4 +34,7 @@ namespace Mackiloha.Render
 
         public override string Type => "Trans";
     }
+
+    // TODO: Remove/refactor. Hack until serializer code is refactored for inheritance
+    public class TransStandalone : Trans { }
 }

@@ -15,6 +15,12 @@ namespace Mackiloha.IO.Serializers
             var trans = data as Trans;
             int version = ReadMagic(ar, data);
 
+            // TODO: Remove/refactor. Hack until serializer code is refactored for inheritance
+            if (trans is TransStandalone)
+            {
+                var meta = ReadMeta(ar);
+            }
+
             trans.Mat1 = ReadMatrix(ar);
             trans.Mat2 = ReadMatrix(ar);
             
