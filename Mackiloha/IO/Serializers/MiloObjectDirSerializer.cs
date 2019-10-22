@@ -203,5 +203,10 @@ namespace Mackiloha.IO.Serializers
                     return -1;
             }
         }
+
+        internal override int[] ValidMagics()
+        {
+            return new[] { MiloSerializer.Info.Version };
+        }
     }
 }

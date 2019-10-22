@@ -26,5 +26,10 @@ namespace Mackiloha.IO.Serializers
         public override bool IsOfType(ISerializable data) => data is MiloObjectBytes;
 
         public override int Magic() => -1; // Magic is derived from byte data
+
+        internal override int[] ValidMagics()
+        {
+            return Array.Empty<int>();
+        }
     }
 }

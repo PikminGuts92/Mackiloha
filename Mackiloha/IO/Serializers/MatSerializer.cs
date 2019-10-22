@@ -15,7 +15,7 @@ namespace Mackiloha.IO.Serializers
             int version = ReadMagic(ar, data);
             var meta = ReadMeta(ar);
 
-            if (version >= 27)
+            if (version >= 25)
             {
                 ReadGH2Material(ar, mat);
                 return;
@@ -103,7 +103,7 @@ namespace Mackiloha.IO.Serializers
 
             var textureCount = ar.ReadInt32(); // Should always be 1
             mat.TextureEntries.Clear();
-            mat.TextureEntries.AddRange(RepeatFor(textureCount, () =>
+            mat.TextureEntries.AddRange(RepeatFor(1, () =>
             {
                 ar.BaseStream.Position += 2;
 
@@ -183,6 +183,21 @@ namespace Mackiloha.IO.Serializers
                     return 27;
                 default:
                     return -1;
+            }
+        }
+
+        internal override int[] ValidMagics()
+        {
+            switch (MiloSerializer.Info.Version)
+            {
+                case 10:
+                    // GH1
+                    return new[] { 21 };
+                case 24:
+                    // GH2
+                    return new[] { 25, 27 };
+                default:
+                    return Array.Empty<int>();
             }
         }
     }

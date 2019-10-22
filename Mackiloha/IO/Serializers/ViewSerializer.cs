@@ -19,7 +19,7 @@ namespace Mackiloha.IO.Serializers
             MiloSerializer.ReadFromStream(ar.BaseStream, view.Trans);
             MiloSerializer.ReadFromStream(ar.BaseStream, view.Draw);
 
-            if(version >= 12)
+            if(version >= 11)
             {
                 // Read draw group
                 var drawableCount = ar.ReadInt32();
@@ -28,6 +28,12 @@ namespace Mackiloha.IO.Serializers
             }
 
             view.MainView = ar.ReadString();
+
+            if (version == 11)
+            {
+                // Has less data at end of file
+                return;
+            }
             
             // Ratio is usually 4:3
             view.LODHeight = ar.ReadSingle();
@@ -69,6 +75,21 @@ namespace Mackiloha.IO.Serializers
                     return 12;
                 default:
                     return -1;
+            }
+        }
+
+        internal override int[] ValidMagics()
+        {
+            switch (MiloSerializer.Info.Version)
+            {
+                case 10:
+                    // GH1
+                    return new[] { 7 };
+                case 24:
+                    // GH2
+                    return new[] { 11, 12 };
+                default:
+                    return Array.Empty<int>();
             }
         }
     }

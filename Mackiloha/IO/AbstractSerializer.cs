@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Mackiloha.DTB;
 
@@ -16,13 +17,17 @@ namespace Mackiloha.IO
 
         public int ReadMagic(AwesomeReader ar, ISerializable data)
         {
-            int magic = Magic();
-            if (magic == -1)
+            var magics = ValidMagics();
+
+            if (magics.Length <= 0)
                 throw new NotImplementedException($"{GetType().Name}: Deserialization of {data.GetType().Name} for serializer version 0x{MiloSerializer.Info.Version:X2} is not implemented yet");
             
             int version = ar.ReadInt32();
-            if (magic != version)
-                throw new NotSupportedException($"{GetType().Name}: Magic 0x{version:X2} does not correspond to serializer version 0x{MiloSerializer.Info.Version:X2} (Expected 0x{magic:X2})");
+            if (!magics.Any(x => x == version))
+            {
+                var magicVersions = string.Join(", ", magics.Select(x => $"0x{x:X2}"));
+                throw new NotSupportedException($"{GetType().Name}: Magic 0x{version:X2} does not correspond to serializer version 0x{MiloSerializer.Info.Version:X2} (Expected {magicVersions})");
+            }
 
             return version;
         }
@@ -72,5 +77,6 @@ namespace Mackiloha.IO
         public abstract bool IsOfType(ISerializable data);
 
         public abstract int Magic();
+        internal abstract int[] ValidMagics();
     }
 }

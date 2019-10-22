@@ -58,5 +58,17 @@ namespace Mackiloha.IO.Serializers
                     return -1;
             }
         }
+
+        internal override int[] ValidMagics()
+        {
+            switch (MiloSerializer.Info.Version)
+            {
+                case 10:
+                    // GH1
+                    return new[] { 7 };
+                default:
+                    return Array.Empty<int>();
+            }
+        }
     }
 }

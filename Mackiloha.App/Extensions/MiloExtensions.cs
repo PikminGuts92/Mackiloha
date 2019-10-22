@@ -55,7 +55,7 @@ namespace Mackiloha.App.Extensions
             var miloDir = appState.GetWorkingDirectory().FullPath;
 
             // Update textures
-            foreach (var texture in textures.Where(x => x.UseExternal))
+            foreach (var texture in textures.Where(x => x.UseExternal && x.Bitmap == null)) // TODO: Figure out what UseExternal actually means
             {
                 var texPath = Path.Combine(miloDir, MakeGenPath(texture.ExternalPath, appState.SystemInfo.Platform));
                 var bitmap = serializer.ReadFromFile<HMXBitmap>(texPath);
@@ -92,12 +92,12 @@ namespace Mackiloha.App.Extensions
                 .ToList();
 
             var cams = milo.Entries
-                .Where(x => "Cam".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
+                .Where(x => "Cam".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase) && appState.SystemInfo.Version <= 10)
                 .Select(y => serializer.ReadFromMiloObjectBytes<Cam>(y as MiloObjectBytes))
                 .ToList();
 
             var environs = milo.Entries
-                .Where(x => "Environ".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase))
+                .Where(x => "Environ".Equals(x.Type, StringComparison.CurrentCultureIgnoreCase) && appState.SystemInfo.Version <= 10)
                 .Select(y => serializer.ReadFromMiloObjectBytes<Environ>(y as MiloObjectBytes))
                 .ToList();
 
@@ -457,6 +457,8 @@ namespace Mackiloha.App.Extensions
                 }
             } */
 
+            var shadowRegex = new System.Text.RegularExpressions.Regex("shadow[^.]*.mesh$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
             var children = drawEntries
                 .Where(w => w is ITrans) // Use trans collection?
                 .Select(x => new
@@ -468,6 +470,7 @@ namespace Mackiloha.App.Extensions
                 .GroupBy(z => z.Trans)
                 .ToDictionary(g => g.Key, g => g.Select(w => w.Name)
                     .OrderBy(s => s)
+                .Where(x => !shadowRegex.IsMatch(x)) // Removes shadow meshes for now
                 .ToList());
 
             /* foreach (var entry in meshes.Union<MiloObject>(views)) // TODO: Union w/ trans
