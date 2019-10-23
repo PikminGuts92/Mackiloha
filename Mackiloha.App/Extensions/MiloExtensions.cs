@@ -494,7 +494,7 @@ namespace Mackiloha.App.Extensions
                 var node = new Node()
                 {
                     Name = "Root_" + key,
-                    //Mesh = meshIndex.ContainsKey(key) ? (int?)meshIndex[key] : null,
+                    Mesh = meshIndex.ContainsKey(key) ? (int?)meshIndex[key] : null,
                     Matrix = ToGLMatrix((transEntry != null) ? transEntry.Mat2 : Matrix4.Identity()),
                     Children = Enumerable.Range(nodes.Count + 1, children[key].Count).ToArray()
                 };
