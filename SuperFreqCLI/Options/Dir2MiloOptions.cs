@@ -9,7 +9,7 @@ using Mackiloha.IO;
 namespace SuperFreqCLI.Options
 {
     [Verb("dir2milo", HelpText = "Creates milo archive from input directory")]
-    internal class Dir2MiloOptions
+    internal class Dir2MiloOptions : GameOptions
     {
         [Value(0, Required = true, MetaName = "dirPath", HelpText = "Path to input directory")]
         public string InputPath { get; set; }
