@@ -8,7 +8,7 @@ using Mackiloha.App.Extensions;
 namespace SuperFreqCLI.Options
 {
     [Verb("milo2dir", HelpText = "Extracts content of milo archive to directory")]
-    internal class Milo2DirOptions
+    internal class Milo2DirOptions : GameOptions
     {
         [Value(0, Required = true, MetaName = "miloPath", HelpText = "Path to input milo archive")]
         public string InputPath { get; set; }
@@ -21,7 +21,10 @@ namespace SuperFreqCLI.Options
 
         public static void Parse(Milo2DirOptions op)
         {
+            op.UpdateOptions();
+
             var appState = new AppState(Path.GetDirectoryName(op.InputPath));
+            appState.UpdateSystemInfo(op.GetSystemInfo());
             appState.ExtractMiloContents(op.InputPath, op.OutputPath, op.ConvertTextures);
         }
     }

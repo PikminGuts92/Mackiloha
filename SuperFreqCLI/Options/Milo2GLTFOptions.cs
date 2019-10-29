@@ -11,7 +11,7 @@ using Mackiloha.IO;
 namespace SuperFreqCLI.Options
 {
     [Verb("milo2gltf", HelpText = "Converts milo scene to GLTF", Hidden = true)]
-    internal class Milo2GLTFOptions
+    internal class Milo2GLTFOptions : GameOptions
     {
         [Value(0, Required = true, MetaName = "miloPath", HelpText = "Path to input milo archive")]
         public string InputPath { get; set; }
@@ -21,16 +21,11 @@ namespace SuperFreqCLI.Options
 
         public static void Parse(Milo2GLTFOptions op)
         {
-            var appState = new AppState(Path.GetDirectoryName(op.InputPath));
-            var info = new SystemInfo()
-            {
-                Version = 10,
-                Platform = Platform.PS2,
-                BigEndian = false
-            };
+            op.UpdateOptions();
 
-            appState.UpdateSystemInfo(info);
-            
+            var appState = new AppState(Path.GetDirectoryName(op.InputPath));
+            appState.UpdateSystemInfo(op.GetSystemInfo());
+
             var milo = appState.OpenMiloFile(op.InputPath);
             milo.ExportToGLTF(op.OutputPath, appState);
         }

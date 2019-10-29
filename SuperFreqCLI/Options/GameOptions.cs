@@ -10,20 +10,41 @@ namespace SuperFreqCLI.Options
 {
     internal class GameOptions
     {
-        [Option("miloVersion", Default = 10, HelpText = "Milo archive version (10, 24, 25)")]
+        [Option("miloVersion", Default = 24, HelpText = "Milo archive version (10, 24, 25)")]
         public int MiloVersion { get; set; }
 
         [Option("bigEndian", Default = false, HelpText = "Use big endian serialization")]
         public bool BigEndian { get; set; }
 
-        [Option("platform", Default = Platform.PS2, HelpText = "Platform (ps2, x360)")]
-        public Platform Platform { get; set; }
+        [Option("platform", Default = "ps2", HelpText = "Platform (ps2, x360)")]
+        public string PlatformString { get; set; }
+        public Platform Platform { get; set; } = Platform.PS2;
 
         [Option("preset", HelpText = "Game preset (gh1, gh2, gh80s, gh2_x360)")]
         public string Preset { get; set; }
 
-        protected void UpdateOptionsIfPreset()
+        private Platform ParsePlatform(string value)
         {
+            value = value?.Trim()?.ToLower();
+
+            if (value == null)
+                return Platform.PS2;
+
+            Platform? platformInput = Enum.GetNames(typeof(Platform))
+                .Where(x => x.ToLower() == value)
+                .Select(y => (Platform?)Enum.Parse(typeof(Platform), y))
+                .FirstOrDefault();
+
+            if (platformInput.HasValue)
+                return platformInput.Value;
+
+            throw new Exception($"Preset of \"{value}\" not recognized");
+        }
+
+        protected void UpdateOptions()
+        {
+            Platform = ParsePlatform(PlatformString);
+
             var presetValue = Preset?.Trim().ToLower();
 
             if (presetValue == null)

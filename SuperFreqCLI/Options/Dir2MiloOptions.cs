@@ -19,15 +19,10 @@ namespace SuperFreqCLI.Options
 
         public static void Parse(Dir2MiloOptions op)
         {
-            var appState = new AppState(Path.GetDirectoryName(op.InputPath));
-            var info = new SystemInfo()
-            {
-                Version = 24,
-                Platform = Platform.PS2,
-                BigEndian = false
-            };
+            op.UpdateOptions();
 
-            appState.UpdateSystemInfo(info);
+            var appState = new AppState(Path.GetDirectoryName(op.InputPath));
+            appState.UpdateSystemInfo(op.GetSystemInfo());
             appState.BuildMiloArchive(op.InputPath, op.OutputPath);
         }
     }

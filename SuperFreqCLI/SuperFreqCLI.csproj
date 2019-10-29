@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
+    <AssemblyName>superfreq</AssemblyName>
   </PropertyGroup>
   <Choose>
     <When Condition=" '$(TargetFramework)' == 'netcoreapp3.0'">
