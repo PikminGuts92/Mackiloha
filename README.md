@@ -1,6 +1,9 @@
 # Mackiloha
 A suite of modding software for hacking milo engine based games. This is still a very much a work-in-progress project. So don't expect perfection. Feel free to submit [Issues](https://github.com/PikminGuts92/Mackiloha/issues) for any bugs found.
 
+# System Requirements
+You will need at least [.NET Core 3.0](https://dotnet.microsoft.com/download/dotnet-core/3.0) runtime installed and be using an x64 operating system (come on, it's 2019).
+
 # Overview
 ## SuperFreq (name pending)
 CLI tool for unpacking/packing rnd archives for milo games. There are many known extensions used such as .gh., .kr, .milo, and .rnd.
