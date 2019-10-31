@@ -1,4 +1,4 @@
-# Mackiloha
+# Mackiloha [![Build status](https://ci.appveyor.com/api/projects/status/toda9bnsi5ur1k4b/branch/master?svg=true)](https://ci.appveyor.com/project/PikminGuts92/mackiloha/branch/master)
 A suite of modding software for hacking milo engine based games. This is still a very much a work-in-progress project. So don't expect perfection. Feel free to submit [Issues](https://github.com/PikminGuts92/Mackiloha/issues) for any bugs found.
 
 # System Requirements
