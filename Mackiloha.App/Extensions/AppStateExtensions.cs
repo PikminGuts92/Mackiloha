@@ -21,13 +21,6 @@ namespace Mackiloha.App.Extensions
                 miloFile = MiloFile.ReadFromStream(fileStream);
             }
 
-            state.UpdateSystemInfo(new SystemInfo()
-            {
-                Version = miloFile.Version,
-                BigEndian = miloFile.BigEndian,
-                Platform = GuessPlatform(miloPath, miloFile.Version, miloFile.BigEndian)
-            });
-
             var serializer = state.GetSerializer();
 
             MiloObjectDir milo;
@@ -71,6 +64,7 @@ namespace Mackiloha.App.Extensions
 
         private static Platform GuessPlatform(string fileName, int version, bool endian)
         {
+            // TODO: Either move or remove
             var ext = fileName?.Split('_')?.LastOrDefault()?.ToLower();
 
             return (ext, version) switch
@@ -102,9 +96,10 @@ namespace Mackiloha.App.Extensions
                 "Character",
                 "ObjectDir",
                 "PanelDir",
-                //"RndDir",
+                "RndDir",
                 "WorldDir",
-                //"WorldFx" // TODO: Find better way to find directory entry
+                "WorldFx"
+                // TODO: Add GH2 360 dir types?
             };
 
             if (!Directory.Exists(dirPath))
@@ -136,10 +131,21 @@ namespace Mackiloha.App.Extensions
 
             if (state.SystemInfo.Version >= 24)
             {
-                // Find directory entry
-                var dirType = directoryTypes
+                // Finds rnd.json file
+                var dirMetaPath = Path.Combine(dirPath, "rnd.json");
+                string dirType = null;
+                if (File.Exists(dirMetaPath))
+                {
+                    // Deserializes rnd meta
+                    var dirMeta = JsonSerializer.Deserialize<DirectoryMeta>(File.ReadAllText(dirMetaPath), state.JsonSerializerOptions);
+                    dirType = dirMeta.Type;
+                }
+
+                // Guess directory type
+                dirType = dirType ?? directoryTypes
                     .Intersect(miloTypes)
-                    .Single();
+                    .Where(x => groupedFiles[x].Count == 1)
+                    .First();
 
                 var dirEntryPath = groupedFiles[dirType]
                     .Single();

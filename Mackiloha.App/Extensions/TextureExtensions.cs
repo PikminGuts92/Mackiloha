@@ -33,10 +33,13 @@ namespace Mackiloha.App.Extensions
                         bitmap.Bpp,
                         (info.Platform == Platform.PC) ? 16 : 32);
 
-                    // Converts BGRa -> RGBa if needed
-                    if (info.Platform == Platform.XBOX
-                        || info.Platform == Platform.X360)
+                    // Converts if needed
+                    if (info.Platform == Platform.XBOX) // BGRa->RGBa TODO: Re-verify
                         SwapRBColors(image);
+                    else if (info.Platform == Platform.X360) // aRGB -> RGBa
+                        ShiftChannelsLeft(image);
+
+                    // TODO: Update alpha AFTER shifting channels
 
                     return image;
                 case 8: // DXT1 or Bitmap
@@ -86,6 +89,42 @@ namespace Mackiloha.App.Extensions
                 temp         =  image[i + 12];
                 image[i + 12] = image[i + 14];
                 image[i + 14] = temp;
+            }
+        }
+
+        private static void ShiftChannelsLeft(byte[] image)
+        {
+            byte temp;
+
+            for (int i = 0; i < image.Length; i += 16)
+            {
+                // Pixel 1
+                temp          = image[i     ];
+                image[i     ] = image[i +  1];
+                image[i +  1] = image[i +  2];
+                image[i +  2] = image[i +  3];
+                image[i +  3] = temp;
+
+                // Pixel 2
+                temp          = image[i +  4];
+                image[i +  4] = image[i +  5];
+                image[i +  5] = image[i +  6];
+                image[i +  6] = image[i +  7];
+                image[i +  7] = temp;
+
+                // Pixel 3
+                temp          = image[i +  8];
+                image[i +  8] = image[i +  9];
+                image[i +  9] = image[i + 10];
+                image[i + 10] = image[i + 11];
+                image[i + 11] = temp;
+
+                // Pixel 4
+                temp          = image[i + 12];
+                image[i + 12] = image[i + 13];
+                image[i + 13] = image[i + 14];
+                image[i + 14] = image[i + 15];
+                image[i + 15] = temp;
             }
         }
 

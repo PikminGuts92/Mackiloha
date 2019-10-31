@@ -709,6 +709,17 @@ namespace Mackiloha.App.Extensions
                         dirEntry.Name = Path.GetFileNameWithoutExtension(milo.Name);
                     }
                     miloEntries.Add(dirEntry);
+
+                    // Create meta
+                    var dirMeta = new DirectoryMeta()
+                    {
+                        Type = dirEntry.Type
+                    };
+
+                    // Write meta
+                    var metaPath = Path.Combine(path, "rnd.json");
+                    var metaJson = JsonSerializer.Serialize(dirMeta, state.JsonSerializerOptions);
+                    File.WriteAllText(metaPath, metaJson);
                 }
             }
             miloEntries.AddRange(milo.Entries);
