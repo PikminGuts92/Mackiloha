@@ -255,3 +255,6 @@ artifacts/
 
 # ImGui
 imgui.ini
+
+# VS Code
+.vscode
