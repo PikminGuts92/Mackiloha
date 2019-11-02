@@ -769,7 +769,7 @@ namespace Mackiloha.App.Extensions
                 .Write(path);
         }
 
-        public static HMXBitmap BitmapFromImage(string imagePath)
+        public static HMXBitmap BitmapFromImage(string imagePath, SystemInfo info)
         {
             using var image = new MagickImage(imagePath);
 
@@ -815,18 +815,23 @@ namespace Mackiloha.App.Extensions
                 {
                     paletteIndicies.Add(c, i >> 2);
 
-                    /*data[i    ] = c.R;
-                    data[i + 1] = c.G;
-                    data[i + 2] = c.B;
-                    data[i + 3] = (c.A == 0xFF)
-                        ? (byte)0x80
-                        : (byte)(c.A >> 1);*/
-                    
-                    data[i    ] = c.A;
-                    data[i + 1] = c.R;
-                    data[i + 2] = c.G;
-                    data[i + 3] = c.B;
-
+                    if (info.Platform != Platform.X360)
+                    {
+                        data[i    ] = c.R;
+                        data[i + 1] = c.G;
+                        data[i + 2] = c.B;
+                        data[i + 3] = (c.A == 0xFF)
+                            ? (byte)0x80
+                            : (byte)(c.A >> 1);
+                    }
+                    else
+                    {
+                        // X360
+                        data[i    ] = c.A;
+                        data[i + 1] = c.R;
+                        data[i + 2] = c.G;
+                        data[i + 3] = c.B;
+                    }
 
                     i += 4;
                 }
@@ -840,7 +845,8 @@ namespace Mackiloha.App.Extensions
                         var bit3 = cIdx & 0b0000_1000;
                         var bit4 = cIdx & 0b0001_0000;
 
-                        //cIdx = (cIdx & 0b1110_0111) | (bit3 << 1) | (bit4 >> 1);
+                        // TODO: Refactor completely or add check for x360? Not sure if x360 is bit shifted
+                        cIdx = (cIdx & 0b1110_0111) | (bit3 << 1) | (bit4 >> 1);
                         data[i] = (byte)cIdx;
                         i += 1;
                     }
@@ -869,7 +875,6 @@ namespace Mackiloha.App.Extensions
             else
             {
                 data = new byte[(width * height * bpp) / 8];
-
                 var i = 0;
 
                 if (bpp == 32)
@@ -878,19 +883,23 @@ namespace Mackiloha.App.Extensions
                     {
                         var c = p.ToColor();
 
-                        // X360
-                        data[i    ] = c.A;
-                        data[i + 1] = c.R;
-                        data[i + 2] = c.G;
-                        data[i + 3] = c.B;
-
-                        /*
-                        data[i    ] = c.R;
-                        data[i + 1] = c.G;
-                        data[i + 2] = c.B;
-                        data[i + 3] = (c.A == 0xFF)
-                            ? (byte)0x80
-                            : (byte)(c.A >> 1);*/
+                        if (info.Platform != Platform.X360)
+                        {
+                            data[    i] = c.R;
+                            data[i + 1] = c.G;
+                            data[i + 2] = c.B;
+                            data[i + 3] = (c.A == 0xFF)
+                                ? (byte)0x80
+                                : (byte)(c.A >> 1);
+                        }
+                        else
+                        {
+                            // X360
+                            data[i    ] = c.A;
+                            data[i + 1] = c.R;
+                            data[i + 2] = c.G;
+                            data[i + 3] = c.B;
+                        }
 
                         i += 4;
                     }
@@ -924,9 +933,9 @@ namespace Mackiloha.App.Extensions
             return bitmap;
         }
 
-        public static Tex TexFromImage(string imagePath)
+        public static Tex TexFromImage(string imagePath, SystemInfo info)
         {
-            var bitmap = BitmapFromImage(imagePath);
+            var bitmap = BitmapFromImage(imagePath, info);
 
             return new Tex()
             {

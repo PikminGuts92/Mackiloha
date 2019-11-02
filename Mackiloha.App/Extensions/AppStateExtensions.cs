@@ -213,7 +213,7 @@ namespace Mackiloha.App.Extensions
                             ? texMetas[uniqueEntry]
                             : defaultTexMeta;
 
-                        var texBitmap = TextureExtensions.TexFromImage(supportedImagePath);
+                        var texBitmap = TextureExtensions.TexFromImage(supportedImagePath, state.SystemInfo);
                         miloDir.Entries.Add(texBitmap);
                     }
 
