@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -36,5 +37,8 @@ namespace Mackiloha.App
         public SystemInfo SystemInfo => _systemInfo;
 
         public JsonSerializerOptions JsonSerializerOptions { get; }
+
+        public static AppState FromDirectory(string dirPath) => new AppState(dirPath);
+        public static AppState FromFile(string filePath) => new AppState(Path.GetDirectoryName(Path.GetFullPath(filePath)));
     }
 }

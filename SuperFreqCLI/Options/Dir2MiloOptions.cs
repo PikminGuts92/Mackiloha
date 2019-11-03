@@ -21,7 +21,7 @@ namespace SuperFreqCLI.Options
         {
             op.UpdateOptions();
 
-            var appState = new AppState(Path.GetDirectoryName(op.InputPath));
+            var appState = AppState.FromFile(op.InputPath);
             appState.UpdateSystemInfo(op.GetSystemInfo());
             appState.BuildMiloArchive(op.InputPath, op.OutputPath);
         }
