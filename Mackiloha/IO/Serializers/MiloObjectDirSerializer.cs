@@ -129,7 +129,7 @@ namespace Mackiloha.IO.Serializers
                 MiloSerializer.WriteToStream(aw.BaseStream, dirEntry);
                 aw.Write(ADDE_PADDING);
             }
-            else if (Magic() <= 10)
+            else if (Magic() < 24) // GH1
             {
                 /*
                 var texEntries = dir.Entries.Where(x => x.Type == "Tex").ToArray();
@@ -137,7 +137,18 @@ namespace Mackiloha.IO.Serializers
                 aw.Write(new byte[texEntries.Length << 2]); // TODO: Write external bitmap paths?
                 */
 
-                var external = dir.Extras["ExternalResources"] as List<string>;
+                List<string> external;
+
+                if (dir.Extras.ContainsKey("ExternalResources"))
+                {
+                    external = dir.Extras["ExternalResources"] as List<string>;
+                }
+                else
+                {
+                    // TODO: Guess external resources?
+                    external = new List<string>();
+                }
+
                 aw.Write((int)external.Count());
                 external.ForEach(x => aw.Write((string)x));
             }

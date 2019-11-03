@@ -38,7 +38,6 @@ namespace Mackiloha.App
 
         public JsonSerializerOptions JsonSerializerOptions { get; }
 
-        public static AppState FromDirectory(string dirPath) => new AppState(dirPath);
         public static AppState FromFile(string filePath) => new AppState(Path.GetDirectoryName(Path.GetFullPath(filePath)));
     }
 }

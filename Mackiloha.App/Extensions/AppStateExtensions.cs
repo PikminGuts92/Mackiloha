@@ -106,21 +106,13 @@ namespace Mackiloha.App.Extensions
                 throw new DirectoryNotFoundException();
 
             // Only finds files at 2nd depth
-            var dirDepth = dirPath
-                .Split(Path.DirectorySeparatorChar)
-                .Count();
-
-            var allFiles = Directory
-                .GetFiles(dirPath, "*", SearchOption.AllDirectories)
-                .Where(x => x
-                    .Split(Path.DirectorySeparatorChar)
-                    .Count() - 2 == dirDepth)
-                .ToList();
+            var allFiles = FileHelper.GetFilesAtExactDepth(dirPath, 1);
 
             var groupedFiles = allFiles
                 .GroupBy(x => x
                     .Split(Path.DirectorySeparatorChar)
-                    .Skip(dirDepth)
+                    .Reverse()
+                    .Skip(1)
                     .First(), y => y)
                 .ToDictionary(x => x.Key, y => y.ToList());
 
@@ -161,6 +153,11 @@ namespace Mackiloha.App.Extensions
                 miloDir.Extras.Add("Num2", 0);
 
                 miloTypes.Remove(dirType);
+            }
+            else if (state.SystemInfo.Version < 24)
+            {
+                // GH1 (and others?)
+                miloDir.Extras.Add("ExternalResources", new List<string>());
             }
             
             foreach (var type in miloTypes)

@@ -49,6 +49,30 @@ namespace Mackiloha
             return $@"{GetDirectory(filePath)}\{GetFileNameWithoutExtension(filePath)}";
         }
 
+        public static string[] GetFilesAtExactDepth(string dirPath, int depth)
+        {
+            var files = new List<string>();
+            FindFilesForDepthRecursively(dirPath, depth, files);
+            files.Sort();
+
+            return files.ToArray();
+        }
+
+        private static void FindFilesForDepthRecursively(string path, int depthsLeft, List<string> foundFiles)
+        {
+            if (depthsLeft <= 0)
+            {
+                foundFiles.AddRange(Directory.GetFiles(path));
+                return;
+            }
+
+            var dirs = Directory.GetDirectories(path);
+            foreach (var dir in dirs)
+            {
+                FindFilesForDepthRecursively(dir, depthsLeft - 1, foundFiles);
+            }
+        }
+
         public static bool HasAccess(string path)
         {
             // TODO: Implement for .net standard
