@@ -128,10 +128,14 @@ namespace Mackiloha.Ark
 
                     string directory = Path.GetDirectoryName(input).Replace("\\", "/");
                     ark._arkPaths[0] = input.Replace("\\", "/");
-                    
+
+                    var hdrFileName = Path.GetFileNameWithoutExtension(input);
+
                     for (int i = 0; i < arkPathsCount; i++)
                     {
-                        ark._arkPaths[i+1] = $"{directory}/{ar.ReadString()}";
+                        ar.ReadString(); // Ehh just ignore what's in hdr. Sometimes it'll be absolute instead of relative
+
+                        ark._arkPaths[i+1] = $"{directory}/{hdrFileName}_{i}.ark";
                     }
                 }
                 else
@@ -282,6 +286,16 @@ namespace Mackiloha.Ark
             foreach (var size in arkSizes)
                 aw.Write((uint)size);
 
+            // Write ark paths
+            if ((int)Version >= 5)
+            {
+                aw.Write((int)_arkPaths.Length - 1);
+                foreach (var path in _arkPaths.Skip(1))
+                {
+                    aw.Write((string)$"gen/{Path.GetFileName(path)}");
+                }
+            }
+
             // Creates and writes string blob
             var entries = _offsetEntries.OrderBy(x => x.Offset).ToList();
             byte[] blob = CreateBlob(out var strings, entries);
@@ -343,13 +357,29 @@ namespace Mackiloha.Ark
             });
 
             aw.Write((uint)entries.Count);
-            foreach(var entry in entries)
+
+            // TODO: Check for versions below 3 or above 6
+            if (Version == ArkVersion.V4 || Version == ArkVersion.V5)
             {
-                aw.Write((uint)entry.Offset);
-                aw.Write((uint)tableOffsets[entry.FileName]);
-                aw.Write((uint)tableOffsets[entry.Directory]);
-                aw.Write((uint)entry.Size);
-                aw.Write((uint)entry.InflatedSize);
+                foreach (var entry in entries)
+                {
+                    aw.Write((ulong)entry.Offset);
+                    aw.Write((uint)tableOffsets[entry.FileName]);
+                    aw.Write((uint)tableOffsets[entry.Directory]);
+                    aw.Write((uint)entry.Size);
+                    aw.Write((uint)entry.InflatedSize);
+                }
+            }
+            else
+            {
+                foreach (var entry in entries)
+                {
+                    aw.Write((uint)entry.Offset);
+                    aw.Write((uint)tableOffsets[entry.FileName]);
+                    aw.Write((uint)tableOffsets[entry.Directory]);
+                    aw.Write((uint)entry.Size);
+                    aw.Write((uint)entry.InflatedSize);
+                }
             }
 
             if (_encrypted)
@@ -576,7 +606,7 @@ namespace Mackiloha.Ark
 
         internal string ArkPath(int index) => this._arkPaths[index];
         
-        public bool Encrypted => this._encrypted;
+        public bool Encrypted { get => _encrypted; set => _encrypted = value; }
         public ArkVersion Version => this._version;
     }
 }
