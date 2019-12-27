@@ -89,6 +89,12 @@ namespace GLTFTools
         public Scene[] Scenes { get; set; }
 
         /// <summary>
+        /// An array of skins.  A skin is defined by joints and matrices.
+        /// </summary>
+        [JsonProperty("skins")]
+        public Skin[] Skins { get; set; }
+
+        /// <summary>
         /// An array of textures
         /// </summary>
         [JsonProperty("textures")]
