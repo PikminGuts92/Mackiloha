@@ -9,9 +9,10 @@ namespace Mackiloha.Ark
 {
     public class OffsetArkEntry : ArkEntry
     {
-        internal OffsetArkEntry(long offset, string fileName, string directory, uint size, uint inflatedSize, int part) : base(fileName, directory)
+        internal OffsetArkEntry(long offset, string fileName, string directory, uint size, uint inflatedSize, int part, long partOffset) : base(fileName, directory)
         {
             Part = part;
+            PartOffset = partOffset;
 
             Offset = offset;
             Size = size;
@@ -19,6 +20,8 @@ namespace Mackiloha.Ark
         }
         
         public int Part { get; }
+        public long PartOffset { get; }
+
         public long Offset { get; }
         public uint Size { get; }
         public uint InflatedSize { get; } // 0 = Already inflated

@@ -108,7 +108,7 @@ namespace Mackiloha.Ark
                 uint arkFileCount = ar.ReadUInt32();
                 uint arkFileSizeCount = ar.ReadUInt32(); // Should be same as ark file count
 
-                ulong[] partSizes = new ulong[arkFileSizeCount];
+                long[] partSizes = new long[arkFileSizeCount];
                 
                 // Reads ark file sizes
                 if (version != 4)
@@ -117,7 +117,7 @@ namespace Mackiloha.Ark
                 else
                     // Version 4 uses 64-bit sizes
                     for (int i = 0; i < partSizes.Length; i++)
-                        partSizes[i] = ar.ReadUInt64();
+                        partSizes[i] = ar.ReadInt64();
 
                 // TODO: Verify the ark parts exist and the sizes match header listing
                 if (version >= 5)
@@ -198,8 +198,8 @@ namespace Mackiloha.Ark
                             uint size = ar.ReadUInt32();
                             uint inflatedSize = ar.ReadUInt32();
 
-                            // TODO: Do some calculation to figure out which ark path to use
-                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, inflatedSize, 1));
+                            (int partIdx, long partOffset) = GetArkOffsetForEntry(entryOffset, partSizes);
+                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, inflatedSize, partIdx + 1, partOffset));
                         }
                     else
                         for (int i = 0; i < entryCount; i++)
@@ -210,8 +210,8 @@ namespace Mackiloha.Ark
                             uint size = ar.ReadUInt32();
                             uint inflatedSize = ar.ReadUInt32();
 
-                            // TODO: Do some calculation to figure out which ark path to use
-                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, inflatedSize, 1));
+                            (int partIdx, long partOffset) = GetArkOffsetForEntry(entryOffset, partSizes);
+                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, inflatedSize, partIdx + 1, partOffset));
                         }
                 }
                 else
@@ -232,8 +232,8 @@ namespace Mackiloha.Ark
                             string filePath = (lastIdx < 0) ? fullPath : fullPath.Remove(0, lastIdx + 1);
                             string direPath = (lastIdx < 0) ? "" : fullPath.Substring(0, lastIdx);
 
-                            // TODO: Do some calculation to figure out which ark path to use
-                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, 0, 1));
+                            (int partIdx, long partOffset) = GetArkOffsetForEntry(entryOffset, partSizes);
+                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, 0, partIdx + 1, partOffset));
                         }
                     else
                         for (int i = 0; i < entryCount; i++)
@@ -247,8 +247,8 @@ namespace Mackiloha.Ark
                             string filePath = (lastIdx < 0) ? fullPath : fullPath.Remove(0, lastIdx + 1);
                             string direPath = (lastIdx < 0) ? "" : fullPath.Substring(0, lastIdx);
 
-                            // TODO: Do some calculation to figure out which ark path to use
-                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, 0, 1));
+                            (int partIdx, long partOffset) = GetArkOffsetForEntry(entryOffset, partSizes);
+                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, 0, partIdx + 1, partOffset));
                         }
 
                     // Reads other entries - Path hashes?
@@ -259,6 +259,22 @@ namespace Mackiloha.Ark
             }
 
             return ark;
+        }
+
+        private static (int part, long offset) GetArkOffsetForEntry(long entryOffset, long[] partSizes)
+        {
+            int currentIdx = 0;
+            long currentOffset = 0;
+            long nextOffset = partSizes.First();
+
+            while ((entryOffset >= nextOffset)
+                && (currentIdx < partSizes.Length - 1))
+            {
+                currentOffset = nextOffset;
+                nextOffset += partSizes[++currentIdx];
+            }
+
+            return (currentIdx, (entryOffset - currentOffset));
         }
 
         public void WriteHeader(string path)
@@ -476,31 +492,40 @@ namespace Mackiloha.Ark
             // TODO: Compare previousOffset to ark file size
             List<EntryOffset> gaps = GetGaps();
             var pendingEntries = _pendingEntries.Select(x => new { Length = new FileInfo(x.LocalFilePath).Length, Entry = x }).OrderBy(x => x.Length);
-            
+
+            // Gets lengths of ark files
+            var arkSizes = _arkPaths.Skip(1).Select(x => new FileInfo(x).Length).ToArray();
+
             foreach (var pending in pendingEntries)
             {
                 // Looks at smallest gaps first, selects first fit
                 var bestFit = gaps.OrderBy(x => x.Size).FirstOrDefault(x => x.Size >= pending.Length);
-                
+
+                if (arkSizes.Length > 1)
+                    bestFit = null; // TODO: Update for multi-part arks
+
                 if (bestFit == null)
                 {
                     // Adds to end of last archive file
                     var lastEntry = remainingOffsetEntries.OrderByDescending(x => x.Offset).FirstOrDefault();
                     long offset = (lastEntry != null) ? lastEntry.Offset + lastEntry.Size : 0;
+                    long partOffset = offset - arkSizes.Sum();
 
-                    // Copies entry to ark file (TODO: Calculate arkPath beforehand)
-                    CopyToArchive(_arkPaths[1], offset, pending.Entry.LocalFilePath);
+                    // Copies entry to ark file
+                    CopyToArchive(_arkPaths.Last(), partOffset, pending.Entry.LocalFilePath);
 
                     // Adds ark offset entry
-                    remainingOffsetEntries.Add(new OffsetArkEntry(offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, 0, 1));
+                    remainingOffsetEntries.Add(new OffsetArkEntry(offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, 0, arkSizes.Length, partOffset));
                 }
                 else
                 {
+                    (int partIdx, long partOffset) = GetArkOffsetForEntry(bestFit.Offset, arkSizes);
+
                     // Copies entry to ark file (TODO: Calculate arkPath beforehand)
-                    CopyToArchive(_arkPaths[1], bestFit.Offset, pending.Entry.LocalFilePath);
+                    CopyToArchive(_arkPaths[partIdx + 1], partOffset, pending.Entry.LocalFilePath);
 
                     // Adds ark offset entry
-                    remainingOffsetEntries.Add(new OffsetArkEntry(bestFit.Offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, 0, 1));
+                    remainingOffsetEntries.Add(new OffsetArkEntry(bestFit.Offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, 0, partIdx + 1, partOffset));
 
                     // Updates gap entry
                     if (bestFit.Size == pending.Length)
@@ -539,7 +564,7 @@ namespace Mackiloha.Ark
 
                 using (FileStream fs = File.OpenRead(arkPath))
                 {
-                    fs.Seek(offEntry.Offset, SeekOrigin.Begin);
+                    fs.Seek(offEntry.PartOffset, SeekOrigin.Begin);
                     fs.Read(data, 0, data.Length);
                 }
 
