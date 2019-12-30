@@ -279,7 +279,7 @@ namespace Mackiloha.Ark
 
         public void WriteHeader(string path)
         {
-            using (var fs = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+            using (var fs = File.Open(path, FileMode.Create, FileAccess.ReadWrite))
                 WriteHeader(fs);
         }
 
@@ -444,7 +444,9 @@ namespace Mackiloha.Ark
             }
         }
 
-        public override void CommitChanges()
+        public override void CommitChanges() => CommitChanges(true);
+
+        public void CommitChanges(bool writeHeader)
         {
             if (!PendingChanges) return;
             
@@ -548,7 +550,8 @@ namespace Mackiloha.Ark
             _offsetEntries.AddRange(remainingOffsetEntries);
 
             // Re-writes header file
-            WriteHeader(_arkPaths[0]);
+            if (writeHeader)
+                WriteHeader(_arkPaths[0]);
 
             // TODO: Add an output log
         }
@@ -630,8 +633,29 @@ namespace Mackiloha.Ark
         public override string FullPath => this._arkPaths[0];
 
         internal string ArkPath(int index) => this._arkPaths[index];
+
+        /// <summary>
+        /// Adds additional ark part, used for patches (experimental)
+        /// </summary>
+        /// <param name="path"></param>
+        public void AddAdditionalPart(string path)
+        {
+            var dirPath = Path.GetDirectoryName(path).Replace("\\", "/");
+            var fileName = Path.GetFileName(path);
+
+            if (!Directory.Exists(dirPath))
+                Directory.CreateDirectory(dirPath);
+
+            using var _ = File.Create($"{dirPath}/{fileName}");
+
+            _arkPaths = _arkPaths
+                .Concat(new[] { $"{dirPath}/{fileName}" })
+                .ToArray();
+        }
         
         public bool Encrypted { get => _encrypted; set => _encrypted = value; }
         public ArkVersion Version => this._version;
+
+        public int PartCount() => _arkPaths.Length - 1;
     }
 }

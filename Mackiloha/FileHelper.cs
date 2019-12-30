@@ -89,5 +89,23 @@ namespace Mackiloha
 
             return true;
         }
+
+        public static string GetRelativePath(string path, string basePath)
+        {
+            return Path.GetFullPath(path).Substring(Path.GetFullPath(basePath).Length + 1);
+        }
+
+        public static byte[] GetBytes(string hex)
+        {
+            // TODO: Move to another location?
+            var bytes = new byte[hex.Length >> 1];
+
+            for (int i = 0; i < hex.Length; i += 2)
+            {
+                bytes[i >> 1] = Convert.ToByte(hex.Substring(i, 2), 16);
+            }
+
+            return bytes;
+        }
     }
 }
