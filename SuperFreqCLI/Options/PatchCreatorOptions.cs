@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using CliWrap;
 using CommandLine;
 using Mackiloha;
 using Mackiloha.Ark;
@@ -28,6 +30,37 @@ namespace SuperFreqCLI.Options
         [Option('o', "outputPath", HelpText = "Path to directory for patch", Required = false)]
         public string OutputPath { get; set; }
 
+        private static string CreateTempDTBFile(string dtaPath, string tempDir, bool newEncryption)
+        {
+            if (!Directory.Exists(tempDir))
+                Directory.CreateDirectory(tempDir);
+
+            var dtbPath = Path.Combine(tempDir, Path.GetRandomFileName());
+            var encDtbPath = Path.Combine(tempDir, Path.GetRandomFileName());
+
+            // Convert to dtb
+            Cli.Wrap("dtab")
+                .SetArguments(new[]
+                {
+                    "-b",
+                    dtaPath,
+                    dtbPath
+                })
+                .Execute();
+
+            // Encrypt dtb
+            Cli.Wrap("dtab")
+                .SetArguments(new[]
+                {
+                    newEncryption ? "-e" : "-E",
+                    dtbPath,
+                    encDtbPath
+                })
+                .Execute();
+
+            return encDtbPath;
+        }
+
         public static void Parse(PatchCreatorOptions op)
         {
             var ark = ArkFile.FromFile(op.InputPath);
@@ -43,17 +76,46 @@ namespace SuperFreqCLI.Options
 
             var updatedHashes = new List<ArkEntryInfo>();
 
+
+            var dtaRegex = new Regex("(?i).dta$");
+            var genPathedFile = new Regex(@"(?i)gen[\/][^\/]+$");
+            var dotRegex = new Regex(@"\([.]+\)/");
+
+            // Create temp path
+            var tempDir = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+
             foreach (var file in files)
             {
                 var internalPath = FileHelper.GetRelativePath(file, op.ArkFilesPath)
                     .Replace("\\", "/");
+
+                string inputFilePath = file;
+
+                if (dtaRegex.IsMatch(internalPath))
+                {
+                    // Updates path
+                    internalPath = $"{internalPath.Substring(0, internalPath.Length - 1)}b";
+
+                    if (!genPathedFile.IsMatch(internalPath))
+                        internalPath = internalPath.Insert(internalPath.LastIndexOf('/'), "/gen");
+
+                    // Creates temp dtb file
+                    inputFilePath = CreateTempDTBFile(file, tempDir, ark.Encrypted);
+                }
+
+                if (dotRegex.IsMatch(internalPath))
+                {
+                    internalPath = dotRegex.Replace(internalPath, x => $"{x.Value.Substring(1, x.Length - 3)}/");
+                }
 
                 var fileName = Path.GetFileName(internalPath);
                 var dirPath = Path.GetDirectoryName(internalPath).Replace("\\", "/");
 
                 var pendingEntry = new PendingArkEntry(fileName, dirPath)
                 {
-                    LocalFilePath = file
+                    LocalFilePath = inputFilePath
                 };
 
                 ark.AddPendingEntry(pendingEntry);
@@ -62,12 +124,15 @@ namespace SuperFreqCLI.Options
                     continue;
 
                 // Update hash
-                using var fs = File.OpenRead(file);
+                using var fs = File.OpenRead(inputFilePath);
                 hashInfo.Hash = Crypt.SHA1Hash(fs);
                 updatedHashes.Add(hashInfo);
             }
 
             ark.CommitChanges(false);
+
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
 
             // Writes header
             var hdrPath = Path.Combine(op.OutputPath, "gen", Path.GetFileName(op.InputPath));

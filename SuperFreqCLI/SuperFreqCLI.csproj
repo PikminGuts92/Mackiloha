@@ -16,6 +16,7 @@
     </When>
   </Choose>
   <ItemGroup>
+    <PackageReference Include="CliWrap" Version="2.5.0" />
     <PackageReference Include="CommandLineParser" Version="2.6.0" />
   </ItemGroup>
 
