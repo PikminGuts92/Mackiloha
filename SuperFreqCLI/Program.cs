@@ -11,7 +11,8 @@ namespace SuperFreqCLI
     {
         static void Main(string[] args)
         {
-            Parser.Default.ParseArguments<Dir2MiloOptions, FixHdrOptions, HashFinderOptions, Milo2DirOptions, Milo2GLTFOptions, PatchCreatorOptions, PngToTextureOptions, TextureToPngOptions>(args)
+            Parser.Default.ParseArguments<ArkExtractOptions,Dir2MiloOptions, FixHdrOptions, HashFinderOptions, Milo2DirOptions, Milo2GLTFOptions, PatchCreatorOptions, PngToTextureOptions, TextureToPngOptions>(args)
+                .WithParsed<ArkExtractOptions>(ArkExtractOptions.Parse)
                 .WithParsed<Dir2MiloOptions>(Dir2MiloOptions.Parse)
                 .WithParsed<FixHdrOptions>(FixHdrOptions.Parse)
                 .WithParsed<HashFinderOptions>(HashFinderOptions.Parse)

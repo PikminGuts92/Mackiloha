@@ -76,7 +76,6 @@ namespace SuperFreqCLI.Options
 
             var updatedHashes = new List<ArkEntryInfo>();
 
-
             var dtaRegex = new Regex("(?i).dta$");
             var genPathedFile = new Regex(@"(?i)gen[\/][^\/]+$");
             var dotRegex = new Regex(@"\([.]+\)/");
