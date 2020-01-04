@@ -64,14 +64,22 @@ namespace SuperFreqCLI.Options
         public static void Parse(PatchCreatorOptions op)
         {
             var ark = ArkFile.FromFile(op.InputPath);
+            var inplaceEdit = string.IsNullOrWhiteSpace(op.OutputPath);
 
-            var patchPartName = $"{Path.GetFileNameWithoutExtension(op.InputPath)}_{ark.PartCount()}.ark";
-            ark.AddAdditionalPart(Path.Combine(op.OutputPath, "gen", patchPartName));
+            if (!inplaceEdit)
+            {
+                // Add additional ark park
+                // TODO: If ark version doesn't support multiple parts then copy entire ark to new directory
+                var patchPartName = $"{Path.GetFileNameWithoutExtension(op.InputPath)}_{ark.PartCount()}.ark";
+                ark.AddAdditionalPart(Path.Combine(op.OutputPath, "gen", patchPartName));
+            }
 
             var files = Directory.GetFiles(op.ArkFilesPath, "*", SearchOption.AllDirectories);
 
             // Open hashes
-            var entryInfo = ArkEntryInfo.ReadFromCSV(op.HashesPath)
+            var entryInfo = (string.IsNullOrWhiteSpace(op.HashesPath)
+                ? new List<ArkEntryInfo>()
+                : ArkEntryInfo.ReadFromCSV(op.HashesPath))
                 .ToDictionary(x => x.Path, y => y);
 
             var updatedHashes = new List<ArkEntryInfo>();
@@ -128,14 +136,23 @@ namespace SuperFreqCLI.Options
                 updatedHashes.Add(hashInfo);
             }
 
-            ark.CommitChanges(false);
+            ark.CommitChanges(inplaceEdit);
 
+            // Clean up temp files
             if (Directory.Exists(tempDir))
                 Directory.Delete(tempDir, true);
 
-            // Writes header
-            var hdrPath = Path.Combine(op.OutputPath, "gen", Path.GetFileName(op.InputPath));
-            ark.WriteHeader(hdrPath);
+            if (!inplaceEdit)
+            {
+                // Writes header
+                var hdrPath = Path.Combine(op.OutputPath, "gen", Path.GetFileName(op.InputPath));
+                ark.WriteHeader(hdrPath);
+            }
+            else
+            {
+                // TODO: Also look at possibly still patching exe
+                return;
+            }
 
             // Copy exe
             var exePath = Path.Combine(op.OutputPath, Path.GetFileName(op.ExePath));

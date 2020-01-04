@@ -511,7 +511,7 @@ namespace Mackiloha.Ark
                     // Adds to end of last archive file
                     var lastEntry = remainingOffsetEntries.OrderByDescending(x => x.Offset).FirstOrDefault();
                     long offset = (lastEntry != null) ? lastEntry.Offset + lastEntry.Size : 0;
-                    long partOffset = offset - arkSizes.Sum();
+                    long partOffset = offset - arkSizes.Reverse().Skip(1).Sum();
 
                     // Copies entry to ark file
                     CopyToArchive(_arkPaths.Last(), partOffset, pending.Entry.LocalFilePath);
