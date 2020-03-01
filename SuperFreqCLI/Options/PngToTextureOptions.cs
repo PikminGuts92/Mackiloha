@@ -10,7 +10,7 @@ using Mackiloha.IO;
 
 namespace SuperFreqCLI.Options
 {
-    [Verb("png2tex", HelpText = "Converts HMX texture to png", Hidden = true)]
+    [Verb("png2tex", HelpText = "Converts HMX texture to png (beta feature)")]
     internal class PngToTextureOptions : GameOptions
     {
         [Value(0, Required = true, MetaName = "pngPath", HelpText = "Path to input png")]

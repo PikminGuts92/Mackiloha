@@ -10,7 +10,7 @@ using Mackiloha.IO;
 
 namespace SuperFreqCLI.Options
 {
-    [Verb("milo2gltf", HelpText = "Converts milo scene to GLTF", Hidden = true)]
+    [Verb("milo2gltf", HelpText = "Converts milo scene to GLTF (beta feature)")]
     internal class Milo2GLTFOptions : GameOptions
     {
         [Value(0, Required = true, MetaName = "miloPath", HelpText = "Path to input milo archive")]
