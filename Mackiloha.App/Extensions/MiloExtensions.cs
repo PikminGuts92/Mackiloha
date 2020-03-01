@@ -131,7 +131,7 @@ namespace Mackiloha.App.Extensions
             {
                 Asset = new Asset()
                 {
-                    Generator = "Mackiloha v1.0"
+                    Generator = $"Mackiloha v{typeof(MiloExtensions).Assembly.GetName().Version}"
                 },
                 Images = textures.Select(x => new Image()
                 {
