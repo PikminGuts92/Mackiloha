@@ -652,6 +652,23 @@ namespace Mackiloha.Ark
                 .Concat(new[] { $"{dirPath}/{fileName}" })
                 .ToArray();
         }
+
+        public ArkFile CopyToDirectory(string dirPath)
+        {
+            // TODO: Apply changes during copy
+            if (PendingChanges)
+                throw new Exception("Can't copy archive until pending changes are applied");
+
+            if (!Directory.Exists(dirPath))
+                Directory.CreateDirectory(dirPath);
+
+            foreach (var file in _arkPaths)
+            {
+                File.Copy(file, Path.Combine(dirPath, Path.GetFileName(file)), true);
+            }
+
+            return FromFile(Path.Combine(dirPath, Path.GetFileName(_arkPaths.First())));
+        }
         
         public bool Encrypted { get => _encrypted; set => _encrypted = value; }
         public ArkVersion Version => this._version;

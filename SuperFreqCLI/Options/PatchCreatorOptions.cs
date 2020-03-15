@@ -68,10 +68,18 @@ namespace SuperFreqCLI.Options
 
             if (!inplaceEdit)
             {
-                // Add additional ark park
-                // TODO: If ark version doesn't support multiple parts then copy entire ark to new directory
-                var patchPartName = $"{Path.GetFileNameWithoutExtension(op.InputPath)}_{ark.PartCount()}.ark";
-                ark.AddAdditionalPart(Path.Combine(op.OutputPath, "gen", patchPartName));
+                if ((int)ark.Version <= 3)
+                {
+                    // If ark version doesn't support multiple parts then copy entire ark to new directory
+                    ark = ark.CopyToDirectory(Path.Combine(op.OutputPath, "gen"));
+                    inplaceEdit = true;
+                }
+                else
+                {
+                    // Add additional ark park
+                    var patchPartName = $"{Path.GetFileNameWithoutExtension(op.InputPath)}_{ark.PartCount()}.ark";
+                    ark.AddAdditionalPart(Path.Combine(op.OutputPath, "gen", patchPartName));
+                }
             }
 
             var files = Directory.GetFiles(op.ArkFilesPath, "*", SearchOption.AllDirectories);
