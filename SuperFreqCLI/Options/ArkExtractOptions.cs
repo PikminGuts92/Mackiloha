@@ -24,6 +24,9 @@ namespace SuperFreqCLI.Options
         [Option('s', "convertScripts", HelpText = "Convert dtb scripts to dta")]
         public bool ConvertScripts { get; set; }
 
+        [Option('m', "extractMilos", HelpText = "Extract milo archives")]
+        public bool ExtractMilos { get; set; }
+
         [Option('a', "extractAll", HelpText = "Extract everything")]
         public bool ExtractAll { get; set; }
 
@@ -114,6 +117,8 @@ namespace SuperFreqCLI.Options
         {
             var scriptRegex = new Regex("(?i).((dtb)|(dta))$");
             var dtbRegex = new Regex("(?i).dtb$");
+            var miloRegex = new Regex("(?i).milo(_[A-Z]+)?$");
+
             var genPathedFile = new Regex(@"(?i)(([^\/\\]+[\/\\])*)(gen[\/\\])([^\/\\]+)$");
 
             var ark = ArkFile.FromFile(op.InputPath);
@@ -123,9 +128,15 @@ namespace SuperFreqCLI.Options
                     && scriptRegex.IsMatch(x.FullPath))
                 .ToList();
 
+            var milosToExtract = ark.Entries
+                .Where(x => op.ExtractMilos
+                    && miloRegex.IsMatch(x.FullPath))
+                .ToList();
+
             var entriesToExtract = ark.Entries
                 .Where(x => op.ExtractAll)
                 .Except(scriptsToConvert)
+                .Except(milosToExtract)
                 .ToList();
 
             foreach (var arkEntry in entriesToExtract)
@@ -139,6 +150,10 @@ namespace SuperFreqCLI.Options
             if (Directory.Exists(tempDir))
                 Directory.Delete(tempDir, true);
 
+            foreach (var miloEntry in milosToExtract)
+            {
+
+            }
 
             var successDtas = 0;
             foreach (var scriptEntry in scriptsToConvert)
