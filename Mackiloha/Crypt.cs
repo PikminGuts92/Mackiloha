@@ -10,24 +10,52 @@ namespace Mackiloha
 {
     public class Crypt
     {
-        /// <summary>
-        /// Decrypts input file and writes to output file
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="output"></param>
-        /// <param name="newStyle"></param>
-        public static void CryptFile(string input, string output, bool newStyle)
-        {
-            File.Copy(input, output, true);
+        private static int DefaultKey = 0x295E2D5E;
 
-            using (FileStream fs = File.Open(output, FileMode.Open))
+        public static void DecryptFile(string input, string output, bool newStyle, byte xor = 0x00)
+        {
+            int key;
+            using var ms = new MemoryStream();
+
+            // Gets key from input and copies remaining bytes to stream
+            using (var fs = File.OpenRead(input))
             {
                 byte[] keyBytes = new byte[4];
                 fs.Read(keyBytes, 0, 4);
-                int key = BitConverter.ToInt32(keyBytes, 0);
+                key = BitConverter.ToInt32(keyBytes, 0);
 
-                DTBCrypt(fs, key, newStyle);
+                fs.CopyTo(ms);
+                ms.Seek(0, SeekOrigin.Begin);
             }
+
+            // Decrypts stream
+            DTBCrypt(ms, key, newStyle, xor);
+            ms.Seek(0, SeekOrigin.Begin);
+
+            // Writes stream to file
+            File.WriteAllBytes(output, ms.ToArray());
+        }
+
+        public static void EncryptFile(string input, string output, bool newStyle, byte xor = 0x00)
+        {
+            int key = DefaultKey;
+            using var ms = new MemoryStream();
+
+            // Writes key to stream
+            ms.Write(BitConverter.GetBytes(DefaultKey), 0, 4);
+
+            // Copies input bytes to stream
+            using (var fs = File.OpenRead(input))
+            {
+                fs.CopyTo(ms);
+                ms.Seek(4, SeekOrigin.Begin);
+            }
+
+            // Encrypts stream
+            DTBCrypt(ms, key, newStyle, xor);
+            ms.Seek(0, SeekOrigin.Begin);
+
+            File.WriteAllBytes(output, ms.ToArray());
         }
 
         /// <summary>
@@ -36,7 +64,7 @@ namespace Mackiloha
         /// <param name="stream">Input</param>
         /// <param name="key">32-bit key</param>
         /// <param name="newStyle">PS2 = False | X360 = true</param>
-        public static void DTBCrypt(Stream stream, int key, bool newStyle)
+        public static void DTBCrypt(Stream stream, int key, bool newStyle, byte xor = 0x00)
         {
             int b;
             long position = stream.Position;
@@ -48,7 +76,7 @@ namespace Mackiloha
                 {
                     key = X360_XOR(key);
                     stream.Seek(-1, SeekOrigin.Current);
-                    stream.WriteByte((byte)(b ^ key));
+                    stream.WriteByte((byte)(b ^ key ^ xor));
                 }
                 
                 stream.Seek(position, SeekOrigin.Begin);
@@ -64,7 +92,7 @@ namespace Mackiloha
                 // PS2 - Code converted from ArkTool v6
                 table.Table[table.Index1] ^= table.Table[table.Index2];
                 stream.Seek(-1, SeekOrigin.Current);
-                stream.WriteByte((byte)(b ^ table.Table[table.Index1]));
+                stream.WriteByte((byte)(b ^ table.Table[table.Index1] ^ xor));
                 
                 table.Index1 = ((table.Index1 + 1)) >= 0xF9 ? 0x00 : (table.Index1 + 1);
                 table.Index2 = ((table.Index2 + 1)) >= 0xF9 ? 0x00 : (table.Index2 + 1);
