@@ -292,9 +292,23 @@ namespace Mackiloha.Ark
             long hdrStart = aw.BaseStream.Position;
 
             // Gets lengths of ark files
-            var arkSizes = _arkPaths.Skip(1).Select(x => new FileInfo(x).Length).ToArray();
+            var arkSizes = _arkPaths
+                .Skip(1)
+                .Select(x => new FileInfo(x).Length)
+                .ToArray();
 
             aw.Write((int)Version);
+
+            if ((int)Version >= 6)
+            {
+                // Always 1?
+                aw.Write((int)1);
+
+                // Write 16-bytes (some kind of hash or timestamp)
+                aw.Write((long)-1);
+                aw.Write((long)-1);
+            }
+
             aw.Write(arkSizes.Length);
             aw.Write(arkSizes.Length);
 
@@ -309,6 +323,18 @@ namespace Mackiloha.Ark
                 foreach (var path in _arkPaths.Skip(1))
                 {
                     aw.Write((string)$"gen/{Path.GetFileName(path)}");
+                }
+            }
+
+            // 32-bit flags?
+            if ((int)Version >= 6 && (int)Version <= 9)
+            {
+                aw.Write(arkSizes.Length);
+
+                // Write 4-bytes for each part (some kind of flag)
+                foreach (var size in arkSizes)
+                {
+                    aw.Write((int)-1);
                 }
             }
 
@@ -375,7 +401,7 @@ namespace Mackiloha.Ark
             aw.Write((uint)entries.Count);
 
             // TODO: Check for versions below 3 or above 6
-            if (Version == ArkVersion.V4 || Version == ArkVersion.V5)
+            if (Version == ArkVersion.V4 || Version == ArkVersion.V5 || Version == ArkVersion.V6)
             {
                 foreach (var entry in entries)
                 {
@@ -450,7 +476,11 @@ namespace Mackiloha.Ark
         {
             if (!PendingChanges) return;
             
-            var remainingOffsetEntries = _offsetEntries.Except<ArkEntry>(_pendingEntries).Select(x => x as OffsetArkEntry).OrderBy(x => x.Offset).ToList();
+            var remainingOffsetEntries = _offsetEntries
+                .Except<ArkEntry>(_pendingEntries)
+                .Select(x => x as OffsetArkEntry)
+                .OrderBy(x => x.Offset)
+                .ToList();
 
             List<EntryOffset> GetGaps()
             {
