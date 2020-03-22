@@ -285,10 +285,12 @@ namespace Mackiloha.Ark
 
         private void WriteHeader(Stream stream)
         {
+            uint key = 0xC64EED30; // TODO: Replace w/ default key
+
             AwesomeWriter aw = new AwesomeWriter(stream, false);
 
             // Writes key if encrypted
-            if (_encrypted) aw.Write((int)DEFAULT_KEY);
+            if (_encrypted) aw.Write((int)key);
             long hdrStart = aw.BaseStream.Position;
 
             // Gets lengths of ark files
@@ -319,25 +321,106 @@ namespace Mackiloha.Ark
             // Write ark paths
             if ((int)Version >= 5)
             {
+                // TODO: Use a better way to write relative path
+                var prefix = ((int)Version < 9) ? "gen/" : "";
+
                 aw.Write((int)_arkPaths.Length - 1);
                 foreach (var path in _arkPaths.Skip(1))
                 {
-                    aw.Write((string)$"gen/{Path.GetFileName(path)}");
+                    aw.Write((string)$"{prefix}{Path.GetFileName(path)}");
                 }
             }
 
             // 32-bit flags?
             if ((int)Version >= 6 && (int)Version <= 9)
             {
+                var writeValue = ((int)Version < 9) ? -1 : 0;
                 aw.Write(arkSizes.Length);
 
                 // Write 4-bytes for each part (some kind of flag)
                 foreach (var size in arkSizes)
                 {
-                    aw.Write((int)-1);
+                    aw.Write((int)writeValue);
                 }
             }
 
+            if ((int)Version >= 9)
+            {
+                // TODO: Re-visit for ark v7 (FME)
+                var writeValue = 0;
+                aw.Write(arkSizes.Length);
+
+                // Write 4-bytes for each part (seems to always be 0)
+                foreach (var size in arkSizes)
+                {
+                    aw.Write((int)writeValue);
+                }
+            }
+
+            if ((int)Version < 9)
+            {
+                WriteClassicFileEntries(aw);
+            }
+            else
+            {
+                WriteNewFileEntries(aw);
+            }
+
+            if (_encrypted)
+            {
+                byte xor = (byte)((Version == ArkVersion.V9) ? 0xFF : 0x00);
+
+                // Encrypts HDR file
+                aw.BaseStream.Seek(hdrStart, SeekOrigin.Begin);
+                Crypt.DTBCrypt(aw.BaseStream, (int)key, true, xor);
+            }
+        }
+
+        private void WriteNewFileEntries(AwesomeWriter aw)
+        {
+            var entries = _offsetEntries
+                .OrderBy(x => x.FullPath)
+                .ToList();
+            
+            // Write entries
+            aw.Write(entries.Count);
+            if (Version == ArkVersion.V9)
+            {
+                int entryFlag;
+
+                foreach (var entry in entries)
+                {
+                    aw.Write((ulong)entry.Offset);
+                    aw.Write((string)entry.FullPath);
+                    aw.Write((int)-1); // Some kind of index
+                    aw.Write((uint)entry.Size);
+
+                    // Only ark v9 seems to have this (0x‭7D401F60 when entry size not 0‬)
+                    entryFlag = (entry.Size <= 0) ? 0 : 0x7D401F60;
+                    aw.Write((int)entryFlag);
+                }
+            }
+            else
+            {
+                foreach (var entry in entries)
+                {
+                    aw.Write((ulong)entry.Offset);
+                    aw.Write((string)entry.FullPath);
+                    aw.Write((int)-1); // Some kind of index
+                    aw.Write((uint)entry.Size);
+                }
+            }
+
+            // Write some kind of index table
+            aw.Write(entries.Count);
+            foreach (var entry in entries)
+            {
+                aw.Write((int)-1); // Some kind of index
+            }
+        }
+
+        private void WriteClassicFileEntries(AwesomeWriter aw)
+        {
             // Creates and writes string blob
             var entries = _offsetEntries.OrderBy(x => x.Offset).ToList();
             byte[] blob = CreateBlob(out var strings, entries);
@@ -347,7 +430,7 @@ namespace Mackiloha.Ark
             // Write string offset table
             int[] stringOffsets = new int[(entries.Count * 2) + 200];
             aw.Write(stringOffsets.Length);
-            
+
             int CalculateHash(string str, int tableSize)
             {
                 int hash = 0;
@@ -363,7 +446,7 @@ namespace Mackiloha.Ark
             foreach (var str in strings)
             {
                 int hash = CalculateHash(str.Key, stringOffsets.Length);
-                
+
                 // Prevents duplicate hashes
                 while (stringOffsets[hash] != 0)
                 {
@@ -422,13 +505,6 @@ namespace Mackiloha.Ark
                     aw.Write((uint)entry.Size);
                     aw.Write((uint)entry.InflatedSize);
                 }
-            }
-
-            if (_encrypted)
-            {
-                // Encrypts HDR file
-                aw.BaseStream.Seek(hdrStart, SeekOrigin.Begin);
-                Crypt.DTBCrypt(aw.BaseStream, DEFAULT_KEY, true);
             }
         }
 
@@ -698,6 +774,14 @@ namespace Mackiloha.Ark
             }
 
             return FromFile(Path.Combine(dirPath, Path.GetFileName(_arkPaths.First())));
+        }
+
+        public void SetVersion(ArkVersion version)
+        {
+            if (!Enum.IsDefined(typeof(ArkVersion), version))
+                throw new NotSupportedException();
+
+            _version = version;
         }
         
         public bool Encrypted { get => _encrypted; set => _encrypted = value; }
