@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel; // ReadOnlyCollection
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.IO;
 using System.Collections;
@@ -30,7 +31,7 @@ namespace Mackiloha.Ark
 
         private const int MAX_HDR_SIZE = 20 * 0x100000; // 20MB
         private const int DEFAULT_KEY = 0x295E2D5E;
-        
+
         private ArkFile() : base()
         {
             _offsetEntries = new List<OffsetArkEntry>();
@@ -217,6 +218,8 @@ namespace Mackiloha.Ark
                 else
                 {
                     uint entryCount = ar.ReadUInt32();
+                    var flags1 = new (string, int)[entryCount];
+                    var flags2 = new int[entryCount];
 
                     // Reads file entries
                     if (version <= 9)
@@ -224,23 +227,26 @@ namespace Mackiloha.Ark
                         {
                             long entryOffset = ar.ReadInt64();
                             string fullPath = ar.ReadString();
-                            uint flags = ar.ReadUInt32();
+                            int flag = ar.ReadInt32();
                             uint size = ar.ReadUInt32();
-                            uint hash = ar.ReadUInt32();
+                            ar.BaseStream.Position += 4; // Some kind of flag (0x‭7D401F60 or 0)
 
                             int lastIdx = fullPath.LastIndexOf('/');
                             string filePath = (lastIdx < 0) ? fullPath : fullPath.Remove(0, lastIdx + 1);
                             string direPath = (lastIdx < 0) ? "" : fullPath.Substring(0, lastIdx);
 
                             (int partIdx, long partOffset) = GetArkOffsetForEntry(entryOffset, partSizes);
-                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, 0, partIdx + 1, partOffset));
+
+                            var entry = new OffsetArkEntry(entryOffset, filePath, direPath, size, 0, partIdx + 1, partOffset);
+                            ark._offsetEntries.Add(entry);
+                            flags1[i] = (entry.FullPath, flag);
                         }
                     else
                         for (int i = 0; i < entryCount; i++)
                         {
                             long entryOffset = ar.ReadInt64();
                             string fullPath = ar.ReadString();
-                            uint flags = ar.ReadUInt32();
+                            int flag = ar.ReadInt32();
                             uint size = ar.ReadUInt32();
 
                             int lastIdx = fullPath.LastIndexOf('/');
@@ -248,11 +254,13 @@ namespace Mackiloha.Ark
                             string direPath = (lastIdx < 0) ? "" : fullPath.Substring(0, lastIdx);
 
                             (int partIdx, long partOffset) = GetArkOffsetForEntry(entryOffset, partSizes);
-                            ark._offsetEntries.Add(new OffsetArkEntry(entryOffset, filePath, direPath, size, 0, partIdx + 1, partOffset));
+
+                            var entry = new OffsetArkEntry(entryOffset, filePath, direPath, size, 0, partIdx + 1, partOffset);
+                            ark._offsetEntries.Add(entry);
+                            flags1[i] = (entry.FullPath, flag);
                         }
 
-                    // Reads other entries - Path hashes?
-                    // TODO: Save these values
+                    // Hash offset table (not needed)
                     uint entryCount2 = ar.ReadUInt32();
                     ar.BaseStream.Position += entryCount2 << 2;
                 }
@@ -378,45 +386,75 @@ namespace Mackiloha.Ark
 
         private void WriteNewFileEntries(AwesomeWriter aw)
         {
-            var entries = _offsetEntries
+            string GetAmpPath(OffsetArkEntry entry)
+                => Regex.Replace(entry.FullPath, "^./", "");
+
+            var entryCount = _offsetEntries.Count;
+
+            var entriesHashed = _offsetEntries
                 .OrderBy(x => x.FullPath)
-                .ToList();
-            
+                .Select(x =>
+                {
+                    var path = GetAmpPath(x);
+
+                    return new
+                    {
+                        Hash = CalculateHash(path, entryCount),
+                        Entry = x,
+                        Path = path
+                    };
+                })
+                .GroupBy(x => x.Hash)
+                .OrderBy(x => x.Key);
+
+            int entryIdx = -1;
+            var hashOffsets = new Dictionary<int, int>();
+
             // Write entries
-            aw.Write(entries.Count);
-            if (Version == ArkVersion.V9)
+            aw.Write(entryCount);
+            foreach (var hashEntry in entriesHashed)
             {
-                int entryFlag;
+                var hash = hashEntry.Key;
+                int prevHashIdx = -1;
 
-                foreach (var entry in entries)
+                foreach (var e in hashEntry)
                 {
-                    aw.Write((ulong)entry.Offset);
-                    aw.Write((string)entry.FullPath);
-                    aw.Write((int)-1); // Some kind of index
-                    aw.Write((uint)entry.Size);
+                    var entry = e.Entry;
+                    WriteNewEntry(aw, entry, prevHashIdx, Version == ArkVersion.V9);
 
-                    // Only ark v9 seems to have this (0x‭7D401F60 when entry size not 0‬)
-                    entryFlag = (entry.Size <= 0) ? 0 : 0x7D401F60;
-                    aw.Write((int)entryFlag);
+                    prevHashIdx = ++entryIdx;
+                }
+
+                hashOffsets.Add(hash, entryIdx);
+            }
+
+            // Write hash index table
+            aw.Write(entryCount);
+            for (int i = 0; i < entryCount; i++)
+            {
+                if (hashOffsets.TryGetValue(i, out entryIdx))
+                {
+                    // Write index to last entry w/ hash
+                    aw.Write((int)entryIdx);
+                }
+                else
+                {
+                    // No hash found, write default value
+                    aw.Write((int)-1);
                 }
             }
-            else
-            {
-                foreach (var entry in entries)
-                {
-                    aw.Write((ulong)entry.Offset);
-                    aw.Write((string)entry.FullPath);
-                    aw.Write((int)-1); // Some kind of index
-                    aw.Write((uint)entry.Size);
-                }
-            }
+        }
 
-            // Write some kind of index table
-            aw.Write(entries.Count);
-            foreach (var entry in entries)
-            {
-                aw.Write((int)-1); // Some kind of index
-            }
+        private static void WriteNewEntry(AwesomeWriter aw, OffsetArkEntry entry, int prevHash, bool extraFlag = false)
+        {
+            aw.Write((ulong)entry.Offset);
+            aw.Write((string)entry.FullPath);
+            aw.Write((int)prevHash); // Index to previous entry w/ same hash
+            aw.Write((uint)entry.Size);
+
+            // Only ark v9 seems to have this (0x‭7D401F60 when entry size not 0‬)
+            if (extraFlag)
+                aw.Write((int)((entry.Size <= 0) ? 0 : 0x7D401F60));
         }
 
         private void WriteClassicFileEntries(AwesomeWriter aw)
@@ -430,17 +468,6 @@ namespace Mackiloha.Ark
             // Write string offset table
             int[] stringOffsets = new int[(entries.Count * 2) + 200];
             aw.Write(stringOffsets.Length);
-
-            int CalculateHash(string str, int tableSize)
-            {
-                int hash = 0;
-                foreach (char c in str)
-                {
-                    hash = (hash * 0x7F) + c;
-                    hash -= ((hash / tableSize) * tableSize);
-                }
-                return hash;
-            }
 
             Dictionary<string, int> tableOffsets = new Dictionary<string, int>();
             foreach (var str in strings)
@@ -506,6 +533,17 @@ namespace Mackiloha.Ark
                     aw.Write((uint)entry.InflatedSize);
                 }
             }
+        }
+
+        private static int CalculateHash(string str, int tableSize)
+        {
+            int hash = 0;
+            foreach (char c in str)
+            {
+                hash = (hash * 0x7F) + c;
+                hash -= ((hash / tableSize) * tableSize);
+            }
+            return hash;
         }
 
         private byte[] CreateBlob(out Dictionary<string, int> offsets, List<OffsetArkEntry> entries)
