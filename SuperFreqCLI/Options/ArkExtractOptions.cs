@@ -8,6 +8,7 @@ using CliWrap;
 using CommandLine;
 using Mackiloha;
 using Mackiloha.Ark;
+using Mackiloha.DTB;
 using SuperFreqCLI.Exceptions;
 
 namespace SuperFreqCLI.Options
@@ -33,7 +34,16 @@ namespace SuperFreqCLI.Options
         private static void WriteOutput(string text)
             => Console.WriteLine(text);
 
-        private static string CreateDTAFile(string dtbPath, string tempDir, bool newEncryption, string dtaPath = null)
+        private static void ConvertNewDtbToOld(string oldDtbPath, string newDtbPath, bool fme = false)
+        {
+            var encoding = fme ? DTBEncoding.FME : DTBEncoding.RBVR;
+
+            var dtb = DTBFile.FromFile(oldDtbPath, encoding);
+            dtb.Encoding = DTBEncoding.Classic;
+            dtb.SaveToFile(newDtbPath);
+        }
+
+        private static string CreateDTAFile(string dtbPath, string tempDir, bool newEncryption, int arkVersion, string dtaPath = null)
         {
             if (!Directory.Exists(tempDir))
                 Directory.CreateDirectory(tempDir);
@@ -45,17 +55,26 @@ namespace SuperFreqCLI.Options
             if (!Directory.Exists(dtaDir))
                 Directory.CreateDirectory(dtaDir);
 
-            // Convert to dtb
-            Cli.Wrap("dtab")
-                .SetArguments(new[]
-                {
-                    newEncryption ? "-d" : "-D",
-                    dtbPath,
-                    decDtbPath
-                })
-                .Execute();
+            if (arkVersion < 7)
+            {
+                // Decrypt dtb
+                Cli.Wrap("dtab")
+                    .SetArguments(new[]
+                    {
+                        newEncryption ? "-d" : "-D",
+                        dtbPath,
+                        decDtbPath
+                    })
+                    .Execute();
+            }
+            else
+            {
+                // New dtb style, convert to old format to use dtab
+                //  and assume not encrypted
+                ConvertNewDtbToOld(dtbPath, decDtbPath, arkVersion < 9);
+            }
 
-            // Encrypt dtb
+            // Convert to dta (plaintext)
             var result = Cli.Wrap("dtab")
                 .SetArguments(new[]
                 {
@@ -115,13 +134,16 @@ namespace SuperFreqCLI.Options
 
         public static void Parse(ArkExtractOptions op)
         {
-            var scriptRegex = new Regex("(?i).((dtb)|(dta))$");
-            var dtbRegex = new Regex("(?i).dtb$");
-            var miloRegex = new Regex("(?i).milo(_[A-Z]+)?$");
+            var scriptRegex = new Regex("(?i).((dtb)|(dta)|(([A-Z]+)(_dta_)([A-Z0-9]+)))$");
+            var scriptForgeRegex = new Regex("(?i)(_dta_)([A-Z0-9]+)$");
+
+            var dtaRegex = new Regex("(?i).dta$");
+            var miloRegex = new Regex("(?i).milo(_[A-Z0-9]+)?$");
 
             var genPathedFile = new Regex(@"(?i)(([^\/\\]+[\/\\])*)(gen[\/\\])([^\/\\]+)$");
 
             var ark = ArkFile.FromFile(op.InputPath);
+            var arkVersion = (int)ark.Version;
 
             var scriptsToConvert = ark.Entries
                 .Where(x => op.ConvertScripts
@@ -152,13 +174,14 @@ namespace SuperFreqCLI.Options
 
             foreach (var miloEntry in milosToExtract)
             {
-
+                // TODO: Implement milo archive extraction
             }
 
             var successDtas = 0;
             foreach (var scriptEntry in scriptsToConvert)
             {
-                if (!dtbRegex.IsMatch(scriptEntry.FullPath))
+                // Just extract file if dta script
+                if (dtaRegex.IsMatch(scriptEntry.FullPath))
                 {
                     var filePath = ExtractEntry(ark, scriptEntry, CombinePath(op.OutputPath, scriptEntry.FullPath));
                     Console.WriteLine($"Wrote \"{filePath}\"");
@@ -167,7 +190,9 @@ namespace SuperFreqCLI.Options
 
                 // Creates output path
                 var dtaPath = CombinePath(op.OutputPath, scriptEntry.FullPath);
-                dtaPath = $"{dtaPath.Substring(0, dtaPath.Length - 1)}a";
+                dtaPath = !scriptForgeRegex.IsMatch(dtaPath)
+                    ?  $"{dtaPath.Substring(0, dtaPath.Length - 1)}a" // Simply change b -> a
+                    : scriptForgeRegex.Replace(dtaPath, "");
 
                 // Removes gen sub directory
                 if (genPathedFile.IsMatch(dtaPath))
@@ -180,7 +205,7 @@ namespace SuperFreqCLI.Options
 
                 try
                 {
-                    CreateDTAFile(tempDtbPath, tempDir, ark.Encrypted, dtaPath);
+                    CreateDTAFile(tempDtbPath, tempDir, ark.Encrypted, arkVersion, dtaPath);
                     Console.WriteLine($"Wrote \"{dtaPath}\"");
                     successDtas++;
                 }

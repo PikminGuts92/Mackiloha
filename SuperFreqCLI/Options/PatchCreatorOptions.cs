@@ -48,7 +48,7 @@ namespace SuperFreqCLI.Options
                 })
                 .Execute();
 
-            // Encrypt dtb
+            // Encrypt dtb (binary)
             Cli.Wrap("dtab")
                 .SetArguments(new[]
                 {
