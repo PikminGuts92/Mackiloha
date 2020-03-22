@@ -26,11 +26,12 @@ namespace Mackiloha.Ark
     {
         private ArkVersion _version;
         private bool _encrypted;
+        private int _cryptKey = 0x295E2D5E;
+
         private string[] _arkPaths; // 0 = HDR
         private readonly List<OffsetArkEntry> _offsetEntries;
 
         private const int MAX_HDR_SIZE = 20 * 0x100000; // 20MB
-        private const int DEFAULT_KEY = 0x295E2D5E;
 
         private ArkFile() : base()
         {
@@ -72,6 +73,8 @@ namespace Mackiloha.Ark
                 {
                     // Decrypt stream and re-checks version
                     Crypt.DTBCrypt(ar.BaseStream, version, true);
+                    ark._cryptKey = version; // Set crypt key
+
                     version = ar.ReadInt32();
                     ark._encrypted = true;
 
@@ -293,12 +296,10 @@ namespace Mackiloha.Ark
 
         private void WriteHeader(Stream stream)
         {
-            uint key = 0xC64EED30; // TODO: Replace w/ default key
-
             AwesomeWriter aw = new AwesomeWriter(stream, false);
 
             // Writes key if encrypted
-            if (_encrypted) aw.Write((int)key);
+            if (_encrypted) aw.Write((int)_cryptKey);
             long hdrStart = aw.BaseStream.Position;
 
             // Gets lengths of ark files
@@ -380,7 +381,7 @@ namespace Mackiloha.Ark
 
                 // Encrypts HDR file
                 aw.BaseStream.Seek(hdrStart, SeekOrigin.Begin);
-                Crypt.DTBCrypt(aw.BaseStream, (int)key, true, xor);
+                Crypt.DTBCrypt(aw.BaseStream, (int)_cryptKey, true, xor);
             }
         }
 
