@@ -13,6 +13,7 @@ namespace Mackiloha.DTB
         {
             Items = new ParentItem(ParentType.Default);
             Embedded = false;
+            Encoding = DTBEncoding.Classic;
         }
 
         public static DTBFile FromFile(string path, DTBEncoding encoding)
@@ -39,11 +40,24 @@ namespace Mackiloha.DTB
 
         public void SaveToStream(AwesomeWriter aw)
         {
-            aw.Write((byte)1);
-            aw.Write((short)Items.Count);
+            var version = Embedded ? 0 : 1;
 
-            if (Embedded) aw.Write((int)0);
-            else aw.Write((int)1);
+            aw.Write((byte)1); // Always 1
+
+            if (Encoding == DTBEncoding.FME)
+                aw.Write((int)0); // Always 0
+
+            if (Encoding != DTBEncoding.RBVR)
+            {
+                aw.Write((short)Items.Count);
+                aw.Write((int)version);
+            }
+            else
+            {
+                aw.Write((int)version);
+                aw.Write((short)Items.Count);
+                aw.Write((short)1); // Always 1?
+            }
 
             int lineNumber = 1;
             foreach (DTBItem item in Items)
@@ -74,8 +88,30 @@ namespace Mackiloha.DTB
                 aw.Write((int)item.NumericValue);
 
                 ParentItem parent = item as ParentItem;
-                aw.Write((short)parent.Count);
-                aw.Write((int)lineNumber);
+                
+                switch (Encoding)
+                {
+                    default:
+                    case DTBEncoding.Classic:
+                        // 6 bytes (2 count, 4 id)
+                        aw.Write((short)parent.Count);
+                        aw.Write((int)lineNumber);
+                        break;
+                    case DTBEncoding.FME:
+                        // TODO: Verify unknown value is constant
+
+                        // 10 bytes (4 unk, 4 count, 2 id)
+                        aw.Write((int)1);
+                        aw.Write((int)parent.Count);
+                        aw.Write((short)lineNumber);
+                        break;
+                    case DTBEncoding.RBVR:
+                        // 8 bytes (4 unk, 2 count, 2 id)
+                        aw.Write((int)1);
+                        aw.Write((short)parent.Count);
+                        aw.Write((short)lineNumber);
+                        break;
+                }
 
                 lineNumber++;
                 foreach (DTBItem sub in parent)
@@ -96,6 +132,7 @@ namespace Mackiloha.DTB
             int version;
 
             DTBFile dtb = new DTBFile();
+            dtb.Encoding = encoding;
 
             if (encoding == DTBEncoding.FME)
                 ar.ReadInt32(); // Always 0
@@ -109,7 +146,7 @@ namespace Mackiloha.DTB
             {
                 version = ar.ReadInt32(); // Reads version. Should be either 0 or 1
                 itemCount = ar.ReadInt16();
-                ar.ReadInt16(); // Unknown
+                ar.ReadInt16(); // Unknown, always 1?
             }
             
             if (version == 0) dtb.Embedded = true;
@@ -191,6 +228,7 @@ namespace Mackiloha.DTB
         public bool Embedded { get; set; }
 
         public ParentItem Items { get; set; }
+        public DTBEncoding Encoding { get; set; }
 
         public override string ToString()
         {
