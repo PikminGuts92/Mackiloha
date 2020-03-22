@@ -15,8 +15,11 @@ namespace Mackiloha.Ark
         public ArkEntry(string fileName, string directory)
         {
             FileName = fileName;
-            Directory = directory;
+            Directory = GetDirectory(directory);
         }
+
+        private string GetDirectory(string dir)
+            => !string.IsNullOrEmpty(dir) ? dir : "."; // If entry is in root, use '.' path
 
         public string FileName { get; }
         public string Directory { get; }
