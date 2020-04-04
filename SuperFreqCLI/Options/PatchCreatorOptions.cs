@@ -8,6 +8,7 @@ using CliWrap;
 using CommandLine;
 using Mackiloha;
 using Mackiloha.Ark;
+using Mackiloha.DTB;
 using SuperFreqCLI.Models;
 
 namespace SuperFreqCLI.Options
@@ -30,7 +31,16 @@ namespace SuperFreqCLI.Options
         [Option('o', "outputPath", HelpText = "Path to directory for patch", Required = false)]
         public string OutputPath { get; set; }
 
-        private static string CreateTempDTBFile(string dtaPath, string tempDir, bool newEncryption)
+        private static void ConvertOldDtbToNew(string oldDtbPath, string newDtbPath, bool fme = false)
+        {
+            var encoding = fme ? DTBEncoding.FME : DTBEncoding.RBVR;
+
+            var dtb = DTBFile.FromFile(oldDtbPath, DTBEncoding.Classic);
+            dtb.Encoding = encoding;
+            dtb.SaveToFile(newDtbPath);
+        }
+
+        private static string CreateTempDTBFile(string dtaPath, string tempDir, bool newEncryption, int arkVersion)
         {
             if (!Directory.Exists(tempDir))
                 Directory.CreateDirectory(tempDir);
@@ -48,23 +58,48 @@ namespace SuperFreqCLI.Options
                 })
                 .Execute();
 
-            // Encrypt dtb (binary)
-            Cli.Wrap("dtab")
-                .SetArguments(new[]
-                {
-                    newEncryption ? "-e" : "-E",
-                    dtbPath,
-                    encDtbPath
-                })
-                .Execute();
+            if (arkVersion < 7)
+            {
+                // Encrypt dtb (binary)
+                Cli.Wrap("dtab")
+                    .SetArguments(new[]
+                    {
+                        newEncryption ? "-e" : "-E",
+                        dtbPath,
+                        encDtbPath
+                    })
+                    .Execute();
+            }
+            else
+            {
+                // Convert
+                ConvertOldDtbToNew(dtbPath, encDtbPath, arkVersion < 9);
+            }
 
             return encDtbPath;
+        }
+
+        private static string GuessPlatform(string arkPath)
+        {
+            // TODO: Get platform as arg?
+            var platformRegex = new Regex("(?i)_([a-z0-9]+)([.]hdr)$");
+            var match = platformRegex.Match(arkPath);
+
+            if (!match.Success)
+                return null;
+
+            return match
+                .Groups[1]
+                .Value
+                .ToLower();
         }
 
         public static void Parse(PatchCreatorOptions op)
         {
             var ark = ArkFile.FromFile(op.InputPath);
             var inplaceEdit = string.IsNullOrWhiteSpace(op.OutputPath);
+
+            var platformExt = GuessPlatform(op.InputPath);
 
             if (!inplaceEdit)
             {
@@ -78,7 +113,11 @@ namespace SuperFreqCLI.Options
                 {
                     // Add additional ark park
                     var patchPartName = $"{Path.GetFileNameWithoutExtension(op.InputPath)}_{ark.PartCount()}.ark";
-                    ark.AddAdditionalPart(Path.Combine(op.OutputPath, "gen", patchPartName));
+                    var fullPartPath = ((int)ark.Version < 9)
+                        ? Path.Combine(op.OutputPath, "gen", patchPartName)
+                        : Path.Combine(op.OutputPath, patchPartName);
+
+                    ark.AddAdditionalPart(fullPartPath);
                 }
             }
 
@@ -95,6 +134,7 @@ namespace SuperFreqCLI.Options
             var dtaRegex = new Regex("(?i).dta$");
             var genPathedFile = new Regex(@"(?i)gen[\/][^\/]+$");
             var dotRegex = new Regex(@"\([.]+\)/");
+            var forgeScriptRegex = new Regex("(?i).((dta)|(fusion)|(moggsong)|(script))$");
 
             // Create temp path
             var tempDir = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
@@ -108,7 +148,7 @@ namespace SuperFreqCLI.Options
 
                 string inputFilePath = file;
 
-                if (dtaRegex.IsMatch(internalPath))
+                if ((int)ark.Version < 7 && dtaRegex.IsMatch(internalPath))
                 {
                     // Updates path
                     internalPath = $"{internalPath.Substring(0, internalPath.Length - 1)}b";
@@ -117,7 +157,15 @@ namespace SuperFreqCLI.Options
                         internalPath = internalPath.Insert(internalPath.LastIndexOf('/'), "/gen");
 
                     // Creates temp dtb file
-                    inputFilePath = CreateTempDTBFile(file, tempDir, ark.Encrypted);
+                    inputFilePath = CreateTempDTBFile(file, tempDir, ark.Encrypted, (int)ark.Version);
+                }
+                else if ((int)ark.Version >= 7 && forgeScriptRegex.IsMatch(internalPath))
+                {
+                    // Updates path
+                    internalPath = $"{internalPath}_dta_{platformExt}";
+
+                    // Creates temp dtb file
+                    inputFilePath = CreateTempDTBFile(file, tempDir, ark.Encrypted, (int)ark.Version);
                 }
 
                 if (dotRegex.IsMatch(internalPath))
@@ -153,7 +201,9 @@ namespace SuperFreqCLI.Options
             if (!inplaceEdit)
             {
                 // Writes header
-                var hdrPath = Path.Combine(op.OutputPath, "gen", Path.GetFileName(op.InputPath));
+                var hdrPath = ((int)ark.Version < 9)
+                    ? Path.Combine(op.OutputPath, "gen", Path.GetFileName(op.InputPath))
+                    : Path.Combine(op.OutputPath, Path.GetFileName(op.InputPath));
                 ark.WriteHeader(hdrPath);
             }
             else
