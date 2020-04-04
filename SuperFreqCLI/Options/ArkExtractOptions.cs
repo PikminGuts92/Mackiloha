@@ -34,13 +34,13 @@ namespace SuperFreqCLI.Options
         private static void WriteOutput(string text)
             => Console.WriteLine(text);
 
-        private static void ConvertNewDtbToOld(string oldDtbPath, string newDtbPath, bool fme = false)
+        private static void ConvertNewDtbToOld(string newDtbPath, string oldDtbPath, bool fme = false)
         {
             var encoding = fme ? DTBEncoding.FME : DTBEncoding.RBVR;
 
-            var dtb = DTBFile.FromFile(oldDtbPath, encoding);
+            var dtb = DTBFile.FromFile(newDtbPath, encoding);
             dtb.Encoding = DTBEncoding.Classic;
-            dtb.SaveToFile(newDtbPath);
+            dtb.SaveToFile(oldDtbPath);
         }
 
         private static string CreateDTAFile(string dtbPath, string tempDir, bool newEncryption, int arkVersion, string dtaPath = null)
