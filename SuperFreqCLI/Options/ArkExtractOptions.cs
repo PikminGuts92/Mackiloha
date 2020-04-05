@@ -116,7 +116,7 @@ namespace SuperFreqCLI.Options
             return path;
         }
 
-        private static string ExtractEntry(ArkFile ark, ArkEntry entry, string filePath)
+        private static string ExtractEntry(Archive ark, ArkEntry entry, string filePath)
         {
             if (!Directory.Exists(Path.GetDirectoryName(filePath)))
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
@@ -142,8 +142,28 @@ namespace SuperFreqCLI.Options
 
             var genPathedFile = new Regex(@"(?i)(([^\/\\]+[\/\\])*)(gen[\/\\])([^\/\\]+)$");
 
-            var ark = ArkFile.FromFile(op.InputPath);
-            var arkVersion = (int)ark.Version;
+            Archive ark;
+            int arkVersion;
+            bool arkEncrypted;
+
+            if (Directory.Exists(op.InputPath))
+            {
+                // Open as directory
+                ark = ArkFileSystem.FromDirectory(op.InputPath);
+
+                // TODO: Get from args probably
+                arkVersion = 10;
+                arkEncrypted = true;
+            }
+            else
+            {
+                // Open as ark
+                var arkFile = ArkFile.FromFile(op.InputPath);
+                arkVersion = (int)arkFile.Version;
+                arkEncrypted = arkFile.Encrypted;
+
+                ark = arkFile;
+            }
 
             var scriptsToConvert = ark.Entries
                 .Where(x => op.ConvertScripts
@@ -205,7 +225,7 @@ namespace SuperFreqCLI.Options
 
                 try
                 {
-                    CreateDTAFile(tempDtbPath, tempDir, ark.Encrypted, arkVersion, dtaPath);
+                    CreateDTAFile(tempDtbPath, tempDir, arkEncrypted, arkVersion, dtaPath);
                     Console.WriteLine($"Wrote \"{dtaPath}\"");
                     successDtas++;
                 }
