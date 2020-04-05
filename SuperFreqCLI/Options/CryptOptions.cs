@@ -17,7 +17,7 @@ namespace SuperFreqCLI.Options
         [Value(1, Required = true, MetaName = "outputPath", HelpText = "Path to output file")]
         public string OutputPath { get; set; }
 
-        [Option('d', HelpText = "Old style decryption")]
+        [Option('d', HelpText = "New style decryption")]
         public bool DecryptNew { get; set; }
 
         [Option('e', HelpText = "New style encryption")]
