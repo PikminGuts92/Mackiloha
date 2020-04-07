@@ -303,9 +303,8 @@ namespace Mackiloha.Ark
             long hdrStart = aw.BaseStream.Position;
 
             // Gets lengths of ark files
-            var arkSizes = _arkPaths
-                .Skip(1)
-                .Select(x => new FileInfo(x).Length)
+            var arkSizes = GetPartSizes()
+                .Select(x => x.size)
                 .ToArray();
 
             aw.Write((int)Version);
@@ -377,7 +376,7 @@ namespace Mackiloha.Ark
 
             if (_encrypted)
             {
-                byte xor = (byte)((Version == ArkVersion.V9) ? 0xFF : 0x00);
+                byte xor = (byte)((Version == ArkVersion.V9) || (Version == ArkVersion.V10) ? 0xFF : 0x00);
 
                 // Encrypts HDR file
                 aw.BaseStream.Seek(hdrStart, SeekOrigin.Begin);
@@ -385,11 +384,11 @@ namespace Mackiloha.Ark
             }
         }
 
-        private void WriteNewFileEntries(AwesomeWriter aw)
-        {
-            string GetAmpPath(OffsetArkEntry entry)
+        private static string GetAmpPath(OffsetArkEntry entry)
                 => Regex.Replace(entry.FullPath, "^./", "");
 
+        private void WriteNewFileEntries(AwesomeWriter aw)
+        {
             var entryCount = _offsetEntries.Count;
 
             var entriesHashed = _offsetEntries
@@ -448,8 +447,13 @@ namespace Mackiloha.Ark
 
         private static void WriteNewEntry(AwesomeWriter aw, OffsetArkEntry entry, int prevHash, bool extraFlag = false)
         {
+            // TODO: Figure out if this hack is actually needed
+            var fullPath = (extraFlag)
+                ? entry.FullPath
+                : GetAmpPath(entry);
+
             aw.Write((ulong)entry.Offset);
-            aw.Write((string)entry.FullPath);
+            aw.Write((string)fullPath);
             aw.Write((int)prevHash); // Index to previous entry w/ same hash
             aw.Write((uint)entry.Size);
 
@@ -699,6 +703,43 @@ namespace Mackiloha.Ark
                 WriteHeader(_arkPaths[0]);
 
             // TODO: Add an output log
+        }
+
+        protected (long size, bool encrypted)[] GetPartSizes()
+        {
+            if ((int)Version < 10)
+            {
+                return _arkPaths
+                    .Skip(1)
+                    .Select(x => (new FileInfo(x).Length, false))
+                    .ToArray();
+            }
+
+            return _arkPaths
+                .Skip(1)
+                .Select(GetPartSizeAndEncryption)
+                .ToArray();
+        }
+
+        protected (long size, bool encrypted) GetPartSizeAndEncryption(string partPath)
+        {
+            const string append = "mcnxyxcmvmcxyxcmskdldkjshagsdhfj";
+            using var file = File.OpenRead(partPath);
+
+            if (file.Length < (append.Length + 4))
+                return (file.Length, false);
+
+            using var ar = new AwesomeReader(file);
+            ar.BaseStream.Seek(-append.Length, SeekOrigin.End);
+            var endString = ar.ReadStringWithLength(append.Length);
+
+            if (endString != append)
+                return (file.Length, false);
+
+            ar.BaseStream.Seek(-(append.Length + 4), SeekOrigin.End);
+            int encDataLength = ar.ReadInt32();
+
+            return (file.Length - encDataLength, true);
         }
 
         protected override byte[] GetArkEntryBytes(ArkEntry entry)

@@ -171,6 +171,16 @@ namespace Mackiloha
         }
 
         /// <summary>
+        /// Reads string with given length
+        /// </summary>
+        /// <returns></returns>
+        public string ReadStringWithLength(int length)
+        {
+            byte[] data = this.ReadBytes(length);
+            return Encoding.UTF8.GetString(data);
+        }
+
+        /// <summary>
         /// Finds next instance of given bytes
         /// </summary>
         /// <param name="needle"></param>
