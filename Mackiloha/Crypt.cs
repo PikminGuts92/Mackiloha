@@ -10,8 +10,6 @@ namespace Mackiloha
 {
     public class Crypt
     {
-        private static int DefaultKey = 0x295E2D5E;
-
         public static void DecryptFile(string input, string output, bool newStyle, byte xor = 0x00)
         {
             int key;
@@ -36,13 +34,12 @@ namespace Mackiloha
             File.WriteAllBytes(output, ms.ToArray());
         }
 
-        public static void EncryptFile(string input, string output, bool newStyle, byte xor = 0x00)
+        public static void EncryptFile(string input, string output, bool newStyle, int key, byte xor = 0x00)
         {
-            int key = DefaultKey;
             using var ms = new MemoryStream();
 
             // Writes key to stream
-            ms.Write(BitConverter.GetBytes(DefaultKey), 0, 4);
+            ms.Write(BitConverter.GetBytes(key), 0, 4);
 
             // Copies input bytes to stream
             using (var fs = File.OpenRead(input))

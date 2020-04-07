@@ -29,9 +29,8 @@ namespace SuperFreqCLI.Options
         [Option('E', HelpText = "Old style encryption")]
         public bool EncryptOld { get; set; }
 
-        // Ehh. I don't care about the key for now
-        // [Option('k', "key", Default = 0x295E2D5E, HelpText = "Key to use (for encryption)")]
-        // public int Key { get; set; }
+        [Option('k', "key", Default = 0x295E2D5E, HelpText = "Key to use (for encryption)")]
+        public int Key { get; set; }
 
         [Option('x', "xor", HelpText = "Value to xor with crypt (advanced use only)")]
         public byte Xor { get; set; }
@@ -64,7 +63,7 @@ namespace SuperFreqCLI.Options
             
             if (encrypt)
             {
-                Crypt.EncryptFile(op.InputPath, op.OutputPath, newStyle, op.Xor);
+                Crypt.EncryptFile(op.InputPath, op.OutputPath, newStyle, op.Key, op.Xor);
             }
             else
             {
