@@ -58,6 +58,18 @@ namespace SuperFreqCLI.Options
                 return;
             }
 
+            // Checks if inputs are files
+            if (Directory.Exists(op.InputPath))
+            {
+                Console.WriteLine($"Input of \"{op.InputPath}\" is a directory, not file");
+                return;
+            }
+            else if (!File.Exists(op.InputPath))
+            {
+                Console.WriteLine($"Input of \"{op.InputPath}\" does not exist");
+                return;
+            }
+
             var newStyle = op.DecryptNew || op.EncryptNew;
             var encrypt = op.EncryptNew || op.EncryptOld;
             
