@@ -4,7 +4,7 @@ A suite of modding software for hacking milo engine based games. This is still v
 The latest build can be found on [AppVeyor](https://ci.appveyor.com/project/PikminGuts92/mackiloha/branch/master/artifacts).
 
 # System Requirements
-You will need at least [.NET Core 3.0](https://dotnet.microsoft.com/download/dotnet-core/3.0) runtime installed and be using an x64 operating system (come on, it's 2019).
+You will need at least [.NET Core 3.1](https://dotnet.microsoft.com/download/dotnet-core/3.1) runtime installed and be using an x64 operating system (come on, it's 2019).
 
 # Overview
 ## SuperFreq (name not final)
