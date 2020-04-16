@@ -8,6 +8,7 @@ using CliWrap;
 using CommandLine;
 using Mackiloha;
 using Mackiloha.Ark;
+using Mackiloha.CSV;
 using Mackiloha.DTB;
 using SuperFreqCLI.Exceptions;
 
@@ -136,11 +137,13 @@ namespace SuperFreqCLI.Options
         {
             var scriptRegex = new Regex("(?i).((dtb)|(dta)|(([A-Z]+)(_dta_)([A-Z0-9]+)))$");
             var scriptForgeRegex = new Regex("(?i)(_dta_)([A-Z0-9]+)$");
+            var csvRegex = new Regex("(?i).csv_([A-Z0-9]+)$");
 
             var dtaRegex = new Regex("(?i).dta$");
             var miloRegex = new Regex("(?i).milo(_[A-Z0-9]+)?$");
 
             var genPathedFile = new Regex(@"(?i)(([^\/\\]+[\/\\])*)(gen[\/\\])([^\/\\]+)$");
+            var platformExtRegex = new Regex(@"(?i)_([A-Z0-9]+)$");
 
             Archive ark;
             int arkVersion;
@@ -170,6 +173,11 @@ namespace SuperFreqCLI.Options
                     && scriptRegex.IsMatch(x.FullPath))
                 .ToList();
 
+            var csvsToConvert = ark.Entries
+                .Where(x => op.ConvertScripts
+                    && csvRegex.IsMatch(x.FullPath))
+                .ToList();
+
             var milosToExtract = ark.Entries
                 .Where(x => op.ExtractMilos
                     && miloRegex.IsMatch(x.FullPath))
@@ -195,6 +203,19 @@ namespace SuperFreqCLI.Options
             foreach (var miloEntry in milosToExtract)
             {
                 // TODO: Implement milo archive extraction
+            }
+
+            foreach (var csvEntry in csvsToConvert)
+            {
+                var csvStream = ark.GetArkEntryFileStream(csvEntry);
+                var csv = CSVFile.FromForgeCSVStream(csvStream);
+
+                // Write to file
+                var csvPath = CombinePath(op.OutputPath, csvEntry.FullPath);
+                csvPath = platformExtRegex.Replace(csvPath, "");
+
+                csv.SaveToFileAsCSV(csvPath);
+                Console.WriteLine($"Wrote \"{csvPath}\"");
             }
 
             var successDtas = 0;
