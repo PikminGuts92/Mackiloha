@@ -791,15 +791,14 @@ namespace Mackiloha.App.Extensions
                     .ToList();
 
             byte[] data;
-            /*int bpp = image switch
+            int bpp = image switch
             {
-                // TODO: Check what games support 16bpp
-                var img when uniqueColors.Count <= 16 => 4,
-                var img when uniqueColors.Count <= 256 => 8,
-                var img when img.ChannelCount <= 3 => 24,
+                var img when info.Platform == Platform.PS2 && uniqueColors.Count <= 16 => 4,
+                var img when info.Platform == Platform.PS2 && uniqueColors.Count <= 256 => 8,
+                var img when info.Platform == Platform.PS2 && img.ChannelCount <= 3 => 24,
                 _ => 32
-            };*/
-            int bpp = 32;
+            };
+            //int bpp = 32;
             
             if (bpp <= 8)
             {
@@ -856,11 +855,11 @@ namespace Mackiloha.App.Extensions
                     // Encodes two pixels into single byte
                     foreach (var p in image.GetPixels())
                     {
-                        var cIdx = paletteIndicies[p.ToColor()];
-                        var dIdx = paletteSize + ((i - paletteSize) >> 1);
-                        var dValue = data[dIdx];
+                        var cIdx = paletteIndicies[p.ToColor()]; // Color index
+                        var dIdx = paletteSize + ((i - paletteSize) >> 1); // Data index
+                        var dValue = data[dIdx]; // Data value
 
-                        if ((i & 1) == 0)
+                        if ((i & 1) == 1)
                         {
                             data[dIdx] = (byte)((dValue & 0x0F) | (cIdx << 4));
                         }
