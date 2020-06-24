@@ -182,6 +182,7 @@ namespace SuperFreqCLI.Options
                 };
 
                 ark.AddPendingEntry(pendingEntry);
+                Console.WriteLine($"Added {pendingEntry.FullPath}");
 
                 if (!entryInfo.TryGetValue(internalPath, out var hashInfo))
                     continue;
@@ -227,6 +228,8 @@ namespace SuperFreqCLI.Options
 
                 exeStream.Seek(hashInfo.Offset, SeekOrigin.Begin);
                 exeStream.Write(hashBytes, 0, hashBytes.Length);
+
+                Console.WriteLine($"Updated hash for {hashInfo.Path}");
             }
         }
     }
