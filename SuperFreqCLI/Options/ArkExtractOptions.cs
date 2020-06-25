@@ -10,6 +10,7 @@ using Mackiloha;
 using Mackiloha.Ark;
 using Mackiloha.CSV;
 using Mackiloha.DTB;
+using Mackiloha.Milo2;
 using SuperFreqCLI.Exceptions;
 
 namespace SuperFreqCLI.Options
@@ -26,8 +27,8 @@ namespace SuperFreqCLI.Options
         [Option('s', "convertScripts", HelpText = "Convert dtb scripts to dta")]
         public bool ConvertScripts { get; set; }
 
-        [Option('m', "extractMilos", HelpText = "Extract milo archives")]
-        public bool ExtractMilos { get; set; }
+        [Option('m', "inflateMilos", HelpText = "Inflate milo archives (decompress)")]
+        public bool InflateMilos { get; set; }
 
         [Option('a', "extractAll", HelpText = "Extract everything")]
         public bool ExtractAll { get; set; }
@@ -178,15 +179,15 @@ namespace SuperFreqCLI.Options
                     && csvRegex.IsMatch(x.FullPath))
                 .ToList();
 
-            var milosToExtract = ark.Entries
-                .Where(x => op.ExtractMilos
+            var milosToInflate = ark.Entries
+                .Where(x => op.InflateMilos
                     && miloRegex.IsMatch(x.FullPath))
                 .ToList();
 
             var entriesToExtract = ark.Entries
                 .Where(x => op.ExtractAll)
                 .Except(scriptsToConvert)
-                .Except(milosToExtract)
+                .Except(milosToInflate)
                 .ToList();
 
             foreach (var arkEntry in entriesToExtract)
@@ -200,9 +201,16 @@ namespace SuperFreqCLI.Options
             if (Directory.Exists(tempDir))
                 Directory.Delete(tempDir, true);
 
-            foreach (var miloEntry in milosToExtract)
+            foreach (var miloEntry in milosToInflate)
             {
-                // TODO: Implement milo archive extraction
+                var filePath = ExtractEntry(ark, miloEntry, CombinePath(op.OutputPath, miloEntry.FullPath));
+
+                // Inflate milo
+                var milo = MiloFile.ReadFromFile(filePath);
+                milo.Structure = BlockStructure.MILO_A;
+                milo.WriteToFile(filePath);
+
+                Console.WriteLine($"Wrote \"{filePath}\"");
             }
 
             foreach (var csvEntry in csvsToConvert)

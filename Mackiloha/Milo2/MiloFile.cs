@@ -203,6 +203,7 @@ namespace Mackiloha.Milo2
         }
 
         //public MiloObjectDir Directory { get; set; }
+        public BlockStructure Structure { get => _structure; set => _structure = value; }
         public byte[] Data { get; set; }
 
         public bool BigEndian => GuessVersion().BigEndian;
