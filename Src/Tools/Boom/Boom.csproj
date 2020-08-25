@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Mackiloha.App\Mackiloha.App.csproj" />
-    <ProjectReference Include="..\Mackiloha\Mackiloha.csproj" />
+    <ProjectReference Include="..\..\Core\Mackiloha.App\Mackiloha.App.csproj" />
+    <ProjectReference Include="..\..\Core\Mackiloha\Mackiloha.csproj" />
   </ItemGroup>
 
 </Project>
