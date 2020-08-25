@@ -13,6 +13,7 @@ namespace SuperFreqCLI
         {
             // TODO: Make pretty
             Parser.Default.ParseArguments<
+                ArkCompareOptions,
                 ArkExtractOptions,
                 CryptOptions,
                 Dir2MiloOptions,
@@ -23,6 +24,7 @@ namespace SuperFreqCLI
                 PatchCreatorOptions,
                 PngToTextureOptions,
                 TextureToPngOptions>(args)
+                .WithParsed<ArkCompareOptions>(ArkCompareOptions.Parse)
                 .WithParsed<ArkExtractOptions>(ArkExtractOptions.Parse)
                 .WithParsed<CryptOptions>(CryptOptions.Parse)
                 .WithParsed<Dir2MiloOptions>(Dir2MiloOptions.Parse)
