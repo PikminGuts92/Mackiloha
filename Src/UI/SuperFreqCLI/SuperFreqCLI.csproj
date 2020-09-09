@@ -6,15 +6,9 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
     <AssemblyName>superfreq</AssemblyName>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
-  <Choose>
-    <When Condition=" '$(TargetFramework)' == 'netcoreapp3.1'">
-      <PropertyGroup>
-        <PublishSingleFile>true</PublishSingleFile>
-        <PublishTrimmed>false</PublishTrimmed>
-      </PropertyGroup>
-    </When>
-  </Choose>
   <ItemGroup>
     <PackageReference Include="CliWrap" Version="2.5.0" />
     <PackageReference Include="CommandLineParser" Version="2.6.0" />
