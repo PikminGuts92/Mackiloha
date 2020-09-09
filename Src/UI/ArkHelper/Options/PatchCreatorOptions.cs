@@ -13,7 +13,7 @@ using ArkHelper.Models;
 
 namespace ArkHelper.Options
 {
-    [Verb("patchcreator", HelpText = "Creates a patch for arks", Hidden = true)]
+    [Verb("patchcreator", HelpText = "Creates a patch for arks")]
     public class PatchCreatorOptions
     {
         [Value(0, Required = true, MetaName = "arkPath", HelpText = "Path to ark (hdr file)")]

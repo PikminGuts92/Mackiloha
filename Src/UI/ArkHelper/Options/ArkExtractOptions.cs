@@ -15,7 +15,7 @@ using ArkHelper.Exceptions;
 
 namespace ArkHelper.Options
 {
-    [Verb("arkextract", HelpText = "Extracts files from milo arks", Hidden = true)]
+    [Verb("extract", HelpText = "Extracts files from milo arks")]
     public class ArkExtractOptions
     {
         [Value(0, Required = true, MetaName = "arkPath", HelpText = "Path to ark (hdr file)")]

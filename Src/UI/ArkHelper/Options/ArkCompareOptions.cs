@@ -8,7 +8,7 @@ using Mackiloha.Ark;
 
 namespace ArkHelper.Options
 {
-    [Verb("arkcompare", HelpText = "Compares differences between two arks", Hidden = true)]
+    [Verb("compare", HelpText = "Compares differences between two arks", Hidden = true)]
     public class ArkCompareOptions
     {
         [Value(0, Required = true, MetaName = "arkPath1", HelpText = "Path to ark 1 (hdr file)")]
