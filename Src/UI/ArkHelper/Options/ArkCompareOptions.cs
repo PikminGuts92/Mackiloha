@@ -53,6 +53,8 @@ namespace ArkHelper.Options
             var ark2UniqueEntries = ark2Entries
                 .Except(sharedEntries)
                 .ToList();
+
+            // TODO: Create formatted console output
         }
     }
 }
