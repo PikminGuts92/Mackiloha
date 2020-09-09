@@ -7,9 +7,14 @@ ZIP_PATH="$OUTPUT_PATH/Mackiloha_v$BUILD_VERSION-win-x64.zip"
 echo ">> Clearing old files"
 rm $OUTPUT_PATH -rf
 
+# Get projects to build
+PROJECTS=$(find Src/UI/**/*.csproj)
+
 # Build + publish projects
 echo ">> Building solution"
-dotnet publish Src/UI/**/*.csproj -c $BUILD_MODE -o $OUTPUT_PATH -p:Version=$BUILD_VERSION --self-contained=false -r=win-x64 # Windows
+for proj in $PROJECTS; do
+    dotnet publish $proj -c $BUILD_MODE -o $OUTPUT_PATH -p:Version=$BUILD_VERSION --self-contained=false -r=win-x64 # Windows
+done
 
 # Delete debug + config files
 echo ">> Removing debug files"
