@@ -5,7 +5,7 @@ using CommandLine;
 using Mackiloha.Ark;
 using Mackiloha.IO;
 
-namespace SuperFreqCLI.Options
+namespace ArkHelper.Options
 {
     [Verb("fixhdr", HelpText = "Re-writes HDR (ark header) to hopefully fix sorting of entries", Hidden = true)]
     public class FixHdrOptions

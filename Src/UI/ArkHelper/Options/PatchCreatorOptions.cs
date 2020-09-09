@@ -9,9 +9,9 @@ using CommandLine;
 using Mackiloha;
 using Mackiloha.Ark;
 using Mackiloha.DTB;
-using SuperFreqCLI.Models;
+using ArkHelper.Models;
 
-namespace SuperFreqCLI.Options
+namespace ArkHelper.Options
 {
     [Verb("patchcreator", HelpText = "Creates a patch for arks", Hidden = true)]
     public class PatchCreatorOptions

@@ -1,11 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
-    <AssemblyName>superfreq</AssemblyName>
+    <AssemblyName>arkhelper</AssemblyName>
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
@@ -18,5 +18,4 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Mackiloha.App\Mackiloha.App.csproj" />
   </ItemGroup>
-
 </Project>

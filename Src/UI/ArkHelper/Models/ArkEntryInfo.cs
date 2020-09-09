@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace SuperFreqCLI.Models
+namespace ArkHelper.Models
 {
     internal class ArkEntryInfo
     {

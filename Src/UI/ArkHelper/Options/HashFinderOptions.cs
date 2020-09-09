@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 using CommandLine;
 using Mackiloha;
 using Mackiloha.Ark;
-using SuperFreqCLI.Models;
+using ArkHelper.Models;
 
-namespace SuperFreqCLI.Options
+namespace ArkHelper.Options
 {
     [Verb("hashfinder", HelpText = "Compute hashes for ark entries and find offsets in decrypted executable", Hidden = true)]
     public class HashFinderOptions

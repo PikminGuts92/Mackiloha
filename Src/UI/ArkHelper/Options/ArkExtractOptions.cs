@@ -11,9 +11,9 @@ using Mackiloha.Ark;
 using Mackiloha.CSV;
 using Mackiloha.DTB;
 using Mackiloha.Milo2;
-using SuperFreqCLI.Exceptions;
+using ArkHelper.Exceptions;
 
-namespace SuperFreqCLI.Options
+namespace ArkHelper.Options
 {
     [Verb("arkextract", HelpText = "Extracts files from milo arks", Hidden = true)]
     public class ArkExtractOptions

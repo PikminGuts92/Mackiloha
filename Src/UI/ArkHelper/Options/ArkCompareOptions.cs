@@ -6,7 +6,7 @@ using CommandLine;
 using Mackiloha;
 using Mackiloha.Ark;
 
-namespace SuperFreqCLI.Options
+namespace ArkHelper.Options
 {
     [Verb("arkcompare", HelpText = "Compares differences between two arks", Hidden = true)]
     public class ArkCompareOptions
