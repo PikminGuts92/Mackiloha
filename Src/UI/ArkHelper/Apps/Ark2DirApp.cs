@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
+﻿using ArkHelper.Exceptions;
+using ArkHelper.Options;
 using CliWrap;
 using CommandLine;
 using Mackiloha;
@@ -11,32 +7,21 @@ using Mackiloha.Ark;
 using Mackiloha.CSV;
 using Mackiloha.DTB;
 using Mackiloha.Milo2;
-using ArkHelper.Exceptions;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 
-namespace ArkHelper.Options
+namespace ArkHelper.Apps
 {
-    [Verb("extract", HelpText = "Extracts files from milo arks")]
-    public class ArkExtractOptions
+    public class Ark2DirApp
     {
-        [Value(0, Required = true, MetaName = "arkPath", HelpText = "Path to ark (hdr file)")]
-        public string InputPath { get; set; }
-
-        [Value(1, Required = true, MetaName = "dirPath", HelpText = "Path to output directory")]
-        public string OutputPath { get; set; }
-
-        [Option('s', "convertScripts", HelpText = "Convert dtb scripts to dta")]
-        public bool ConvertScripts { get; set; }
-
-        [Option('m', "inflateMilos", HelpText = "Inflate milo archives (decompress)")]
-        public bool InflateMilos { get; set; }
-
-        [Option('a', "extractAll", HelpText = "Extract everything")]
-        public bool ExtractAll { get; set; }
-
-        private static void WriteOutput(string text)
+        private void WriteOutput(string text)
             => Console.WriteLine(text);
 
-        private static void ConvertNewDtbToOld(string newDtbPath, string oldDtbPath, bool fme = false)
+        private void ConvertNewDtbToOld(string newDtbPath, string oldDtbPath, bool fme = false)
         {
             var encoding = fme ? DTBEncoding.FME : DTBEncoding.RBVR;
 
@@ -45,7 +30,7 @@ namespace ArkHelper.Options
             dtb.SaveToFile(oldDtbPath);
         }
 
-        private static string CreateDTAFile(string dtbPath, string tempDir, bool newEncryption, int arkVersion, string dtaPath = null)
+        private string CreateDTAFile(string dtbPath, string tempDir, bool newEncryption, int arkVersion, string dtaPath = null)
         {
             if (!Directory.Exists(tempDir))
                 Directory.CreateDirectory(tempDir);
@@ -95,7 +80,7 @@ namespace ArkHelper.Options
             return dtaPath;
         }
 
-        private static string CombinePath(string basePath, string path)
+        private string CombinePath(string basePath, string path)
         {
             // Consistent slash
             basePath = (basePath ?? "").Replace("/", "\\");
@@ -105,7 +90,7 @@ namespace ArkHelper.Options
             return Path.Combine(basePath, path);
         }
 
-        private static string ReplaceDotsInPath(string path)
+        private string ReplaceDotsInPath(string path)
         {
             var dotRegex = new Regex(@"[.]+[\/\\]");
 
@@ -118,7 +103,7 @@ namespace ArkHelper.Options
             return path;
         }
 
-        private static string ExtractEntry(Archive ark, ArkEntry entry, string filePath)
+        private string ExtractEntry(Archive ark, ArkEntry entry, string filePath)
         {
             if (!Directory.Exists(Path.GetDirectoryName(filePath)))
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
@@ -134,7 +119,7 @@ namespace ArkHelper.Options
             return filePath;
         }
 
-        public static void Parse(ArkExtractOptions op)
+        public void Parse(Ark2DirOptions op)
         {
             var scriptRegex = new Regex("(?i).((dtb)|(dta)|(([A-Z]+)(_dta_)([A-Z0-9]+)))$");
             var scriptForgeRegex = new Regex("(?i)(_dta_)([A-Z0-9]+)$");
@@ -240,7 +225,7 @@ namespace ArkHelper.Options
                 // Creates output path
                 var dtaPath = CombinePath(op.OutputPath, scriptEntry.FullPath);
                 dtaPath = !scriptForgeRegex.IsMatch(dtaPath)
-                    ?  $"{dtaPath.Substring(0, dtaPath.Length - 1)}a" // Simply change b -> a
+                    ? $"{dtaPath.Substring(0, dtaPath.Length - 1)}a" // Simply change b -> a
                     : scriptForgeRegex.Replace(dtaPath, "");
 
                 // Removes gen sub directory

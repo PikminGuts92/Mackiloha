@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using CommandLine;
-using Mackiloha.Ark;
-using Mackiloha.IO;
 
 namespace ArkHelper.Options
 {
@@ -18,15 +16,5 @@ namespace ArkHelper.Options
 
         [Option('e', "forceEncrypt", HelpText = "Force encryption of HDR file")]
         public bool ForceEncryption { get; set; }
-
-        public static void Parse(FixHdrOptions op)
-        {
-            if (op.OutputPath == null)
-                op.OutputPath = op.InputPath;
-
-            var ark = ArkFile.FromFile(op.InputPath);
-            ark.Encrypted = ark.Encrypted || op.ForceEncryption; // Force encryption
-            ark.WriteHeader(op.OutputPath);
-        }
     }
 }
