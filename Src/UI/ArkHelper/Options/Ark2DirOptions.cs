@@ -2,7 +2,7 @@
 
 namespace ArkHelper.Options
 {
-    [Verb("ark2dir", HelpText = "Extracts content of milo arks to directory")]
+    [Verb("ark2dir", HelpText = "Extracts content of milo ark to directory")]
     public class Ark2DirOptions
     {
         [Value(0, Required = true, MetaName = "arkPath", HelpText = "Path to ark (hdr file)")]
