@@ -1,4 +1,5 @@
 ﻿using ArkHelper.Apps;
+using ArkHelper.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,9 @@ namespace ArkHelper
     {
         public static void ConfigureServices(IServiceCollection services)
         {
+            // Helpers
+            services.AddSingleton<ScriptHelper>();
+
             // Apps
             services.AddSingleton<Ark2DirApp>();
             services.AddSingleton<ArkCompareApp>();

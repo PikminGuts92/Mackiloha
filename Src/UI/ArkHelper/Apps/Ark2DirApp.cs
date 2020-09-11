@@ -1,11 +1,9 @@
 ﻿using ArkHelper.Exceptions;
+using ArkHelper.Helpers;
 using ArkHelper.Options;
-using CliWrap;
-using CommandLine;
 using Mackiloha;
 using Mackiloha.Ark;
 using Mackiloha.CSV;
-using Mackiloha.DTB;
 using Mackiloha.Milo2;
 using System;
 using System.Collections.Generic;
@@ -18,66 +16,11 @@ namespace ArkHelper.Apps
 {
     public class Ark2DirApp
     {
-        private void WriteOutput(string text)
-            => Console.WriteLine(text);
+        protected readonly ScriptHelper ScriptHelper;
 
-        private void ConvertNewDtbToOld(string newDtbPath, string oldDtbPath, bool fme = false)
+        public Ark2DirApp(ScriptHelper scriptHelper)
         {
-            var encoding = fme ? DTBEncoding.FME : DTBEncoding.RBVR;
-
-            var dtb = DTBFile.FromFile(newDtbPath, encoding);
-            dtb.Encoding = DTBEncoding.Classic;
-            dtb.SaveToFile(oldDtbPath);
-        }
-
-        private string CreateDTAFile(string dtbPath, string tempDir, bool newEncryption, int arkVersion, string dtaPath = null)
-        {
-            if (!Directory.Exists(tempDir))
-                Directory.CreateDirectory(tempDir);
-
-            var decDtbPath = Path.Combine(tempDir, Path.GetRandomFileName());
-            dtaPath = dtaPath ?? Path.Combine(tempDir, Path.GetRandomFileName());
-
-            var dtaDir = Path.GetDirectoryName(dtaPath);
-            if (!Directory.Exists(dtaDir))
-                Directory.CreateDirectory(dtaDir);
-
-            if (arkVersion < 7)
-            {
-                // Decrypt dtb
-                Cli.Wrap("dtab")
-                    .SetArguments(new[]
-                    {
-                        newEncryption ? "-d" : "-D",
-                        dtbPath,
-                        decDtbPath
-                    })
-                    .Execute();
-            }
-            else
-            {
-                // New dtb style, convert to old format to use dtab
-                //  and assume not encrypted
-                ConvertNewDtbToOld(dtbPath, decDtbPath, arkVersion < 9);
-            }
-
-            // Convert to dta (plaintext)
-            var result = Cli.Wrap("dtab")
-                .SetArguments(new[]
-                {
-                    "-a",
-                    decDtbPath,
-                    dtaPath
-                })
-                .EnableExitCodeValidation(false)
-                .SetStandardOutputCallback(WriteOutput)
-                .SetStandardErrorCallback(WriteOutput)
-                .Execute();
-
-            if (result.ExitCode != 0)
-                throw new DTBParseException($"dtab.exe was unable to parse file from \'{decDtbPath}\'");
-
-            return dtaPath;
+            ScriptHelper = scriptHelper;
         }
 
         private string CombinePath(string basePath, string path)
@@ -239,7 +182,7 @@ namespace ArkHelper.Apps
 
                 try
                 {
-                    CreateDTAFile(tempDtbPath, tempDir, arkEncrypted, arkVersion, dtaPath);
+                    ScriptHelper.CreateDTAFile(tempDtbPath, tempDir, arkEncrypted, arkVersion, dtaPath);
                     Console.WriteLine($"Wrote \"{dtaPath}\"");
                     successDtas++;
                 }
