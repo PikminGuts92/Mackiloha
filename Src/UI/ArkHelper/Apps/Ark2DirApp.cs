@@ -16,9 +16,9 @@ namespace ArkHelper.Apps
 {
     public class Ark2DirApp
     {
-        protected readonly ScriptHelper ScriptHelper;
+        protected readonly IScriptHelper ScriptHelper;
 
-        public Ark2DirApp(ScriptHelper scriptHelper)
+        public Ark2DirApp(IScriptHelper scriptHelper)
         {
             ScriptHelper = scriptHelper;
         }
@@ -182,7 +182,7 @@ namespace ArkHelper.Apps
 
                 try
                 {
-                    ScriptHelper.CreateDTAFile(tempDtbPath, tempDir, arkEncrypted, arkVersion, dtaPath);
+                    ScriptHelper.ConvertDtbToDta(tempDtbPath, tempDir, arkEncrypted, arkVersion, dtaPath);
                     Console.WriteLine($"Wrote \"{dtaPath}\"");
                     successDtas++;
                 }

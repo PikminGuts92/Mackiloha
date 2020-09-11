@@ -12,7 +12,7 @@ namespace ArkHelper
         public static void ConfigureServices(IServiceCollection services)
         {
             // Helpers
-            services.AddSingleton<ScriptHelper>();
+            services.AddSingleton<IScriptHelper, ScriptHelperDtab>();
 
             // Apps
             services.AddSingleton<Ark2DirApp>();

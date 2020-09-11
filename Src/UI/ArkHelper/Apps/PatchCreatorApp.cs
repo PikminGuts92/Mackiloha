@@ -1,4 +1,5 @@
-﻿using ArkHelper.Models;
+﻿using ArkHelper.Helpers;
+using ArkHelper.Models;
 using ArkHelper.Options;
 using CliWrap;
 using Mackiloha;
@@ -15,52 +16,11 @@ namespace ArkHelper.Apps
 {
     public class PatchCreatorApp
     {
-        private void ConvertOldDtbToNew(string oldDtbPath, string newDtbPath, bool fme = false)
+        protected readonly IScriptHelper ScriptHelper;
+
+        public PatchCreatorApp(IScriptHelper scriptHelper)
         {
-            var encoding = fme ? DTBEncoding.FME : DTBEncoding.RBVR;
-
-            var dtb = DTBFile.FromFile(oldDtbPath, DTBEncoding.Classic);
-            dtb.Encoding = encoding;
-            dtb.SaveToFile(newDtbPath);
-        }
-
-        private string CreateTempDTBFile(string dtaPath, string tempDir, bool newEncryption, int arkVersion)
-        {
-            if (!Directory.Exists(tempDir))
-                Directory.CreateDirectory(tempDir);
-
-            var dtbPath = Path.Combine(tempDir, Path.GetRandomFileName());
-            var encDtbPath = Path.Combine(tempDir, Path.GetRandomFileName());
-
-            // Convert to dtb
-            Cli.Wrap("dtab")
-                .SetArguments(new[]
-                {
-                    "-b",
-                    dtaPath,
-                    dtbPath
-                })
-                .Execute();
-
-            if (arkVersion < 7)
-            {
-                // Encrypt dtb (binary)
-                Cli.Wrap("dtab")
-                    .SetArguments(new[]
-                    {
-                        newEncryption ? "-e" : "-E",
-                        dtbPath,
-                        encDtbPath
-                    })
-                    .Execute();
-            }
-            else
-            {
-                // Convert
-                ConvertOldDtbToNew(dtbPath, encDtbPath, arkVersion < 9);
-            }
-
-            return encDtbPath;
+            ScriptHelper = scriptHelper;
         }
 
         private string GuessPlatform(string arkPath)
@@ -141,7 +101,7 @@ namespace ArkHelper.Apps
                         internalPath = internalPath.Insert(internalPath.LastIndexOf('/'), "/gen");
 
                     // Creates temp dtb file
-                    inputFilePath = CreateTempDTBFile(file, tempDir, ark.Encrypted, (int)ark.Version);
+                    inputFilePath = ScriptHelper.ConvertDtaToDtb(file, tempDir, ark.Encrypted, (int)ark.Version);
                 }
                 else if ((int)ark.Version >= 7 && forgeScriptRegex.IsMatch(internalPath))
                 {
@@ -149,7 +109,7 @@ namespace ArkHelper.Apps
                     internalPath = $"{internalPath}_dta_{platformExt}";
 
                     // Creates temp dtb file
-                    inputFilePath = CreateTempDTBFile(file, tempDir, ark.Encrypted, (int)ark.Version);
+                    inputFilePath = ScriptHelper.ConvertDtaToDtb(file, tempDir, ark.Encrypted, (int)ark.Version);
                 }
 
                 if (dotRegex.IsMatch(internalPath))
