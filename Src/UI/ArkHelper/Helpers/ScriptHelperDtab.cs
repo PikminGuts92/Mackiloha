@@ -3,13 +3,44 @@ using CliWrap;
 using Mackiloha.DTB;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ArkHelper.Helpers
 {
     public class ScriptHelperDtab : IScriptHelper
     {
+        protected readonly string DtabPath;
+
+        public ScriptHelperDtab()
+        {
+            DtabPath = ResolveDtabPath();
+        }
+
+        protected virtual string ResolveDtabPath()
+        {
+            var dtabFileName = $"dtab{GetExeExtension()}";
+            var dtabPath = Path.Combine(GetExeDirectory(), dtabFileName);
+
+            // Check if dtab exists relative to exe
+            if (File.Exists(dtabPath))
+            {
+                Console.WriteLine($"Using {dtabFileName} relative to executable");
+                return dtabPath;
+            }
+
+            Console.WriteLine($"Using {dtabFileName} in Path environment variable");
+            return dtabFileName;
+        }
+
+        protected virtual string GetExeExtension()
+            => RuntimeInformation.OSDescription.Contains("Windows") ? ".exe" : "";
+
+        protected virtual string GetExeDirectory()
+            => Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+
         protected virtual void WriteOutput(string text)
             => Console.WriteLine(text);
 
@@ -37,7 +68,7 @@ namespace ArkHelper.Helpers
             if (arkVersion < 7)
             {
                 // Decrypt dtb
-                Cli.Wrap("dtab")
+                Cli.Wrap(DtabPath)
                     .SetArguments(new[]
                     {
                         newEncryption ? "-d" : "-D",
@@ -57,7 +88,7 @@ namespace ArkHelper.Helpers
             }
 
             // Convert to dta (plaintext)
-            var result = Cli.Wrap("dtab")
+            var result = Cli.Wrap(DtabPath)
                 .SetArguments(new[]
                 {
                     "-a",
@@ -93,7 +124,7 @@ namespace ArkHelper.Helpers
             var encDtbPath = Path.Combine(tempDir, Path.GetRandomFileName());
 
             // Convert to dtb
-            Cli.Wrap("dtab")
+            Cli.Wrap(DtabPath)
                 .SetArguments(new[]
                 {
                     "-b",
@@ -108,7 +139,7 @@ namespace ArkHelper.Helpers
             if (arkVersion < 7)
             {
                 // Encrypt dtb (binary)
-                Cli.Wrap("dtab")
+                Cli.Wrap(DtabPath)
                     .SetArguments(new[]
                     {
                         newEncryption ? "-e" : "-E",
