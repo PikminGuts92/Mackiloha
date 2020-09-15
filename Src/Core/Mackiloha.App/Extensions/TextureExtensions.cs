@@ -39,7 +39,9 @@ namespace Mackiloha.App.Extensions
                     else if (info.Platform == Platform.X360) // aRGB -> RGBa
                         ShiftChannelsLeft(image);
 
-                    // TODO: Update alpha AFTER shifting channels
+                    // Update alpha channel
+                    if (info.Platform == Platform.PS2 && bitmap.Bpp != 24)
+                        UpdateAlphaTo8Bit(image);
 
                     return image;
                 case 8: // DXT1 or Bitmap
@@ -140,6 +142,17 @@ namespace Mackiloha.App.Extensions
             }
         }
 
+        private static void UpdateAlphaTo8Bit(byte[] image)
+        {
+            // Updates alpha channels (7-bit -> 8-bit)
+            byte al;
+            for (int p = 0; p < image.Length; p += 4)
+            {
+                al = image[p + 3];
+                image[p] = ((al & 0x80) != 0) ? (byte)0xFF : (byte)(al << 1);
+            }
+        }
+
         private static byte[] DecodeBitmap(byte[] raw, int width, int height, int mips, int bpp, int colorSize = 32)
         {
             byte[] image = new byte[width * height * 4]; // 32 bpp
@@ -148,16 +161,6 @@ namespace Mackiloha.App.Extensions
             if (bpp == 32)
             {
                 Array.Copy(raw, image, image.Length);
-
-                // Updates alpha channels (7-bit -> 8-bit)
-                byte al;
-                for (int p = 0; p < image.Length; p += 4)
-                {
-                    // Set to max (0xFF) if 128 or multiply by 2
-                    al = image[p + 3];
-                    image[p + 3] = ((al & 0x80) != 0) ? (byte)0xFF : (byte)(al << 1);
-                }
-
                 return image;
             }
             else if (bpp == 24)
@@ -227,16 +230,8 @@ namespace Mackiloha.App.Extensions
             if (colorSize == 32)
             {
                 Array.Copy(raw, palette, palette.Length);
-
-                // Updates alpha channels (7-bit -> 8-bit)
-                byte a;
-                for (int p = 0; p < palette.Length; p += 4)
-                {
-                    // Set to max (0xFF) if 128 or multiply by 2
-                    a = palette[p + 3];
-                    palette[p + 3] = ((a & 0x80) != 0) ? (byte)0xFF : (byte)(a << 1);
-                }
-            } else if (colorSize == 16)
+            }
+            else if (colorSize == 16)
             {
                 int r = 0;
                 for (int i = 0; i < palette.Length; i += 16)
