@@ -39,6 +39,36 @@ namespace Mackiloha.Ark
             _offsetEntries = new List<OffsetArkEntry>();
         }
 
+        public static ArkFile Create(string hdrPath, ArkVersion version, int? key)
+        {
+            hdrPath = Path.GetFullPath(hdrPath);
+
+            var ark = new ArkFile();
+            ark._encrypted = key.HasValue;
+            ark._xor = (version == ArkVersion.V10); // RB4/RBVR?
+
+            if (key.HasValue)
+            {
+                ark._cryptKey = key.Value;
+            }
+
+            ark._version = version;
+
+            var directory = Path.GetDirectoryName(hdrPath);
+            var fileNameNoExt = Path.GetFileNameWithoutExtension(hdrPath);
+
+            var arkPaths = Enumerable.Range(0, 1)
+                .Select(x => Path.Combine(directory, $"{fileNameNoExt}_{x}.ark")); // TODO: Add additional parts dynamically
+
+            ark._arkPaths = new[]
+            {
+                hdrPath,
+                arkPaths.First()
+            };
+
+            return ark;
+        }
+
         public static ArkFile FromFile(string input)
         {
             if (input == null) throw new ArgumentNullException();
