@@ -17,6 +17,7 @@ namespace ArkHelper
             // Apps
             services.AddSingleton<Ark2DirApp>();
             services.AddSingleton<ArkCompareApp>();
+            services.AddSingleton<Dir2ArkApp>();
             services.AddSingleton<FixHdrApp>();
             services.AddSingleton<HashFinderApp>();
             services.AddSingleton<PatchCreatorApp>();
