@@ -45,7 +45,7 @@ namespace Mackiloha.Ark
 
             var ark = new ArkFile();
             ark._encrypted = key.HasValue;
-            ark._xor = (version == ArkVersion.V10); // RB4/RBVR?
+            ark._xor = (version >= ArkVersion.V10); // RB4/RBVR?
 
             if (key.HasValue)
             {
@@ -57,8 +57,20 @@ namespace Mackiloha.Ark
             var directory = Path.GetDirectoryName(hdrPath);
             var fileNameNoExt = Path.GetFileNameWithoutExtension(hdrPath);
 
+            // TODO: Add additional parts dynamically
             var arkPaths = Enumerable.Range(0, 1)
-                .Select(x => Path.Combine(directory, $"{fileNameNoExt}_{x}.ark")); // TODO: Add additional parts dynamically
+                .Select(x => Path.Combine(directory, $"{fileNameNoExt}_{x}.ark"))
+                .ToList();
+
+            // Create directory
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
+            // Create ark parts
+            foreach (var partPath in arkPaths)
+            {
+                using var _ = File.Create(partPath);
+            }
 
             ark._arkPaths = new[]
             {
