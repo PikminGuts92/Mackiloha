@@ -881,8 +881,19 @@ namespace Mackiloha.Ark
         /// Adds additional ark part, used for patches (experimental)
         /// </summary>
         /// <param name="path"></param>
-        public void AddAdditionalPart(string path)
+        public void AddAdditionalPart(string path = null)
         {
+            if (path is null)
+            {
+                // Use hdr name
+                var hdrPath = _arkPaths.First();
+                var fileNameNoExt = Path.GetFileNameWithoutExtension(hdrPath);
+                var hdrDir = Path.GetDirectoryName(hdrPath);
+                var nextPartIdx = _arkPaths.Count() - 1;
+
+                path = Path.Combine(hdrDir, $"{fileNameNoExt}_{nextPartIdx}.ark");
+            }
+
             var dirPath = Path.GetDirectoryName(path).Replace("\\", "/");
             var fileName = Path.GetFileName(path);
 

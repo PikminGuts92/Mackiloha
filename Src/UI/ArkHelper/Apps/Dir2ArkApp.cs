@@ -29,6 +29,9 @@ namespace ArkHelper.Apps
             var genPathedFile = new Regex(@"(?i)gen[\/][^\/]+$");
             var dotRegex = new Regex(@"\([.]+\)/");
             var forgeScriptRegex = new Regex("(?i).((dta)|(fusion)|(moggsong)|(script))$");
+            var arkPartSizeLimit = (op.PartSizeLimit > 0)
+                ? op.PartSizeLimit
+                : uint.MaxValue;
 
             var arkDir = Path.GetFullPath(op.OutputPath);
 
@@ -43,7 +46,6 @@ namespace ArkHelper.Apps
                 op.EncryptKey = default;
             }
 
-
             // Create directory if it doesn't exist
             if (!Directory.Exists(arkDir))
                 Directory.CreateDirectory(arkDir);
@@ -57,6 +59,8 @@ namespace ArkHelper.Apps
             // Create temp path and guess platform
             var tempDir = CreateTemporaryDirectory();
             var platformExt = GuessPlatform(op.InputPath);
+
+            var currentPartSize = 0u;
 
             foreach (var file in files)
             {
@@ -90,6 +94,24 @@ namespace ArkHelper.Apps
                     internalPath = dotRegex.Replace(internalPath, x => $"{x.Value.Substring(1, x.Length - 3)}/");
                 }
 
+                // Check part limit
+                var fileSizeLong = new FileInfo(inputFilePath).Length;
+                var fileSize = (uint)fileSizeLong;
+                var potentialPartSize = currentPartSize + fileSize;
+
+                if (fileSizeLong > (long)uint.MaxValue)
+                {
+                    throw new NotSupportedException($"File size above 4GB is unsupported for \"{file}\"");
+                }
+                else if (potentialPartSize >= arkPartSizeLimit)
+                {
+                    // Kind of hacky but multiple part writing isn't implemented in commit changes yet
+                    ark.CommitChanges(true);
+                    ark.AddAdditionalPart();
+
+                    currentPartSize = 0;
+                }
+
                 var fileName = Path.GetFileName(internalPath);
                 var dirPath = Path.GetDirectoryName(internalPath).Replace("\\", "/");
 
@@ -100,6 +122,8 @@ namespace ArkHelper.Apps
 
                 ark.AddPendingEntry(pendingEntry);
                 Console.WriteLine($"Added {pendingEntry.FullPath}");
+
+                currentPartSize += fileSize;
             }
 
             ark.CommitChanges(true);
