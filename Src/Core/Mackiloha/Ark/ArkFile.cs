@@ -537,7 +537,7 @@ namespace Mackiloha.Ark
                 while (stringOffsets[hash] != 0)
                 {
                     hash++;
-                    if (hash >= stringOffsets.Length) hash = 0;
+                    if (hash >= stringOffsets.Length) hash = 1; // Index of 0 is reserved for empty string
                 }
 
                 stringOffsets[hash] = str.Value;
