@@ -20,7 +20,7 @@ namespace ArkHelper.Options
         [Option('e', "encrypt", HelpText = "Encrypt hdr")]
         public bool Encrypt { get; set; }
 
-        [Option('k', "key", HelpText = "Encryption key")]
-        public uint? Key { get; set; }
+        [Option('k', "key", HelpText = "Encryption key (one will be generated if not set)")]
+        public uint? EncryptKey { get; set; }
     }
 }
