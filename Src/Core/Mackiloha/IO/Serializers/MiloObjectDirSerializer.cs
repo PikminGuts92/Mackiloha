@@ -50,6 +50,45 @@ namespace Mackiloha.IO.Serializers
 
                 dir.Extras.Add("ExternalResources", external);
             }
+            else if (version == 25 && dirType == "ObjectDir")
+            {
+                // Hack for project 9
+                var dirEntry = new MiloObjectDirEntry();
+                dirEntry.Version = ar.ReadInt32();
+                dirEntry.SubVersion = ar.ReadInt32();
+                dirEntry.Name = ar.ReadString();
+
+                // Skip matrices + constants
+                var matCount = ar.ReadInt32(); // Usually 7
+                ar.BaseStream.Position += (matCount * 48) + 9;
+
+                // Read imported milos
+                var importedMiloCount = ar.ReadInt32();
+                dirEntry.ImportedMiloPaths = Enumerable.Range(0, importedMiloCount)
+                    .Select(x => ar.ReadString())
+                    .ToArray();
+
+                // Boolean, true when sub directory?
+                ar.ReadBoolean();
+
+                // Sub directory names seem to be in reverse order of serialization...
+                var subDirCount = ar.ReadInt32();
+                var subDirNames = Enumerable.Range(0, subDirCount)
+                    .Select(x => ar.ReadString())
+                    .ToArray();
+
+                // Read subdirectories
+                foreach (var _ in subDirNames.Reverse())
+                {
+                    var subDir = new MiloObjectDir();
+                    ReadFromStream(ar, subDir);
+
+                    dirEntry.SubDirectories.Add(subDir);
+                }
+
+                dir.Extras.Add("DirectoryEntry", dirEntry);
+                ar.BaseStream.Position += 17; // 0'd data + ADDE
+            }
             else if (version >= 24)
             {
                 // GH2 and above
