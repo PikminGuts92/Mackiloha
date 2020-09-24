@@ -124,7 +124,7 @@ namespace ArkHelper.Helpers
             var encDtbPath = Path.Combine(tempDir, Path.GetRandomFileName());
 
             // Convert to dtb
-            Cli.Wrap(DtabPath)
+            var result = Cli.Wrap(DtabPath)
                 .SetArguments(new[]
                 {
                     "-b",
@@ -135,6 +135,9 @@ namespace ArkHelper.Helpers
                 .SetStandardOutputCallback(WriteOutput)
                 .SetStandardErrorCallback(WriteOutput)
                 .Execute();
+
+            if (result.ExitCode != 0)
+                throw new DTBParseException($"dtab.exe was unable to parse file from \'{dtaPath}\'");
 
             if (arkVersion < 7)
             {
