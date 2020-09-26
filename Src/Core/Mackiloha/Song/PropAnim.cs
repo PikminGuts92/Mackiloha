@@ -70,7 +70,7 @@ namespace Mackiloha.Song
     public class PropAnim : MiloObject
     {
         public string AnimName { get; set; }
-        public string TotalTime { get; set; }
+        public float TotalTime { get; set; }
 
         public List<DirectedEventGroup> DirectorGroups { get; } = new List<DirectedEventGroup>();
 
