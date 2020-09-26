@@ -121,8 +121,8 @@ namespace P9SongTool.Apps
                 MiniVenues = songPref.MiniVenues.ToList(),
                 Scenes = songPref.Scenes.ToList(),
 
-                StudioOutfit = songPref.StudioOutfit,
                 DreamscapeOutfit = songPref.DreamscapeOutfit,
+                StudioOutfit = songPref.StudioOutfit,
 
                 GeorgeInstruments = songPref.GeorgeInstruments.ToList(),
                 JohnInstruments = songPref.JohnInstruments.ToList(),

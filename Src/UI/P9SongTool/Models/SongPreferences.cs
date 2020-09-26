@@ -10,8 +10,8 @@ namespace P9SongTool.Models
         public List<string> MiniVenues { get; set; }
         public List<string> Scenes { get; set; }
 
-        public string StudioOutfit { get; set; }
         public string DreamscapeOutfit { get; set; }
+        public string StudioOutfit { get; set; }
 
         public List<string> GeorgeInstruments { get; set; }
         public List<string> JohnInstruments { get; set; }
