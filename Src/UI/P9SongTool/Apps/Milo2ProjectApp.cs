@@ -53,6 +53,7 @@ namespace P9SongTool.Apps
             // Write song json
             var song = new P9Song()
             {
+                Name = milo.Name,
                 Preferences = ConvertFromP9SongPref(songPref)
             };
 
