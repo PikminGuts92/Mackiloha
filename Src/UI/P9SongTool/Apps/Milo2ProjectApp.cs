@@ -20,8 +20,6 @@ namespace P9SongTool.Apps
 {
     public class Milo2ProjectApp
     {
-        protected readonly string[] Characters = new[] { "john", "george", "paul", "ringo"  };
-
         public void Parse(Milo2ProjectOptions op)
         {
             var appState = AppState.FromFile(op.InputPath);
