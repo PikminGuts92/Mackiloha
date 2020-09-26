@@ -3,13 +3,16 @@ using Mackiloha.App;
 using Mackiloha.App.Extensions;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
+using Mackiloha.Song;
 using P9SongTool.Exceptions;
+using P9SongTool.Models;
 using P9SongTool.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace P9SongTool.Apps
@@ -31,6 +34,32 @@ namespace P9SongTool.Apps
 
             var entries = GetEntries(milo);
             ExtractLipsync(entries, op.OutputPath);
+
+            var serializer = appState.GetSerializer();
+
+            var propAnims = entries
+                .Where(x => x.Type == "PropAnim")
+                .Select(y => serializer.ReadFromMiloObjectBytes<PropAnim>(y as MiloObjectBytes))
+                .ToList();
+
+            var songPref = entries
+                .Where(x => x.Type == "P9SongPref")
+                .Select(y => serializer.ReadFromMiloObjectBytes<P9SongPref>(y as MiloObjectBytes))
+                .FirstOrDefault();
+
+            if (songPref is null)
+                throw new UnsupportedMiloException("No P9SongPref entry was found");
+
+            // Write song json
+            var song = new P9Song()
+            {
+                Preferences = ConvertFromP9SongPref(songPref)
+            };
+
+            var songJson = JsonSerializer.Serialize(song, appState.JsonSerializerOptions);
+            var songJsonPath = Path.Combine(op.OutputPath, "song.json");
+
+            File.WriteAllText(songJsonPath, songJson);
         }
 
         protected SystemInfo GetSystemInfo(Milo2ProjectOptions op)
@@ -84,5 +113,34 @@ namespace P9SongTool.Apps
                 File.WriteAllBytes(lipFilePath, lipBytes.Data);
             }
         }
+
+        protected SongPreferences ConvertFromP9SongPref(P9SongPref songPref)
+            => new SongPreferences()
+            {
+                Venue = songPref.Venue,
+                MiniVenues = songPref.MiniVenues.ToList(),
+                Scenes = songPref.Scenes.ToList(),
+
+                StudioOutfit = songPref.StudioOutfit,
+                DreamscapeOutfit = songPref.DreamscapeOutfit,
+
+                GeorgeInstruments = songPref.GeorgeInstruments.ToList(),
+                JohnInstruments = songPref.JohnInstruments.ToList(),
+                PaulInstruments = songPref.PaulInstruments.ToList(),
+                RingoInstruments = songPref.RingoInstruments.ToList(),
+
+                Tempo = songPref.Tempo,
+                SongClips = songPref.SongClips,
+                DreamscapeFont = songPref.DreamscapeFont,
+
+                // TBRB specific
+                GeorgeAmp = songPref.GeorgeAmp,
+                JohnAmp = songPref.JohnAmp,
+                PaulAmp = songPref.PaulAmp,
+                Mixer = songPref.Mixer,
+                DreamscapeCamera = Enum.GetName(typeof (DreamscapeCamera), songPref.DreamscapeCamera),
+
+                LyricPart = songPref.LyricPart
+            };
     }
 }
