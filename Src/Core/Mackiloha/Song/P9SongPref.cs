@@ -18,8 +18,8 @@ namespace Mackiloha.Song
         public List<string> MiniVenues { get; } = new List<string>();
         public List<string> Scenes { get; } = new List<string>();
 
-        public string StudioOutfit { get; set; }
         public string DreamscapeOutfit { get; set; }
+        public string StudioOutfit { get; set; }
 
         public List<string> GeorgeInstruments { get; } = new List<string>();
         public List<string> JohnInstruments { get; } = new List<string>();

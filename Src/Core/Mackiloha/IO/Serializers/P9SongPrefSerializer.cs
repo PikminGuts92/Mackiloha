@@ -30,8 +30,8 @@ namespace Mackiloha.IO.Serializers
             if (zero != 0)
                 throw new NotSupportedException();
 
-            songPref.StudioOutfit = ar.ReadString();
             songPref.DreamscapeOutfit = ar.ReadString();
+            songPref.StudioOutfit = ar.ReadString();
 
             count = ar.ReadInt32();
             songPref.GeorgeInstruments.AddRange(RepeatFor(count, () => ar.ReadString()));
@@ -112,8 +112,8 @@ namespace Mackiloha.IO.Serializers
 
             aw.Write((int)0); // Always 0
 
-            aw.Write(songPref.StudioOutfit);
             aw.Write(songPref.DreamscapeOutfit);
+            aw.Write(songPref.StudioOutfit);
 
             aw.Write(songPref.GeorgeInstruments.Count);
             foreach (var instrument in songPref.GeorgeInstruments)
