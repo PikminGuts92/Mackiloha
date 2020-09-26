@@ -5,6 +5,7 @@ using Mackiloha.IO;
 using Mackiloha.Milo2;
 using Mackiloha.Song;
 using P9SongTool.Exceptions;
+using P9SongTool.Helpers;
 using P9SongTool.Models;
 using P9SongTool.Options;
 using System;
@@ -61,6 +62,12 @@ namespace P9SongTool.Apps
             var songJsonPath = Path.Combine(op.OutputPath, "song.json");
 
             File.WriteAllText(songJsonPath, songJson);
+
+            // Export midi
+            var songAnim = propAnims.First(x => x.Name == "song.anim");
+
+            var converter = new Anim2Midi(songAnim, op.BaseMidiPath);
+            converter.ExportMidi(Path.Combine(op.OutputPath, "venue.mid"));
         }
 
         protected SystemInfo GetSystemInfo(Milo2ProjectOptions op)
