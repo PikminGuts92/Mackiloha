@@ -12,7 +12,7 @@ namespace Mackiloha
 
     public abstract class MiloObject : IMiloObject
     {        
-        public string Name { get; set; }
+        public virtual string Name { get; set; }
         public abstract string Type { get; }
 
         public override string ToString()
