@@ -29,6 +29,7 @@ namespace Mackiloha.IO
                 new MiloObjectBytesSerializer(this),
                 new MiloObjectDirSerializer(this),
                 new P9SongPrefSerializer(this),
+                new PropAnimSerializer(this),
                 new TexSerializer(this),
                 new TransSerializer(this),
                 new ViewSerializer(this)
