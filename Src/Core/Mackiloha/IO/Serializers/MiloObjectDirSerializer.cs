@@ -53,10 +53,10 @@ namespace Mackiloha.IO.Serializers
             else if (version == 25 && dirType == "ObjectDir")
             {
                 // Hack for project 9
-                var dirEntry = new MiloObjectDirEntry();
+                var dirEntry = new MiloObjectDirEntry() { Name = dirName };
                 dirEntry.Version = ar.ReadInt32();
                 dirEntry.SubVersion = ar.ReadInt32();
-                dirEntry.Name = ar.ReadString();
+                dirEntry.ProjectName = ar.ReadString();
 
                 // Skip matrices + constants
                 var matCount = ar.ReadInt32(); // Usually 7
