@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Mackiloha.Song
 {
-    public enum DreamscapeCamera
+    public enum DreamscapeCamera : int
     {
         None,
         DreamSlow = 1 << 16,
