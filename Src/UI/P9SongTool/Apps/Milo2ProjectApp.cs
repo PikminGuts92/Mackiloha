@@ -88,7 +88,7 @@ namespace P9SongTool.Apps
                 throw new UnsupportedMiloException($"Directory type of \"{miloDir.Type}\" found, expected \"ObjectDir\" expected");
 
             // Traverse sub directories
-            if (!(miloDir.Extras["DirectoryEntry"] is MiloObjectDirEntry dirEntry))
+            if (!(miloDir.GetDirectoryEntry() is MiloObjectDirEntry dirEntry))
                 throw new UnsupportedMiloException("Could not parse directory entry");
 
             foreach (var subDir in dirEntry.SubDirectories)
