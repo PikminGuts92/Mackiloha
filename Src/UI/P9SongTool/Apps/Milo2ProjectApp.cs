@@ -62,10 +62,26 @@ namespace P9SongTool.Apps
             File.WriteAllText(songJsonPath, songJson);
 
             // Export midi
-            var songAnim = propAnims.First(x => x.Name == "song.anim");
+            var songAnim = propAnims
+                .First(x => x.Name == "song.anim");
 
             var converter = new Anim2Midi(songAnim, op.BaseMidiPath);
             converter.ExportMidi(Path.Combine(op.OutputPath, "venue.mid"));
+
+            // Export whatever remaining files
+            var remaining = entries
+                .Where(x => x.Name != songAnim.Name
+                    && x.Type != "CharLipSync"
+                    && x.Type != "P9SongPref")
+                .ToList();
+
+            foreach (var entry in remaining)
+            {
+                var entryPath = Path.Combine(op.OutputPath, entry.Name);
+                var miloObj = entry as MiloObjectBytes;
+
+                File.WriteAllBytes(entryPath, miloObj.Data);
+            }
         }
 
         protected SystemInfo GetSystemInfo(Milo2ProjectOptions op)
