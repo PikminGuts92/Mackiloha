@@ -44,7 +44,7 @@ namespace P9SongTool.Helpers
             var mid = this.BaseMidi;
 
             var fps = Framerate;
-            var ticksPerQuarter = mid.DeltaTicksPerQuarterNote;
+            var ticksPerQuarter = GetTicksPerQuarter();
 
             var currentTickPos = 0L;
             var currentFramePos = 0.0M;
@@ -116,7 +116,7 @@ namespace P9SongTool.Helpers
             }
             else
             {
-                mid = new MidiEventCollection(1, 480);
+                mid = new MidiEventCollection(1, GetTicksPerQuarter());
 
                 // Create basic tempo track
                 var tempoTrack = new List<MidiEvent>();
@@ -264,9 +264,7 @@ namespace P9SongTool.Helpers
             if (framePos <= 0.0M)
                 return 0L;
 
-            var ticksPerQuarter = !(BaseMidi is null)
-                ? BaseMidi.DeltaTicksPerQuarterNote
-                : 480;
+            var ticksPerQuarter = GetTicksPerQuarter();
 
             var currentTempo = TempoChanges.First();
 
@@ -287,5 +285,10 @@ namespace P9SongTool.Helpers
             long deltaTicks = (1000L * (long)(seconds * 1000) * ticksPerQuarter) / mpq;
             return currentTempo.tickPos +  deltaTicks;
         }
+
+        protected int GetTicksPerQuarter()
+            => !(BaseMidi is null)
+                ? BaseMidi.DeltaTicksPerQuarterNote
+                : 480;
     }
 }
