@@ -11,34 +11,81 @@ namespace P9SongTool.Helpers
 {
     public class Anim2Midi
     {
+        protected readonly decimal Framerate = 30.0M;
         protected readonly string[] TBRBCharacters = new[] { "paul", "john", "george", "ringo" };
 
         protected readonly PropAnim Anim;
         protected readonly MidiFile BaseMidi;
 
+        protected readonly List<(long tickPos, decimal framePos, int mpq)> TempoChanges;
+
         public Anim2Midi(PropAnim anim, string midPath)
         {
             Anim = anim;
             BaseMidi = ParseBaseMidi(midPath);
+            TempoChanges = CreateTempoMap();
         }
 
         protected virtual MidiFile ParseBaseMidi(string midPath)
         {
-            // Base mid not found, setup default values
+            // Check if mid exists
             if ((midPath is null) || !File.Exists(midPath))
             {
-                SetDefaultMidiValues();
+                // No mid found
                 return null;
             }
 
-            var mid = new MidiFile(midPath);
-
-            return mid;
+            return new MidiFile(midPath);
         }
 
-        protected virtual void SetDefaultMidiValues()
+        protected virtual List<(long tickPos, decimal framePos, int mpq)> CreateTempoMap()
         {
+            var calculatedTempos = new List<(long tickPos, decimal framePos, int mpq)>();
+            var mid = this.BaseMidi;
 
+            var fps = Framerate;
+            var ticksPerQuarter = mid.DeltaTicksPerQuarterNote;
+
+            var currentTickPos = 0L;
+            var currentFramePos = 0.0M;
+            var currentMpq = 60_000_000 / 120;
+
+            if (mid is null)
+            {
+                // No mid found, return default
+                calculatedTempos.Add((currentTickPos, currentFramePos, currentMpq));
+                return calculatedTempos;
+            }
+
+            var tempoChanges = mid.Events
+                .First()
+                .Where(x => x is TempoEvent)
+                .Select(x => x as TempoEvent)
+                .OrderBy(x => x.AbsoluteTime)
+                .ToList();
+
+            if (tempoChanges.Count <= 0)
+            {
+                // No tempo events found, return default
+                calculatedTempos.Add((currentTickPos, currentFramePos, currentMpq));
+                return calculatedTempos;
+            }
+
+            foreach (var tempo in tempoChanges)
+            {
+                var deltaTicks = tempo.AbsoluteTime - currentTickPos;
+                var deltaFrames = (Framerate * deltaTicks * currentMpq) / (1_000_000 * ticksPerQuarter);
+
+                // Set current tempo values
+                currentTickPos = tempo.AbsoluteTime;
+                currentFramePos += deltaFrames;
+                currentMpq = tempo.MicrosecondsPerQuarterNote;
+
+                // Add tempo
+                calculatedTempos.Add((currentTickPos, currentFramePos, currentMpq));
+            }
+
+            return calculatedTempos;
         }
 
         public void ExportMidi(string exportMidPath)
@@ -62,8 +109,18 @@ namespace P9SongTool.Helpers
 
             // Add basic tempo track
             var tempoTrack = new List<MidiEvent>();
-            tempoTrack.Add(new TextEvent("animTempo", MetaEventType.SequenceTrackName, 0));
-            tempoTrack.Add(new MetaEvent(MetaEventType.EndTrack, 0, 0));
+
+            if (!(BaseMidi is null))
+            {
+                // Use existing tempo track
+                tempoTrack.AddRange(BaseMidi.Events.First());
+            }
+            else
+            {
+                // Create basic tempo track
+                tempoTrack.Add(new TextEvent("animTempo", MetaEventType.SequenceTrackName, 0));
+                tempoTrack.Add(new MetaEvent(MetaEventType.EndTrack, 0, 0));
+            }
             mid.AddTrack(tempoTrack);
 
             foreach (var group in Anim.DirectorGroups)
@@ -94,7 +151,7 @@ namespace P9SongTool.Helpers
 
                 foreach (var ev in group.Events.OrderBy(x => x.Position))
                 {
-                    var tickPos = FramePosToTicks(ev.Position);
+                    var tickPos = FramePosToTicks((decimal)ev.Position);
 
                     var evValue = ev switch
                     {
@@ -149,22 +206,34 @@ namespace P9SongTool.Helpers
             MidiFile.Export(exportMidPath, mid);
         }
 
-        protected long FramePosToTicks(float framePos)
+        protected long FramePosToTicks(decimal framePos)
         {
             // Some position are negative
-            if (framePos < 0.0f)
-                framePos = 0.0f;
+            if (framePos <= 0.0M)
+                return 0L;
 
-            // TODO: Read from base midi
-            var ticksPerQuarter = 480;
-            var mpq = 60000000 / 120;
-            var fps = 30.0f;
+            var ticksPerQuarter = !(BaseMidi is null)
+                ? BaseMidi.DeltaTicksPerQuarterNote
+                : 480;
 
-            var seconds = framePos / fps;
+            var currentTempo = TempoChanges.First();
 
-            long absoluteTicks = (1000L * (long)(seconds * 1000) * ticksPerQuarter) / mpq;
+            foreach (var change in TempoChanges.Skip(1))
+            {
+                if (change.framePos > (decimal)framePos)
+                    break;
 
-            return absoluteTicks;
+                currentTempo = change;
+            }
+
+            var mpq = currentTempo.mpq;
+            var fps = Framerate;
+
+            var deltaPos = framePos - currentTempo.framePos;
+            var seconds = deltaPos / fps;
+
+            long deltaTicks = (1000L * (long)(seconds * 1000) * ticksPerQuarter) / mpq;
+            return currentTempo.tickPos +  deltaTicks;
         }
     }
 }
