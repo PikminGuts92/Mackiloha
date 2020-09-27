@@ -97,7 +97,34 @@ namespace P9SongTool.Helpers
                 Directory.CreateDirectory(dirPath);
             }
 
-            var mid = new MidiEventCollection(1, 480);
+            MidiEventCollection mid;
+            var midiTracks = new List<List<MidiEvent>>();
+
+            if (!(BaseMidi is null))
+            {
+                mid = new MidiEventCollection(BaseMidi.FileFormat, BaseMidi.DeltaTicksPerQuarterNote);
+
+                // Copy tracks
+                foreach (var baseTrack in BaseMidi.Events)
+                {
+                    // Shallow copy events
+                    var track = new List<MidiEvent>();
+                    track.AddRange(baseTrack);
+
+                    midiTracks.Add(track);
+                }
+            }
+            else
+            {
+                mid = new MidiEventCollection(1, 480);
+
+                // Create basic tempo track
+                var tempoTrack = new List<MidiEvent>();
+                tempoTrack.Add(new TextEvent("animTempo", MetaEventType.SequenceTrackName, 0));
+                tempoTrack.Add(new MetaEvent(MetaEventType.EndTrack, 0, 0));
+
+                midiTracks.Add(tempoTrack);
+            }
 
             // Create dictionary of tracks to filter events in
             var midFilteredTracks = TBRBCharacters
@@ -106,22 +133,6 @@ namespace P9SongTool.Helpers
                 .ToDictionary(x => x, y => new List<MidiEvent>());
 
             var nameFilterRegex = new Regex($"(?i)([_]?)({string.Join("|", TBRBCharacters)})$");
-
-            // Add basic tempo track
-            var tempoTrack = new List<MidiEvent>();
-
-            if (!(BaseMidi is null))
-            {
-                // Use existing tempo track
-                tempoTrack.AddRange(BaseMidi.Events.First());
-            }
-            else
-            {
-                // Create basic tempo track
-                tempoTrack.Add(new TextEvent("animTempo", MetaEventType.SequenceTrackName, 0));
-                tempoTrack.Add(new MetaEvent(MetaEventType.EndTrack, 0, 0));
-            }
-            mid.AddTrack(tempoTrack);
 
             foreach (var group in Anim.DirectorGroups)
             {
@@ -192,16 +203,57 @@ namespace P9SongTool.Helpers
                 var trackName = kv.Key;
                 var track = kv.Value;
 
+                var existingTrack = midiTracks
+                    .FirstOrDefault(x =>
+                        x.Any(y => (y is TextEvent te)
+                            && te.MetaEventType == MetaEventType.SequenceTrackName
+                            && te.Text == trackName));
+
+                if ((existingTrack is null))
+                {
+                    // Sort events
+                    track.Sort((x, y) => x.AbsoluteTime.CompareTo(y.AbsoluteTime));
+
+                    // Create new track
+                    // Insert track name and add end event
+                    track.Insert(0, new TextEvent(trackName, MetaEventType.SequenceTrackName, 0));
+                    track.Add(new MetaEvent(MetaEventType.EndTrack, 0, track.Max(x => x.AbsoluteTime)));
+
+                    midiTracks.Add(track);
+                    continue;
+                }
+
+                // Use existing track
+
+                // Remove track name event
+                var trackNameEvent = existingTrack
+                    .First(x => x is TextEvent me
+                        && me.MetaEventType == MetaEventType.SequenceTrackName);
+
+                existingTrack.Remove(trackNameEvent);
+
+                // Remove end event if it exists (it probably should)
+                var endEvent = existingTrack
+                    .FirstOrDefault(x => x is MetaEvent me
+                        && me.MetaEventType == MetaEventType.EndTrack);
+
+                if (!(endEvent is null))
+                    existingTrack.Remove(endEvent);
+
+                existingTrack.AddRange(track);
+
                 // Sort events
-                track.Sort((x, y) => x.AbsoluteTime.CompareTo(y.AbsoluteTime));
+                existingTrack.Sort((x, y) => x.AbsoluteTime.CompareTo(y.AbsoluteTime));
 
                 // Insert track name
-                track.Insert(0, new TextEvent(trackName, MetaEventType.SequenceTrackName, 0));
+                existingTrack.Insert(0, new TextEvent(trackName, MetaEventType.SequenceTrackName, 0));
 
                 // Add end event
-                track.Add(new MetaEvent(MetaEventType.EndTrack, 0, track.Max(x => x.AbsoluteTime)));
-                mid.AddTrack(track);
+                existingTrack.Add(new MetaEvent(MetaEventType.EndTrack, 0, existingTrack.Max(x => x.AbsoluteTime)));
             }
+
+            // Copy tracks to mid
+            midiTracks.ForEach(x => mid.AddTrack(x));
 
             MidiFile.Export(exportMidPath, mid);
         }
