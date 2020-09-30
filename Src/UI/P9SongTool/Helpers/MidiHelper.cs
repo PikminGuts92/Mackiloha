@@ -34,7 +34,6 @@ namespace P9SongTool.Helpers
         protected virtual List<(long tickPos, decimal framePos, int mpq)> CreateTempoMap()
         {
             var calculatedTempos = new List<(long tickPos, decimal framePos, int mpq)>();
-            var mid = this.BaseMidi;
 
             var fps = Framerate;
             var ticksPerQuarter = GetTicksPerQuarter();
@@ -43,14 +42,14 @@ namespace P9SongTool.Helpers
             var currentFramePos = 0.0M;
             var currentMpq = 60_000_000 / 120;
 
-            if (mid is null)
+            if (BaseMidi is null)
             {
                 // No mid found, return default
                 calculatedTempos.Add((currentTickPos, currentFramePos, currentMpq));
                 return calculatedTempos;
             }
 
-            var tempoChanges = mid.Events
+            var tempoChanges = BaseMidi.Events
                 .First()
                 .Where(x => x is TempoEvent)
                 .Select(x => x as TempoEvent)
@@ -137,6 +136,18 @@ namespace P9SongTool.Helpers
 
             return midiTracks;
         }
+
+        internal Dictionary<string, List<MidiEvent>> CreateMidiTracksDictionaryFromBase()
+            => CreateMidiTracksFromBase()
+                .Skip(1) // Skip tempo map
+                .ToDictionary(
+                    x => x
+                        .Where(y => (y is TextEvent te)
+                            && te.MetaEventType == MetaEventType.SequenceTrackName)
+                        .Select(y => y as TextEvent)
+                        .First()
+                        .Text,
+                    y => y);
 
         internal int GetTicksPerQuarter()
             => !(BaseMidi is null)
