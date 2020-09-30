@@ -86,8 +86,8 @@ namespace P9SongTool.Helpers
             if (framePos <= 0.0M)
                 return 0L;
 
+            var fps = Framerate;
             var ticksPerQuarter = GetTicksPerQuarter();
-
             var currentTempo = TempoChanges.First();
 
             foreach (var change in TempoChanges.Skip(1))
@@ -99,13 +99,36 @@ namespace P9SongTool.Helpers
             }
 
             var mpq = currentTempo.mpq;
-            var fps = Framerate;
+            var deltaPosF = framePos - currentTempo.framePos;
+            var seconds = deltaPosF / fps;
 
-            var deltaPos = framePos - currentTempo.framePos;
-            var seconds = deltaPos / fps;
-
-            long deltaTicks = (1000L * (long)(seconds * 1000) * ticksPerQuarter) / mpq;
+            long deltaTicks = (1000L * 1000L * (long)(seconds) * ticksPerQuarter) / mpq;
             return currentTempo.tickPos + deltaTicks;
+        }
+
+        internal decimal TickPosToFrames(long tickPos)
+        {
+            // Save the trouble of calculation
+            if (tickPos <= 0L)
+                return 0.0M;
+
+            var fps = Framerate;
+            var ticksPerQuarter = GetTicksPerQuarter();
+            var currentTempo = TempoChanges.First();
+
+            foreach (var change in TempoChanges.Skip(1))
+            {
+                if (change.tickPos > (long)tickPos)
+                    break;
+
+                currentTempo = change;
+            }
+
+            var mpq = currentTempo.mpq;
+            var deltaPosT = tickPos - currentTempo.tickPos;
+
+            decimal deltaSeconds = (decimal)(mpq * deltaPosT) / (1000L * 1000L * ticksPerQuarter);
+            return currentTempo.framePos + (deltaSeconds * fps);
         }
 
         internal List<List<MidiEvent>> CreateMidiTracksFromBase()
