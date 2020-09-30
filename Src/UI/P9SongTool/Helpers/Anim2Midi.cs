@@ -31,8 +31,6 @@ namespace P9SongTool.Helpers
                 Directory.CreateDirectory(dirPath);
             }
 
-            var midiTracks = MidiHelper.CreateMidiTracksFromBase();
-
             // Create dictionary of tracks to filter events in
             var midFilteredTracks = TBRBCharacters
                 .Select(x => x.ToUpper())
@@ -104,6 +102,9 @@ namespace P9SongTool.Helpers
                     midFilteredTracks.Remove(key);
                 }
             }
+
+            // Get tracks from mid
+            var midiTracks = MidiHelper.CreateMidiTracksFromBase();
 
             foreach (var kv in midFilteredTracks)
             {
