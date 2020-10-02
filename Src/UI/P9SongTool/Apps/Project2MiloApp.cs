@@ -4,6 +4,7 @@ using Mackiloha.App.Extensions;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
 using P9SongTool.Exceptions;
+using P9SongTool.Helpers;
 using P9SongTool.Models;
 using P9SongTool.Options;
 using System;
@@ -33,7 +34,7 @@ namespace P9SongTool.Apps
         public void Parse(Project2MiloOptions op)
         {
             if (!Directory.Exists(op.InputPath))
-                throw new MiloBuildException("Input path doesn't exist");
+                throw new MiloBuildException("Input directory doesn't exist");
 
             var inputDir = Path.GetFullPath(op.InputPath);
             var songMetaPath = Path.Combine(inputDir, "song.json");
@@ -42,8 +43,16 @@ namespace P9SongTool.Apps
             var lipsyncPaths = Directory.GetFiles(Path.Combine(inputDir, "lipsync"), "*.lipsync");
             var extrasPaths = Directory.GetFiles(Path.Combine(inputDir, "extra"));
 
+            // Enforce files exist
+            if (!File.Exists(songMetaPath))
+                throw new MiloBuildException("Can't find \"song.json\" file");
+            if (!File.Exists(midPath))
+                throw new MiloBuildException("Can't find \"venue.mid\" file");
+
             var p9song = OpenP9File(songMetaPath);
 
+            var converter = new Midi2Anim(midPath);
+            var anim = converter.ExportToAnim();
         }
 
         protected P9Song OpenP9File(string p9songPath)
