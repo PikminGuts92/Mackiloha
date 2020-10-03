@@ -49,10 +49,9 @@ namespace Mackiloha.IO.Serializers
             ar.BaseStream.Position += 11; // Skip constants
 
             eventGroup.PropName = ar.ReadString();
-            ar.BaseStream.Position += 4; // Always 0?
+            eventGroup.Unknown1 = ar.ReadInt32(); // Usually 0
             eventGroup.PropName2 = ar.ReadString(); // Usually empty
-
-            ar.BaseStream.Position += 4; // Unknown enum... hopefully it's not important
+            eventGroup.Unknown2 = ar.ReadInt32(); // Unknown enum... hopefully it's not important
 
             var count = ar.ReadInt32();
             eventGroup.Events = new List<IDirectedEvent>();
@@ -168,13 +167,11 @@ namespace Mackiloha.IO.Serializers
             aw.Write((int)0);
             aw.Write((int)5);
 
-            // Write prop names
+            // Write prop names + unknown ints
             aw.Write((string)eventGroup.PropName);
-            aw.Write((int)0);
+            aw.Write((int)eventGroup.Unknown1);
             aw.Write((string)eventGroup.PropName2);
-
-            // Unknown (probably some kind of enum or flag, usually 0)
-            aw.Write((int)0);
+            aw.Write((int)eventGroup.Unknown2);
 
             if (eventGroup.Events is null)
             {
