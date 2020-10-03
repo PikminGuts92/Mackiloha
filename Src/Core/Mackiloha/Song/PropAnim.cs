@@ -61,8 +61,11 @@ namespace Mackiloha.Song
         public DirectedEventType EventType;
 
         public string DirectorName;
+
         public string PropName;
+        public int Unknown1;
         public string PropName2;
+        public int Unknown2;
 
         public List<IDirectedEvent> Events;
     }
