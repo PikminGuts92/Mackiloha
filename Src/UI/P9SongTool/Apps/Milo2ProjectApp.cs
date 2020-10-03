@@ -75,9 +75,13 @@ namespace P9SongTool.Apps
                     && x.Type != "P9SongPref")
                 .ToList();
 
+            var extraDirPath = Path.Combine(op.OutputPath, "extra");
+            if (!Directory.Exists(extraDirPath))
+                Directory.CreateDirectory(extraDirPath);
+
             foreach (var entry in remaining)
             {
-                var entryPath = Path.Combine(op.OutputPath, entry.Name);
+                var entryPath = Path.Combine(extraDirPath, entry.Name);
                 var miloObj = entry as MiloObjectBytes;
 
                 File.WriteAllBytes(entryPath, miloObj.Data);
@@ -127,9 +131,13 @@ namespace P9SongTool.Apps
                 .Where(x => x.Type == "CharLipSync")
                 .ToList();
 
+            var lipDirPath = Path.Combine(dirPath, "lipsync");
+            if (!Directory.Exists(lipDirPath))
+                Directory.CreateDirectory(lipDirPath);
+
             foreach (var lipsync in lipsyncEntries)
             {
-                var lipFilePath = Path.Combine(dirPath, lipsync.Name);
+                var lipFilePath = Path.Combine(lipDirPath, lipsync.Name);
 
                 var lipBytes = lipsync as MiloObjectBytes; // Should always be this
                 File.WriteAllBytes(lipFilePath, lipBytes.Data);
