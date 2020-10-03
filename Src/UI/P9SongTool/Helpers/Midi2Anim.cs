@@ -139,19 +139,39 @@ namespace P9SongTool.Helpers
             {
                 EventType = propName switch
                 {
-                    "postproc" => DirectedEventType.TextFloat,
-                    "lookat" => DirectedEventType.Float,
-                    "face_weight" => DirectedEventType.Float,
-                    "sing" => DirectedEventType.Float,
+                    var p when p.StartsWith("postproc") => DirectedEventType.TextFloat,
+                    var p when p.StartsWith("lookat") => DirectedEventType.Float,
+                    var p when p.StartsWith("face_weight") => DirectedEventType.Float,
+                    var p when p.StartsWith("sing") => DirectedEventType.Float,
                     _ => DirectedEventType.Text
                 },
                 DirectorName = "P9Director",
                 PropName = propName,
+                Unknown1 = propName switch
+                {
+                    "rotation" => 1,
+                    "scale" => 1,
+                    "position" => 1,
+                    var p when p.StartsWith("face_weight") => 1,
+                    var p when p.StartsWith("sing") => 2,
+                    var p when p.StartsWith("lookat") => 4,
+                    _ => 0
+                },
                 PropName2 = propName switch
                 {
                     "postproc" => "postproc_interp",
                     "hist_lightpreset" => "hist_lightpreset_interp",
                     _ => ""
+                },
+                Unknown2 = propName switch
+                {
+                    "rotation" => 1,
+                    "scale" => 2,
+                    "position" => 3,
+                    "postproc" => 5,
+                    "hist_lightpreset" => 5,
+                    "configuration" => 6,
+                    _ => 0
                 },
                 Events = new List<IDirectedEvent>()
             };
