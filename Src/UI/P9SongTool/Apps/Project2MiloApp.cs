@@ -74,7 +74,18 @@ namespace P9SongTool.Apps
             miloDir.Entries.Add(songPref);
             miloDir.Entries.Add(anim);
 
-            // TODO: Add extras
+            // Get extras as raw entries
+            var extras = extrasPaths
+                .Select(x => (x, SupportedExtraTypes.FirstOrDefault(y => x.EndsWith(y.extension, StringComparison.CurrentCultureIgnoreCase)).miloType))
+                .Where(x => !(x.Item1 is null))
+                .Select(x => new MiloObjectBytes(x.Item2)
+                {
+                    Name = Path.GetFileName(x.Item1),
+                    Data = File.ReadAllBytes(x.Item1)
+                })
+                .ToList();
+
+            miloDir.Entries.AddRange(extras);
 
             var serializer = state.GetSerializer();
 
@@ -122,7 +133,13 @@ namespace P9SongTool.Apps
             songPref.PaulAmp = preferences.PaulAmp;
             songPref.Mixer = preferences.Mixer;
 
-            Enum.TryParse<DreamscapeCamera>(preferences.DreamscapeCamera, out var dreamCam);
+            var camera = preferences.DreamscapeCamera;
+            if (!(camera is null)
+                && (camera != "None")
+                && !camera.StartsWith("kP9"))
+                camera = $"kP9{camera}"; // Prepend with prefix
+
+            Enum.TryParse<DreamscapeCamera>(camera, out var dreamCam);
             songPref.DreamscapeCamera = dreamCam;
 
             songPref.LyricPart = preferences.LyricPart;
