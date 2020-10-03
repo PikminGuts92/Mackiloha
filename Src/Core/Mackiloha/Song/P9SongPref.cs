@@ -7,9 +7,10 @@ namespace Mackiloha.Song
     public enum DreamscapeCamera : int
     {
         None,
-        DreamSlow = 1 << 16,
-        DreamFast = 1 << 17,
-        DreamPsych = 1 << 18
+        kP9DreamSlow = 1 << 16,
+        kP9DreamFast = 1 << 17,
+        kP9DreamPsych = 1 << 18,
+        kP9DreamAllConfigs = (1 << 18) | (1 << 17) | (1 << 16)
     }
 
     public class P9SongPref : MiloObject
