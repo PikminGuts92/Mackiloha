@@ -3,6 +3,7 @@ using Mackiloha.App;
 using Mackiloha.App.Extensions;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
+using Mackiloha.Song;
 using P9SongTool.Exceptions;
 using P9SongTool.Helpers;
 using P9SongTool.Models;
@@ -50,6 +51,7 @@ namespace P9SongTool.Apps
                 throw new MiloBuildException("Can't find \"venue.mid\" file");
 
             var p9song = OpenP9File(songMetaPath);
+            var songPref = ConvertFromSongPreferences(p9song.Preferences);
 
             var converter = new Midi2Anim(midPath);
             var anim = converter.ExportToAnim();
@@ -61,6 +63,41 @@ namespace P9SongTool.Apps
             var jsonText = File.ReadAllText(p9songPath);
 
             return JsonSerializer.Deserialize<P9Song>(jsonText, appState.JsonSerializerOptions);
+        }
+
+        protected P9SongPref ConvertFromSongPreferences(SongPreferences preferences)
+        {
+            var songPref = new P9SongPref();
+
+            songPref.Name = "P9SongPref";
+            songPref.Venue = preferences.Venue;
+            songPref.MiniVenues.AddRange(preferences.MiniVenues);
+            songPref.Scenes.AddRange(preferences.Scenes);
+            
+            songPref.DreamscapeOutfit = preferences.DreamscapeOutfit;
+            songPref.StudioOutfit = preferences.StudioOutfit;
+            
+            songPref.GeorgeInstruments.AddRange(preferences.GeorgeInstruments);
+            songPref.JohnInstruments.AddRange(preferences.JohnInstruments);
+            songPref.PaulInstruments.AddRange(preferences.PaulInstruments);
+            songPref.RingoInstruments.AddRange(preferences.RingoInstruments);
+            
+            songPref.Tempo = preferences.Tempo;
+            songPref.SongClips = preferences.SongClips;
+            songPref.DreamscapeFont = preferences.DreamscapeFont;
+            
+            // TBRB specific
+            songPref.GeorgeAmp = preferences.GeorgeAmp;
+            songPref.JohnAmp = preferences.JohnAmp;
+            songPref.PaulAmp = preferences.PaulAmp;
+            songPref.Mixer = preferences.Mixer;
+
+            Enum.TryParse<DreamscapeCamera>(preferences.DreamscapeCamera, out var dreamCam);
+            songPref.DreamscapeCamera = dreamCam;
+
+            songPref.LyricPart = preferences.LyricPart;
+
+            return songPref;
         }
     }
 }
