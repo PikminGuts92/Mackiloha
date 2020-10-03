@@ -201,8 +201,13 @@ namespace Mackiloha.IO.Serializers
                         aw.Write((float)mat.M43);
                     }
 
+                    // Constants? I hope
+                    aw.Write((int)0);
+                    aw.Write((bool)true);
+                    aw.Write((int)0);
+
                     // Write imported milo paths
-                    if ((dirEntry.ImportedMiloPaths is null))
+                    if (!(dirEntry.ImportedMiloPaths is null))
                     {
                         aw.Write((int)dirEntry.ImportedMiloPaths.Length);
 
@@ -214,23 +219,19 @@ namespace Mackiloha.IO.Serializers
                         aw.Write((int)0);
                     }
 
-                    // Constants? I hope
-                    aw.Write((int)0);
-                    aw.Write((bool)true);
-                    aw.Write((int)0);
-
                     // Might be different depending on dir being root/nested
                     // Root: false, Nested: true
                     aw.Write((bool)(dirEntry.SubDirectories.Count <= 0)); // TODO: Use a better way to determine if nested
 
                     // Write sub directory names
-                    var subDirNames = dirEntry
+                    aw.Write((int)dirEntry.SubDirectories.Count);
+                    foreach (var subName in dirEntry
                         .SubDirectories
                         .Select(x => $"{x.Name}.milo")
-                        .Reverse(); // Seems to be reverse order of serialization
+                        .Reverse()) // Seems to be reverse order of serialization
+                        aw.Write((string)subName);
 
-                    // Write sub directories
-                    aw.Write((int)dirEntry.SubDirectories.Count);
+                    // Write sub directory data
                     foreach (var subDir in dirEntry.SubDirectories)
                         WriteToStream(aw, subDir);
 
