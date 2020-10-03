@@ -141,7 +141,7 @@ namespace Mackiloha.IO.Serializers
             if (Magic() >= 24)
             {
                 // Write extra info
-                var dirEntry = dir.Extras["DirectoryEntry"] as MiloObjectBytes;
+                var dirEntry = dir.Extras["DirectoryEntry"] as MiloObject;
                 aw.Write((string)dirEntry.Type);
                 aw.Write((string)dirEntry.Name);
 
@@ -151,8 +151,11 @@ namespace Mackiloha.IO.Serializers
                 aw.Write(1 + ((string)dirEntry.Name).Length + dir.Entries.Count + entryNameLengths);
                 */
 
-                aw.Write((int)dir.Extras["Num1"]);
-                aw.Write((int)dir.Extras["Num2"]);
+                if (dir.Extras.TryGetValue("Num1", out var num1))
+                    aw.Write((int)num1);
+                if (dir.Extras.TryGetValue("Num2", out var num2))
+                    aw.Write((int)num2);
+
                 aw.Write((int)dir.Entries.Count);
             }
 
@@ -164,8 +167,80 @@ namespace Mackiloha.IO.Serializers
 
             if (Magic() >= 24)
             {
-                var dirEntry = dir.Extras["DirectoryEntry"] as MiloObjectBytes;
-                MiloSerializer.WriteToStream(aw.BaseStream, dirEntry);
+                var dirEntryRaw = dir.Extras["DirectoryEntry"] as ISerializable;
+
+                if (Magic() == 25
+                    && dir.Type == "ObjectDir" 
+                    && dirEntryRaw is MiloObjectDirEntry dirEntry)
+                {
+                    // Hack for project 9
+                    aw.Write((int)dirEntry.Version);
+                    aw.Write((int)dirEntry.SubVersion);
+                    aw.Write((string)dirEntry.ProjectName);
+
+                    // Write matrices
+                    aw.Write((int)7);
+                    foreach (var mat in Enumerable
+                        .Range(0, 7)
+                        .Select(x => Matrix4.Identity()))
+                    {
+                        aw.Write((float)mat.M11);
+                        aw.Write((float)mat.M12);
+                        aw.Write((float)mat.M13);
+
+                        aw.Write((float)mat.M21);
+                        aw.Write((float)mat.M22);
+                        aw.Write((float)mat.M23);
+
+                        aw.Write((float)mat.M31);
+                        aw.Write((float)mat.M32);
+                        aw.Write((float)mat.M33);
+
+                        aw.Write((float)mat.M41);
+                        aw.Write((float)mat.M42);
+                        aw.Write((float)mat.M43);
+                    }
+
+                    // Write imported milo paths
+                    if ((dirEntry.ImportedMiloPaths is null))
+                    {
+                        aw.Write((int)dirEntry.ImportedMiloPaths.Length);
+
+                        foreach (var path in dirEntry.ImportedMiloPaths)
+                            aw.Write((string)path);
+                    }
+                    else
+                    {
+                        aw.Write((int)0);
+                    }
+
+                    // Constants? I hope
+                    aw.Write((int)0);
+                    aw.Write((bool)true);
+                    aw.Write((int)0);
+
+                    // Might be different depending on dir being root/nested
+                    // Root: false, Nested: true
+                    aw.Write((bool)(dirEntry.SubDirectories.Count <= 0)); // TODO: Use a better way to determine if nested
+
+                    // Write sub directory names
+                    var subDirNames = dirEntry
+                        .SubDirectories
+                        .Select(x => $"{x.Name}.milo")
+                        .Reverse(); // Seems to be reverse order of serialization
+
+                    // Write sub directories
+                    aw.Write((int)dirEntry.SubDirectories.Count);
+                    foreach (var subDir in dirEntry.SubDirectories)
+                        WriteToStream(aw, subDir);
+
+                    aw.BaseStream.Position += 13; // Zero'd bytes
+                }
+                else
+                {
+                    MiloSerializer.WriteToStream(aw.BaseStream, dirEntryRaw);
+                }
+
                 aw.Write(ADDE_PADDING);
             }
             else if (Magic() < 24) // GH1
