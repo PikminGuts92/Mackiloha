@@ -46,7 +46,7 @@ namespace Mackiloha.Song
         public string Text { get; set; }
     }
 
-    public enum DirectedEventType
+    public enum DirectedEventType : int
     {
         Float,
         TextFloat = 2,
