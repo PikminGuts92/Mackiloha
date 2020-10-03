@@ -55,6 +55,36 @@ namespace P9SongTool.Apps
 
             var converter = new Midi2Anim(midPath);
             var anim = converter.ExportToAnim();
+
+            // Create app state
+            var state = new AppState(inputDir);
+            state.UpdateSystemInfo(GetSystemInfo(op));
+
+            var miloDir = CreateRootDirectory(p9song.Name?.ToLower());
+            var miloDirEntry = miloDir.Extras["DirectoryEntry"] as MiloObjectDirEntry;
+
+            // Add lipsync files
+            foreach (var lipPath in lipsyncPaths)
+            {
+                var subDir = GetCharSubDirectory(lipPath);
+                miloDirEntry.SubDirectories.Add(subDir);
+            }
+
+            // Add preference + anim
+            miloDir.Entries.Add(songPref);
+            miloDir.Entries.Add(anim);
+
+            // TODO: Add extras
+
+            var serializer = state.GetSerializer();
+
+            var miloFile = new MiloFile
+            {
+                Data = serializer.WriteToBytes(miloDir)
+            };
+
+            miloFile.Structure = BlockStructure.MILO_A;
+            miloFile.WriteToFile(op.OutputPath);
         }
 
         protected P9Song OpenP9File(string p9songPath)
@@ -98,6 +128,79 @@ namespace P9SongTool.Apps
             songPref.LyricPart = preferences.LyricPart;
 
             return songPref;
+        }
+
+        protected SystemInfo GetSystemInfo(Project2MiloOptions op)
+            => new SystemInfo()
+            {
+                Version = 25,
+                BigEndian = true,
+                Platform = op.OutputPath
+                    .ToLower()
+                    .EndsWith("_ps3")
+                    ? Platform.PS3
+                    : Platform.X360
+            };
+
+        protected MiloObjectDir CreateRootDirectory(string name)
+        {
+            var miloDirEntry = new MiloObjectDirEntry()
+            {
+                Name = name,
+                Version = 22,
+                SubVersion = 2,
+                ProjectName = "song",
+                ImportedMiloPaths = new[]
+                {
+                    "../../world/shared/camera.milo",
+                    "../../world/shared/director.milo"
+                },
+                SubDirectories = new List<MiloObjectDir>()
+            };
+
+            var miloDir = new MiloObjectDir()
+            {
+                Name = name
+            };
+
+            miloDir.Extras.Add("DirectoryEntry", miloDirEntry);
+            miloDir.Extras.Add("Num1", 0);
+            miloDir.Extras.Add("Num2", 0);
+            return miloDir;
+        }
+        
+        protected MiloObjectDir GetCharSubDirectory(string lipPath)
+        {
+            var name = Path.GetFileNameWithoutExtension(lipPath).ToLower();
+            var fileName = Path.GetFileName(lipPath).ToLower();
+            var data = File.ReadAllBytes(lipPath);
+
+            var lipsync = new MiloObjectBytes("CharLipSync")
+            {
+                Name = fileName,
+                Data = data
+            };
+
+            var miloDirEntry = new MiloObjectDirEntry()
+            {
+                Name = name,
+                Version = 22,
+                SubVersion = 2,
+                ProjectName = "",
+                ImportedMiloPaths = Array.Empty<string>(),
+                SubDirectories = new List<MiloObjectDir>()
+            };
+
+            var miloDir = new MiloObjectDir()
+            {
+                Name = name
+            };
+
+            miloDir.Entries.Add(lipsync);
+            miloDir.Extras.Add("DirectoryEntry", miloDirEntry);
+            miloDir.Extras.Add("Num1", 0);
+            miloDir.Extras.Add("Num2", 0);
+            return miloDir;
         }
     }
 }
