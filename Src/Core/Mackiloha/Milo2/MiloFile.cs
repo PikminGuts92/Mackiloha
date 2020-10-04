@@ -97,7 +97,7 @@ namespace Mackiloha.Milo2
 
         public void WriteToFile(string path)
         {
-            using (var fs = File.OpenWrite(path))
+            using (var fs = File.Create(path))
             {
                 WriteToStream(new AwesomeWriter(fs, false));
             }
