@@ -8,7 +8,6 @@ namespace P9SongTool.Options
     public class Project2MiloOptions
     {
         [Value(0, Required = true, MetaName = "dirPath", HelpText = "Path to input project directory")]
-        
         public string InputPath { get; set; }
 
         [Value(1, Required = true, MetaName = "miloPath", HelpText = "Path to output milo archive")]
