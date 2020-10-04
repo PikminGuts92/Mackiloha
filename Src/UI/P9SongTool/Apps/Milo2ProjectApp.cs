@@ -28,11 +28,12 @@ namespace P9SongTool.Apps
             var milo = appState.OpenMiloFile(op.InputPath);
 
             // Create output directory
-            if (!Directory.Exists(op.OutputPath))
-                Directory.CreateDirectory(op.OutputPath);
+            var outputDir = Path.GetFullPath(op.OutputPath);
+            if (!Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
 
             var entries = GetEntries(milo);
-            ExtractLipsync(entries, op.OutputPath);
+            ExtractLipsync(entries, outputDir);
 
             var serializer = appState.GetSerializer();
 
@@ -57,16 +58,18 @@ namespace P9SongTool.Apps
             };
 
             var songJson = JsonSerializer.Serialize(song, appState.JsonSerializerOptions);
-            var songJsonPath = Path.Combine(op.OutputPath, "song.json");
+            var songJsonPath = Path.Combine(outputDir, "song.json");
 
             File.WriteAllText(songJsonPath, songJson);
+            Console.WriteLine($"Wrote \"song.json\"");
 
             // Export midi
             var songAnim = propAnims
                 .First(x => x.Name == "song.anim");
 
             var converter = new Anim2Midi(songAnim, op.BaseMidiPath);
-            converter.ExportMidi(Path.Combine(op.OutputPath, "venue.mid"));
+            converter.ExportMidi(Path.Combine(outputDir, "venue.mid"));
+            Console.WriteLine($"Wrote \"venue.mid\"");
 
             // Export whatever remaining files
             var remaining = entries
@@ -75,7 +78,7 @@ namespace P9SongTool.Apps
                     && x.Type != "P9SongPref")
                 .ToList();
 
-            var extraDirPath = Path.Combine(op.OutputPath, "extra");
+            var extraDirPath = Path.Combine(outputDir, "extra");
             if (!Directory.Exists(extraDirPath))
                 Directory.CreateDirectory(extraDirPath);
 
@@ -85,7 +88,10 @@ namespace P9SongTool.Apps
                 var miloObj = entry as MiloObjectBytes;
 
                 File.WriteAllBytes(entryPath, miloObj.Data);
+                Console.WriteLine($"Extracted \"{miloObj.Name}\"");
             }
+
+            Console.WriteLine($"Successfully created project in \"{outputDir}\"");
         }
 
         protected SystemInfo GetSystemInfo(Milo2ProjectOptions op)
@@ -141,6 +147,8 @@ namespace P9SongTool.Apps
 
                 var lipBytes = lipsync as MiloObjectBytes; // Should always be this
                 File.WriteAllBytes(lipFilePath, lipBytes.Data);
+
+                Console.WriteLine($"Extracted \"{lipsync.Name}\"");
             }
         }
 

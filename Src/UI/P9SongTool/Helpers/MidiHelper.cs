@@ -22,12 +22,20 @@ namespace P9SongTool.Helpers
         protected virtual MidiFile ParseBaseMidi(string midPath)
         {
             // Check if mid exists
-            if ((midPath is null) || !File.Exists(midPath))
+            if ((midPath is null))
             {
-                // No mid found
+                // No mid path given
+                Console.WriteLine("No base .mid file path given");
+                return null;
+            }
+            else if (!File.Exists(midPath))
+            {
+                // Mid not found
+                Console.WriteLine($"Could not find \"{midPath}\" to use as base .mid file, proceeding anyways");
                 return null;
             }
 
+            Console.WriteLine($"Using \"{midPath}\" as base .mid file");
             return new MidiFile(midPath);
         }
 

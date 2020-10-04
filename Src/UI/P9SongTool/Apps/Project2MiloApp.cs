@@ -94,8 +94,12 @@ namespace P9SongTool.Apps
                 Data = serializer.WriteToBytes(miloDir)
             };
 
+            var outputMiloPath = Path.GetFullPath(op.OutputPath);
+
             miloFile.Structure = BlockStructure.MILO_A;
             miloFile.WriteToFile(op.OutputPath);
+
+            Console.WriteLine($"Successfully created milo at \"{outputMiloPath}\"");
         }
 
         protected P9Song OpenP9File(string p9songPath)
