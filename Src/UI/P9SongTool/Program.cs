@@ -16,8 +16,10 @@ namespace P9SongTool
 
             Parser.Default.ParseArguments<
                 Milo2ProjectOptions,
+                NewProjectOptions,
                 Project2MiloOptions>(args)
                 .WithParsed<Milo2ProjectOptions>(serviceProvider.GetService<Milo2ProjectApp>().Parse)
+                .WithParsed<NewProjectOptions>(serviceProvider.GetService<NewProjectApp>().Parse)
                 .WithParsed<Project2MiloOptions>(serviceProvider.GetService<Project2MiloApp>().Parse)
                 .WithNotParsed(errors => { });
         }

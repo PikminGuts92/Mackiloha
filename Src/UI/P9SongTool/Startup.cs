@@ -12,6 +12,7 @@ namespace P9SongTool
         {
             // Apps
             services.AddSingleton<Milo2ProjectApp>();
+            services.AddSingleton<NewProjectApp>();
             services.AddSingleton<Project2MiloApp>();
         }
     }
