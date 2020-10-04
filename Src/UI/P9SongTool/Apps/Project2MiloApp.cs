@@ -88,17 +88,18 @@ namespace P9SongTool.Apps
             miloDir.Entries.AddRange(extras);
 
             var serializer = state.GetSerializer();
+            var outputMiloPath = Path.GetFullPath(op.OutputPath);
 
             var miloFile = new MiloFile
             {
                 Data = serializer.WriteToBytes(miloDir)
             };
 
-            var outputMiloPath = Path.GetFullPath(op.OutputPath);
+            miloFile.Structure = op.UncompressedMilo
+                ? BlockStructure.MILO_A
+                : BlockStructure.MILO_B;
 
-            miloFile.Structure = BlockStructure.MILO_A;
             miloFile.WriteToFile(op.OutputPath);
-
             Console.WriteLine($"Successfully created milo at \"{outputMiloPath}\"");
         }
 
