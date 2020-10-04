@@ -1,4 +1,6 @@
 ﻿using CommandLine;
+using CommandLine.Text;
+using System.Collections.Generic;
 
 namespace P9SongTool.Options
 {
@@ -13,5 +15,23 @@ namespace P9SongTool.Options
 
         [Option('m', "midi", HelpText = "Base MIDI path to import tempo map (otherwise constant 120bpm will be used)")]
         public string BaseMidiPath { get; set; }
+
+        [Usage(ApplicationAlias = "p9songtool.exe")]
+        public static IEnumerable<Example> Examples
+            => new[]
+            {
+                new Example("Convert milo archive to song project", new Milo2ProjectOptions
+                {
+                    InputPath = "temporarysec.milo",
+                    OutputPath = "project_temporarysec",
+                    BaseMidiPath = null
+                }),
+                new Example("Convert milo archive to song project w/ base .mid", new Milo2ProjectOptions
+                {
+                    InputPath = "temporarysec.milo",
+                    OutputPath = "project_temporarysec",
+                    BaseMidiPath = "temporarysec.mid"
+                })
+            };
     }
 }
