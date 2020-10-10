@@ -45,25 +45,48 @@ namespace Mackiloha.IO.Serializers
 
             // Read vertices
             var count = ar.ReadInt32();
+            if (version >= 36) ar.BaseStream.Position += 9; // Skips unknown stuff
+
             mesh.Vertices.Clear();
             mesh.Vertices.AddRange(RepeatFor(count, () =>
             {
-                // TODO: Add switch statement for milo version
-                return new Vertex3()
+                var vertex = new Vertex3();
+
+                vertex.X = ar.ReadSingle();
+                vertex.Y = ar.ReadSingle();
+                vertex.Z = ar.ReadSingle();
+                if (version == 34) ar.BaseStream.Position += 4; // Skip W for RB1
+
+                if (version < 35)
                 {
-                    X = ar.ReadSingle(),
-                    Y = ar.ReadSingle(),
-                    Z = ar.ReadSingle(),
-                    NormalX = ar.ReadSingle(),
-                    NormalY = ar.ReadSingle(),
-                    NormalZ = ar.ReadSingle(),
-                    ColorR = ar.ReadSingle(),
-                    ColorG = ar.ReadSingle(),
-                    ColorB = ar.ReadSingle(),
-                    ColorA = ar.ReadSingle(),
-                    U = ar.ReadSingle(),
-                    V = ar.ReadSingle()
-                };
+                    // Single precision
+                    vertex.NormalX = ar.ReadSingle();
+                    vertex.NormalY = ar.ReadSingle();
+                    vertex.NormalZ = ar.ReadSingle();
+
+                    if (version == 34) ar.BaseStream.Position += 4; // Skip W for RB1
+
+                    vertex.ColorR = ar.ReadSingle();
+                    vertex.ColorG = ar.ReadSingle();
+                    vertex.ColorB = ar.ReadSingle();
+                    vertex.ColorA = ar.ReadSingle();
+                    vertex.U = ar.ReadSingle();
+                    vertex.V = ar.ReadSingle();
+
+                    if (version == 34) ar.BaseStream.Position += 24; // Skip unknown bytes for RB1
+                }
+                else
+                {
+                    // Half precision
+                    vertex.ColorR = ar.ReadByte();
+                    vertex.ColorG = ar.ReadByte();
+                    vertex.ColorB = ar.ReadByte();
+                    vertex.ColorA = ar.ReadByte();
+
+                    ar.BaseStream.Position += 20;
+                }
+
+                return vertex;
             }));
 
             // Read face indicies
@@ -107,6 +130,9 @@ namespace Mackiloha.IO.Serializers
             {
                 // Skips zero
                 ar.BaseStream.Position += 4;
+
+                if (version >= 36)
+                    ar.BaseStream.Position += 1;
             }
 
             mesh.Groups.Clear();
@@ -293,6 +319,9 @@ namespace Mackiloha.IO.Serializers
                 case 24:
                     // GH2
                     return new[] { 28 };
+                case 25:
+                    // TBRB
+                    return new[] { 36 };
                 default:
                     return Array.Empty<int>();
             }
