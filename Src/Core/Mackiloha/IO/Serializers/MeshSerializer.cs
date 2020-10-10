@@ -83,7 +83,16 @@ namespace Mackiloha.IO.Serializers
                     vertex.ColorB = ar.ReadByte();
                     vertex.ColorA = ar.ReadByte();
 
-                    ar.BaseStream.Position += 20;
+                    vertex.U = ar.ReadHalf();
+                    vertex.V = ar.ReadHalf();
+
+                    vertex.NormalX = ar.ReadHalf();
+                    vertex.NormalY = ar.ReadHalf();
+                    vertex.NormalZ = ar.ReadHalf();
+                    ar.BaseStream.Position += 2; // Skip W
+
+                    // Skip unknown bytes
+                    ar.BaseStream.Position += 8;
                 }
 
                 return vertex;
