@@ -129,27 +129,43 @@ namespace Mackiloha.IO.Serializers
             mesh.Bones.Clear();
             if (charCount > 0)
             {
-                const int boneCount = 4; // Always 4?
-                var boneNames = RepeatFor(boneCount, () => ar.ReadString()).ToArray(); // Either 3 or none (Last one is always empty?)
-                var boneMats = RepeatFor(boneCount, () => ReadMatrix(ar)).ToArray();
-                                
-                for (int i = 0; i < boneCount; i++)
+                if (version >= 36)
                 {
-                    mesh.Bones.Add(new Bone()
+                    // Uses variable length bone count
+                    ar.BaseStream.Position += 4;
+
+                    mesh.Bones
+                        .AddRange(RepeatFor(charCount, () => new Bone()
+                        {
+                            Name = ar.ReadString(),
+                            Mat = ReadMatrix(ar)
+                        }));
+                }
+                else
+                {
+                    // Uses constant length bone count
+                    const int boneCount = 4; // Always 4?
+                    var boneNames = RepeatFor(boneCount, () => ar.ReadString()).ToArray(); // Either 3 or none (Last one is always empty?)
+                    var boneMats = RepeatFor(boneCount, () => ReadMatrix(ar)).ToArray();
+
+                    for (int i = 0; i < boneCount; i++)
                     {
-                        Name = boneNames[i],
-                        Mat = boneMats[i]
-                    });
+                        mesh.Bones.Add(new Bone()
+                        {
+                            Name = boneNames[i],
+                            Mat = boneMats[i]
+                        });
+                    }
                 }
             }
             else
             {
                 // Skips zero
                 ar.BaseStream.Position += 4;
-
-                if (version >= 36)
-                    ar.BaseStream.Position += 1;
             }
+
+            if (version >= 36)
+                ar.BaseStream.Position += 1;
 
             mesh.Groups.Clear();
             if (count <= 0 || groupSizes[0] <= 0 || ar.BaseStream.Length == ar.BaseStream.Position)
