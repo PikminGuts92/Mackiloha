@@ -78,18 +78,25 @@ namespace Mackiloha.IO.Serializers
                 else
                 {
                     // Half precision
+                    vertex.U = ar.ReadHalf();
+                    vertex.V = ar.ReadHalf();
+
+                    // Not sure what this value is but it's usually pretty high
+                    ar.BaseStream.Position += 8;
+
+                    // Skip reading normals for now
+                    //vertex.NormalX = ar.ReadHalf();
+                    //vertex.NormalY = ar.ReadHalf();
+                    //vertex.NormalZ = ar.ReadHalf();
+
+                    vertex.NormalX = 1.0f;
+                    vertex.NormalY = 1.0f;
+                    vertex.NormalZ = 1.0f;
+
                     vertex.ColorR = ar.ReadByte();
                     vertex.ColorG = ar.ReadByte();
                     vertex.ColorB = ar.ReadByte();
                     vertex.ColorA = ar.ReadByte();
-
-                    vertex.U = ar.ReadHalf();
-                    vertex.V = ar.ReadHalf();
-
-                    vertex.NormalX = ar.ReadHalf();
-                    vertex.NormalY = ar.ReadHalf();
-                    vertex.NormalZ = ar.ReadHalf();
-                    ar.BaseStream.Position += 2; // Skip W
 
                     // Skip unknown bytes
                     ar.BaseStream.Position += 8;
