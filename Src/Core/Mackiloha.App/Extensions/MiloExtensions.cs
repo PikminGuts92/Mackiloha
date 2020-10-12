@@ -591,6 +591,22 @@ namespace Mackiloha.App.Extensions
                 .OrderByDescending(x => x.Nodes.Length)
                 .ToArray();
 
+            if (scene.Scenes.Length <= 0)
+            {
+                // Create scene from root notes
+                scene.Scenes = new[]
+                {
+                    new Scene()
+                    {
+                        Nodes = Enumerable
+                            .Range(0, nodes.Count)
+                            .Zip(nodes, (idx, node) => (idx, node))
+                            .Where(x => x.node.Name.StartsWith("Root_"))
+                            .Select(x => x.idx).ToArray()
+                    }
+                };
+            }
+
             scene.Nodes = nodes.ToArray();
             
             using (var fs = File.OpenWrite(Path.Combine(pathDirectory, scene.Buffers[0].Uri)))
