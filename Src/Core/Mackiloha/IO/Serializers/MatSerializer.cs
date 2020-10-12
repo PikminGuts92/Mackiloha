@@ -17,7 +17,7 @@ namespace Mackiloha.IO.Serializers
 
             if (version >= 25)
             {
-                ReadGH2Material(ar, mat);
+                ReadGH2Material(ar, mat, version);
                 return;
             }
 
@@ -73,7 +73,7 @@ namespace Mackiloha.IO.Serializers
             num = ar.ReadInt16();
         }
 
-        private void ReadGH2Material(AwesomeReader ar, Mat mat)
+        private void ReadGH2Material(AwesomeReader ar, Mat mat, int version)
         {
             // TODO: Better figure out GH2 material structure
             var num = ar.ReadInt32();
@@ -106,6 +106,12 @@ namespace Mackiloha.IO.Serializers
             mat.TextureEntries.AddRange(RepeatFor(1, () =>
             {
                 ar.BaseStream.Position += 2;
+
+                if (version >= 55)
+                {
+                    // Skip unknown data
+                    ar.BaseStream.Position += 4;
+                }
 
                 var texEntry = new TextureEntry()
                 {
@@ -196,6 +202,9 @@ namespace Mackiloha.IO.Serializers
                 case 24:
                     // GH2
                     return new[] { 25, 27 };
+                case 25:
+                    // TBRB
+                    return new[] { 55 };
                 default:
                     return Array.Empty<int>();
             }
