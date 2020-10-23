@@ -45,25 +45,64 @@ namespace Mackiloha.IO.Serializers
 
             // Read vertices
             var count = ar.ReadInt32();
+            if (version >= 36) ar.BaseStream.Position += 9; // Skips unknown stuff
+
             mesh.Vertices.Clear();
             mesh.Vertices.AddRange(RepeatFor(count, () =>
             {
-                // TODO: Add switch statement for milo version
-                return new Vertex3()
+                var vertex = new Vertex3();
+
+                vertex.X = ar.ReadSingle();
+                vertex.Y = ar.ReadSingle();
+                vertex.Z = ar.ReadSingle();
+                if (version == 34) ar.BaseStream.Position += 4; // Skip W for RB1
+
+                if (version < 35)
                 {
-                    X = ar.ReadSingle(),
-                    Y = ar.ReadSingle(),
-                    Z = ar.ReadSingle(),
-                    NormalX = ar.ReadSingle(),
-                    NormalY = ar.ReadSingle(),
-                    NormalZ = ar.ReadSingle(),
-                    ColorR = ar.ReadSingle(),
-                    ColorG = ar.ReadSingle(),
-                    ColorB = ar.ReadSingle(),
-                    ColorA = ar.ReadSingle(),
-                    U = ar.ReadSingle(),
-                    V = ar.ReadSingle()
-                };
+                    // Single precision
+                    vertex.NormalX = ar.ReadSingle();
+                    vertex.NormalY = ar.ReadSingle();
+                    vertex.NormalZ = ar.ReadSingle();
+
+                    if (version == 34) ar.BaseStream.Position += 4; // Skip W for RB1
+
+                    vertex.ColorR = ar.ReadSingle();
+                    vertex.ColorG = ar.ReadSingle();
+                    vertex.ColorB = ar.ReadSingle();
+                    vertex.ColorA = ar.ReadSingle();
+                    vertex.U = ar.ReadSingle();
+                    vertex.V = ar.ReadSingle();
+
+                    if (version == 34) ar.BaseStream.Position += 24; // Skip unknown bytes for RB1
+                }
+                else
+                {
+                    // Half precision
+                    vertex.U = ar.ReadHalf();
+                    vertex.V = ar.ReadHalf();
+
+                    // Not sure what this value is but it's usually pretty high
+                    ar.BaseStream.Position += 8;
+
+                    // Skip reading normals for now
+                    //vertex.NormalX = ar.ReadHalf();
+                    //vertex.NormalY = ar.ReadHalf();
+                    //vertex.NormalZ = ar.ReadHalf();
+
+                    vertex.NormalX = 1.0f;
+                    vertex.NormalY = 1.0f;
+                    vertex.NormalZ = 1.0f;
+
+                    vertex.ColorR = ar.ReadByte();
+                    vertex.ColorG = ar.ReadByte();
+                    vertex.ColorB = ar.ReadByte();
+                    vertex.ColorA = ar.ReadByte();
+
+                    // Skip unknown bytes
+                    ar.BaseStream.Position += 8;
+                }
+
+                return vertex;
             }));
 
             // Read face indicies
@@ -90,17 +129,33 @@ namespace Mackiloha.IO.Serializers
             mesh.Bones.Clear();
             if (charCount > 0)
             {
-                const int boneCount = 4; // Always 4?
-                var boneNames = RepeatFor(boneCount, () => ar.ReadString()).ToArray(); // Either 3 or none (Last one is always empty?)
-                var boneMats = RepeatFor(boneCount, () => ReadMatrix(ar)).ToArray();
-                                
-                for (int i = 0; i < boneCount; i++)
+                if (version >= 36)
                 {
-                    mesh.Bones.Add(new Bone()
+                    // Uses variable length bone count
+                    ar.BaseStream.Position += 4;
+
+                    mesh.Bones
+                        .AddRange(RepeatFor(charCount, () => new Bone()
+                        {
+                            Name = ar.ReadString(),
+                            Mat = ReadMatrix(ar)
+                        }));
+                }
+                else
+                {
+                    // Uses constant length bone count
+                    const int boneCount = 4; // Always 4?
+                    var boneNames = RepeatFor(boneCount, () => ar.ReadString()).ToArray(); // Either 3 or none (Last one is always empty?)
+                    var boneMats = RepeatFor(boneCount, () => ReadMatrix(ar)).ToArray();
+
+                    for (int i = 0; i < boneCount; i++)
                     {
-                        Name = boneNames[i],
-                        Mat = boneMats[i]
-                    });
+                        mesh.Bones.Add(new Bone()
+                        {
+                            Name = boneNames[i],
+                            Mat = boneMats[i]
+                        });
+                    }
                 }
             }
             else
@@ -108,6 +163,9 @@ namespace Mackiloha.IO.Serializers
                 // Skips zero
                 ar.BaseStream.Position += 4;
             }
+
+            if (version >= 36)
+                ar.BaseStream.Position += 1;
 
             mesh.Groups.Clear();
             if (count <= 0 || groupSizes[0] <= 0 || ar.BaseStream.Length == ar.BaseStream.Position)
@@ -293,6 +351,9 @@ namespace Mackiloha.IO.Serializers
                 case 24:
                     // GH2
                     return new[] { 28 };
+                case 25:
+                    // TBRB
+                    return new[] { 36 };
                 default:
                     return Array.Empty<int>();
             }

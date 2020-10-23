@@ -143,6 +143,9 @@ namespace Mackiloha.IO.Serializers
                 case 24:
                     // GH2
                     return new[] { 9 };
+                case 25:
+                    // TBRB
+                    return new[] { 9 };
                 default:
                     return Array.Empty<int>();
             }

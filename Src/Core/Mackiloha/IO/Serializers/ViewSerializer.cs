@@ -39,6 +39,8 @@ namespace Mackiloha.IO.Serializers
             view.LODHeight = ar.ReadSingle();
             view.LODWidth = ar.ReadSingle();
 
+            // 9 extra bytes for v14?
+
             /*
             if (view.ScreenHeight > 0.0f && (view.ScreenWidth / view.ScreenHeight) != (4.0f / 3.0f))
                 throw new Exception($"Aspect ratio should be {(4.0f / 3.0f):F2}, got {(view.ScreenWidth / view.ScreenHeight):F2}");
@@ -88,6 +90,9 @@ namespace Mackiloha.IO.Serializers
                 case 24:
                     // GH2
                     return new[] { 11, 12 };
+                case 25:
+                    // TBRB
+                    return new[] { 14 };
                 default:
                     return Array.Empty<int>();
             }
