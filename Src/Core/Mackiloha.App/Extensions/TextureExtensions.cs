@@ -613,6 +613,35 @@ namespace Mackiloha.App.Extensions
             return image;
         }
 
+        private static byte[] EncodeDxImage(byte[] raw, int width, int height, int mips, DxEncoding encoding)
+        {
+            var image = new MagickImage(raw, new PixelReadSettings(width, height, StorageType.Char, PixelMapping.RGBA));
+
+            using var ddsStream = new MemoryStream();
+            var format = encoding switch
+            {
+                DxEncoding.DXGI_FORMAT_BC1_UNORM => MagickFormat.Dxt1,
+                DxEncoding.DXGI_FORMAT_BC5_UNORM => MagickFormat.Dxt5,
+                _ => MagickFormat.Dxt5 // TODO: Support ATI2 somehow
+            };
+
+            var bpp = encoding switch
+            {
+                DxEncoding.DXGI_FORMAT_BC1_UNORM => 4,
+                DxEncoding.DXGI_FORMAT_BC5_UNORM => 8,
+                _ => 8
+            };
+
+            image.Write(ddsStream, format);
+            ddsStream.Seek(128, SeekOrigin.Begin);
+
+            var dataSize = (width * height * bpp) / 8;
+            var data = new byte[dataSize];
+            ddsStream.Read(data, 0, data.Length);
+
+            return data;
+        }
+
         private static int LinearOffset(int x, int y, int w) => (y * (w << 2)) + (x << 2);
 
         private static byte _4BitsTo8Bits(int val, int andVal = 0x0F)
@@ -778,6 +807,45 @@ namespace Mackiloha.App.Extensions
                 || (height < 4)
                 || ((height & (height - 1)) != 0))
                 throw new Exception($"Inavlid image resolution of {width}x{height}. Both must be a power of 2 and at least 4px.");
+
+            if (info.Platform == Platform.PS3
+                || info.Platform == Platform.X360)
+            {
+                // TODO: Refactor to be more efficient
+                var inputBytes = image
+                    .GetPixels()
+                    .Select(x =>
+                    {
+                        var c = x.ToColor();
+                        return new[]
+                        {
+                            c.R,
+                            c.G,
+                            c.B,
+                            c.A
+                        };
+                    })
+                    .SelectMany(x => x)
+                    .ToArray(); ;
+
+                // Encode as DXT5 for now
+                var rawData = EncodeDxImage(inputBytes, width, height, 0, DxEncoding.DXGI_FORMAT_BC3_UNORM);
+                var bpp2 = 8;
+
+                if (info.Platform == Platform.X360)
+                    SwapBytes(rawData);
+
+                return new HMXBitmap()
+                {
+                    Bpp = bpp2,
+                    Encoding = 24, // DXT5
+                    MipMaps = 0,
+                    Width = width,
+                    Height = height,
+                    BPL = (width * bpp2) / 8,
+                    RawData = rawData
+                };
+            }
 
             var uniqueColors = image
                     .GetPixels()
