@@ -25,7 +25,8 @@ namespace P9SongTool.Apps
             var appState = AppState.FromFile(op.InputPath);
             appState.UpdateSystemInfo(GetSystemInfo(op));
 
-            var milo = appState.OpenMiloFile(op.InputPath);
+            var inputMiloPath = Path.GetFullPath(op.InputPath); // Use abs path until AppState is updated
+            var milo = appState.OpenMiloFile(inputMiloPath);
 
             // Create output directory
             var outputDir = Path.GetFullPath(op.OutputPath);
