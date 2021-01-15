@@ -8,7 +8,6 @@ namespace P9SongTool.Models
 {
     public class LyricEvent
     {
-        public float Time { get; set; }
         [JsonPropertyName("Pos")]
         [JsonProperty("Pos")]
         public float[] Position { get; set; } // 3 floats

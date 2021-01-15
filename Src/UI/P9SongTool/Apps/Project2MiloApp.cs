@@ -171,109 +171,126 @@ namespace P9SongTool.Apps
             {
                 Name = "lyric_config.anim",
                 AnimName = "",
-                TotalTime = lyricConfigs
-                    .Select(x => x.Events.Count())
-                    .Max()
+                TotalTime = lyricConfigs.Count() // Directed cuts count
             };
 
-            int i = 1;
-            foreach (var lyricConfig in lyricConfigs.OrderBy(x => x.Name))
-            {
-                var name = lyricConfig?.Name ?? $"venue_lyric{i:d2}";
+            var maxLyricCount = lyricConfigs
+                .Select(x => x.Lyrics.Count())
+                .Max();
 
-                // Create groups
-                var posGroup = Midi2Anim.CreateDirectorGroup("position", name);
-                var rotGroup = Midi2Anim.CreateDirectorGroup("rotation", name);
-                var scaleGroup = Midi2Anim.CreateDirectorGroup("scale", name);
+            var propGroups = Enumerable
+                .Range(1, maxLyricCount)
+                .Select(i =>
+                {
+                    var name = $"venue_lyric{i:d2}";
 
-                // Convert position
-                lyricConfig
-                    .Events
-                    .OrderBy(x => x.Time)
-                    .Select(x => new DirectedEventVector3()
+                    return new []
                     {
-                        Position = x.Time,
+                        Midi2Anim.CreateDirectorGroup("position", name), // Pos
+                        Midi2Anim.CreateDirectorGroup("rotation", name), // Rot
+                        Midi2Anim.CreateDirectorGroup("scale", name)     // Scale
+                    };
+                })
+                .ToArray();
+
+            // Iterate over directed lyric cuts
+            foreach (var lyricConfig in lyricConfigs
+                // TODO: Some sort of name validation
+                .Select(x => (int.Parse(x.Name.Substring(x.Name.LastIndexOf("_") + 1)), x))
+                .OrderBy(x => x.Item1))
+            {
+                var dcIndex = lyricConfig.Item1;
+
+                // Iterate over lyrics
+                int i = 0;
+                foreach (var lyric in lyricConfig.x.Lyrics)
+                {
+                    // Get indexed groups
+                    var posGroup = propGroups[i][0];
+                    var rotGroup = propGroups[i][1];
+                    var scaleGroup = propGroups[i][2];
+
+                    // Convert position
+                    var posEvent = new DirectedEventVector3()
+                    {
+                        Position = dcIndex,
                         Value = new Vector3()
                         {
-                            X = (!(x.Position is null)
-                                && x.Position.Length > 0)
-                                ? x.Position[0]
+                            X = (!(lyric.Position is null)
+                                && lyric.Position.Length > 0)
+                                ? lyric.Position[0]
                                 : 0.0f,
-                            Y = (!(x.Position is null)
-                                && x.Position.Length > 1)
-                                ? x.Position[1]
+                            Y = (!(lyric.Position is null)
+                                && lyric.Position.Length > 1)
+                                ? lyric.Position[1]
                                 : 0.0f,
-                            Z = (!(x.Position is null)
-                                && x.Position.Length > 2)
-                                ? x.Position[2]
-                                : 0.0f,
+                            Z = (!(lyric.Position is null)
+                                && lyric.Position.Length > 2)
+                                ? lyric.Position[2]
+                                : 0.0f
                         }
-                    })
-                    .ToList()
-                    .ForEach(x => posGroup.Events.Add(x)); // Must add one at a time because of generic conflict
+                    };
+                    posGroup.Events.Add(posEvent);
 
-                // Convert rotation
-                lyricConfig
-                    .Events
-                    .OrderBy(x => x.Time)
-                    .Select(x => new DirectedEventVector4()
+                    // Convert rotation
+                    var rotEvent = new DirectedEventVector4()
                     {
-                        Position = x.Time,
+                        Position = dcIndex,
                         Value = new Vector4()
                         {
-                            X = (!(x.Rotation is null)
-                                && x.Rotation.Length > 0)
-                                ? x.Rotation[0]
+                            X = (!(lyric.Rotation is null)
+                                && lyric.Rotation.Length > 0)
+                                ? lyric.Rotation[0]
                                 : 0.0f,
-                            Y = (!(x.Rotation is null)
-                                && x.Rotation.Length > 1)
-                                ? x.Rotation[1]
+                            Y = (!(lyric.Rotation is null)
+                                && lyric.Rotation.Length > 1)
+                                ? lyric.Rotation[1]
                                 : 0.0f,
-                            Z = (!(x.Rotation is null)
-                                && x.Rotation.Length > 2)
-                                ? x.Rotation[2]
+                            Z = (!(lyric.Rotation is null)
+                                && lyric.Rotation.Length > 2)
+                                ? lyric.Rotation[2]
                                 : 0.0f,
-                            W = (!(x.Rotation is null)
-                                && x.Rotation.Length > 3)
-                                ? x.Rotation[3]
+                            W = (!(lyric.Rotation is null)
+                                && lyric.Rotation.Length > 3)
+                                ? lyric.Rotation[3]
                                 : 1.0f,
                         }
-                    })
-                    .ToList()
-                    .ForEach(x => rotGroup.Events.Add(x)); // Must add one at a time because of generic conflict
+                    };
+                    rotGroup.Events.Add(rotEvent);
 
-                // Convert scale
-                lyricConfig
-                    .Events
-                    .OrderBy(x => x.Time)
-                    .Select(x => new DirectedEventVector3()
+                    // Convert scale
+                    var scaleEvent = new DirectedEventVector3()
                     {
-                        Position = x.Time,
+                        Position = dcIndex,
                         Value = new Vector3()
                         {
-                            X = (!(x.Scale is null)
-                                && x.Scale.Length > 0)
-                                ? x.Scale[0]
+                            X = (!(lyric.Scale is null)
+                                && lyric.Scale.Length > 0)
+                                ? lyric.Scale[0]
                                 : 1.0f,
-                            Y = (!(x.Scale is null)
-                                && x.Scale.Length > 1)
-                                ? x.Scale[1]
+                            Y = (!(lyric.Scale is null)
+                                && lyric.Scale.Length > 1)
+                                ? lyric.Scale[1]
                                 : 1.0f,
-                            Z = (!(x.Scale is null)
-                                && x.Scale.Length > 2)
-                                ? x.Scale[2]
-                                : 1.0f,
+                            Z = (!(lyric.Scale is null)
+                                && lyric.Scale.Length > 2)
+                                ? lyric.Scale[2]
+                                : 1.0f
                         }
-                    })
-                    .ToList()
-                    .ForEach(x => scaleGroup.Events.Add(x)); // Must add one at a time because of generic conflict
+                    };
+                    scaleGroup.Events.Add(scaleEvent);
 
-                // Add groups to lyric anim
-                lyricAnim.DirectorGroups.Add(posGroup);
-                lyricAnim.DirectorGroups.Add(rotGroup);
-                lyricAnim.DirectorGroups.Add(scaleGroup);
+                    i++;
+                }
+            }
 
-                i++;
+            // Add groups to lyric anim
+            foreach (var group in propGroups)
+            {
+                foreach (var subGroup in group)
+                {
+                    lyricAnim.DirectorGroups.Add(subGroup);
+                }
             }
 
             return lyricAnim;

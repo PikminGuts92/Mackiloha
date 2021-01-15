@@ -197,32 +197,40 @@ namespace P9SongTool.Apps
         {
             var groupedConfigs = lyricConfigProp
                 .DirectorGroups
-                .GroupBy(x => x.DirectorName)
-                .OrderBy(x => x.Key);
+                .SelectMany(x => x.Events
+                    .Select(y => (y, x.DirectorName, x.PropName))
+                    .ToList())
+                .GroupBy(x => (int)x.y.Position)
+                .OrderBy(x => x.Key) // Order by "dc_lyrics_x"
+                .ToList();
 
             var lyricConfigs = new List<LyricConfig>();
 
             foreach (var propConfig in groupedConfigs)
             {
-                var parts = propConfig
-                    .OrderBy(x => x.DirectorName)
-                    .ToList();
+                var configName = $"dc_lyrics_{propConfig.Key}";
 
-                var eventCount = parts
-                    .Select(x => x.Events.Count)
-                    .Max();
+                var lyrics = propConfig
+                    .OrderBy(x => x.DirectorName) // Order by "venue_lyric_xx"
+                    .GroupBy(x => x.DirectorName)
+                    .ToList();
 
                 var lyricEvents = new List<LyricEvent>();
 
-                foreach (var i in Enumerable.Range(0, eventCount))
+                foreach (var lyric in lyrics)
                 {
-                    var pos = (DirectedEventVector3)parts[0].Events[i];
-                    var rot = (DirectedEventVector4)parts[1].Events[i];
-                    var scale = (DirectedEventVector3)parts[2].Events[i];
+                    // Assume always pos, rot, scale
+                    var parts = lyric
+                        .OrderBy(x => x.PropName)
+                        .Select(x => x.y)
+                        .ToList();
+
+                    var pos = (DirectedEventVector3)parts[0];
+                    var rot = (DirectedEventVector4)parts[1];
+                    var scale = (DirectedEventVector3)parts[2];
 
                     lyricEvents.Add(new LyricEvent()
                     {
-                        Time = pos.Position, // For now assume positions match between pos, rot, and scale
                         Position = new float[]
                         {
                             pos.Value.X,
@@ -247,10 +255,10 @@ namespace P9SongTool.Apps
 
                 lyricConfigs.Add(new LyricConfig()
                 {
-                    Name = parts.First().DirectorName,
-                    Events = lyricEvents
+                    Name = configName,
+                    Lyrics = lyricEvents
                         .ToArray()
-                }); ;
+                });
             }
 
             return lyricConfigs
