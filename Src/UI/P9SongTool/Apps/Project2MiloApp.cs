@@ -236,7 +236,7 @@ namespace P9SongTool.Apps
                             W = (!(x.Rotation is null)
                                 && x.Rotation.Length > 3)
                                 ? x.Rotation[3]
-                                : 0.0f,
+                                : 1.0f,
                         }
                     })
                     .ToList()
