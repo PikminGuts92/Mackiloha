@@ -6,6 +6,7 @@ using Mackiloha.Milo2;
 using Mackiloha.Song;
 using P9SongTool.Exceptions;
 using P9SongTool.Helpers;
+using P9SongTool.Json;
 using P9SongTool.Models;
 using P9SongTool.Options;
 using System;
@@ -58,7 +59,16 @@ namespace P9SongTool.Apps
                 Preferences = ConvertFromP9SongPref(songPref)
             };
 
-            var songJson = JsonSerializer.Serialize(song, appState.JsonSerializerOptions);
+            // Convert lyric config
+            var lyricConfig = propAnims
+                .FirstOrDefault(x => x.Name == "lyric_config.anim");
+
+            if (!(lyricConfig is null))
+            {
+                song.LyricConfigurations = ConvertFromPropAnim(lyricConfig);
+            }
+
+            var songJson = SerializeSong(song, appState);
             var songJsonPath = Path.Combine(outputDir, "song.json");
 
             File.WriteAllText(songJsonPath, songJson);
@@ -76,7 +86,8 @@ namespace P9SongTool.Apps
             var remaining = entries
                 .Where(x => x.Name != songAnim.Name
                     && x.Type != "CharLipSync"
-                    && x.Type != "P9SongPref")
+                    && x.Type != "P9SongPref"
+                    && x.Name != "lyric_config.anim")
                 .ToList();
 
             var extraDirPath = Path.Combine(outputDir, "extra");
@@ -181,5 +192,80 @@ namespace P9SongTool.Apps
 
                 LyricPart = songPref.LyricPart
             };
+
+        protected LyricConfig[] ConvertFromPropAnim(PropAnim lyricConfigProp)
+        {
+            var groupedConfigs = lyricConfigProp
+                .DirectorGroups
+                .GroupBy(x => x.DirectorName)
+                .OrderBy(x => x.Key);
+
+            var lyricConfigs = new List<LyricConfig>();
+
+            foreach (var propConfig in groupedConfigs)
+            {
+                var parts = propConfig
+                    .OrderBy(x => x.DirectorName)
+                    .ToList();
+
+                var eventCount = parts
+                    .Select(x => x.Events.Count)
+                    .Max();
+
+                var lyricEvents = new List<LyricEvent>();
+
+                foreach (var i in Enumerable.Range(0, eventCount))
+                {
+                    var pos = (DirectedEventVector3)parts[0].Events[i];
+                    var rot = (DirectedEventVector4)parts[1].Events[i];
+                    var scale = (DirectedEventVector3)parts[2].Events[i];
+
+                    lyricEvents.Add(new LyricEvent()
+                    {
+                        Time = pos.Position, // For now assume positions match between pos, rot, and scale
+                        Position = new float[]
+                        {
+                            pos.Value.X,
+                            pos.Value.Y,
+                            pos.Value.Z
+                        },
+                        Rotation = new float[]
+                        {
+                            rot.Value.X,
+                            rot.Value.Y,
+                            rot.Value.Z,
+                            rot.Value.W
+                        },
+                        Scale = new float[]
+                        {
+                            scale.Value.X,
+                            scale.Value.Y,
+                            scale.Value.Z
+                        }
+                    });
+                }
+
+                lyricConfigs.Add(new LyricConfig()
+                {
+                    Name = parts.First().DirectorName,
+                    Events = lyricEvents
+                        .ToArray()
+                }); ;
+            }
+
+            return lyricConfigs
+                .ToArray();
+        }
+
+        public string SerializeSong(P9Song song, AppState appState)
+        {
+            var jsonSettings = new Newtonsoft.Json.JsonSerializerSettings();
+            jsonSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+            jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+            jsonSettings.Converters.Add(new SingleLineFloatArrayConverter());
+
+            return Newtonsoft.Json.JsonConvert.SerializeObject(song, jsonSettings);
+            //return JsonSerializer.Serialize(song, appState.JsonSerializerOptions);
+        }
     }
 }
