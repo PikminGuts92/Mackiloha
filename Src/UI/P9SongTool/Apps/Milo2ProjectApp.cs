@@ -56,7 +56,8 @@ namespace P9SongTool.Apps
             var song = new P9Song()
             {
                 Name = milo.Name,
-                Preferences = ConvertFromP9SongPref(songPref)
+                Preferences = ConvertFromP9SongPref(songPref),
+                LyricConfigurations = Array.Empty<LyricConfig>()
             };
 
             // Convert lyric config
