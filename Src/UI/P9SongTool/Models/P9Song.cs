@@ -12,6 +12,6 @@ namespace P9SongTool.Models
         public SongPreferences Preferences { get; set; }
         [JsonPropertyName("LyricConfigs")]
         [JsonProperty("LyricConfigs")]
-        public LyricConfig[] LyricConfigurations { get; set; } = Array.Empty<LyricConfig>();
+        public LyricConfig[] LyricConfigurations { get; set; }
     }
 }

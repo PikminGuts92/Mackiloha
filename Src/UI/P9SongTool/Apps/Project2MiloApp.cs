@@ -52,6 +52,7 @@ namespace P9SongTool.Apps
 
             var p9song = OpenP9File(songMetaPath);
             var songPref = ConvertFromSongPreferences(p9song.Preferences);
+            var lyricConfigAnim = ConvertFromLyricConfigs(p9song.LyricConfigurations);
 
             var converter = new Midi2Anim(midPath);
             var anim = converter.ExportToAnim();
@@ -70,9 +71,14 @@ namespace P9SongTool.Apps
                 miloDirEntry.SubDirectories.Add(subDir);
             }
 
-            // Add preference + anim
+            // Add preference + anims
             miloDir.Entries.Add(songPref);
             miloDir.Entries.Add(anim);
+
+            if (!(lyricConfigAnim is null))
+            {
+                miloDir.Entries.Add(lyricConfigAnim);
+            }
 
             // Get extras as raw entries
             var extras = extrasPaths
@@ -83,6 +89,8 @@ namespace P9SongTool.Apps
                     Name = Path.GetFileName(x.Item1),
                     Data = File.ReadAllBytes(x.Item1)
                 })
+                .Where(x => (lyricConfigAnim is null)
+                    || !x.Name.Equals(lyricConfigAnim.Name, StringComparison.CurrentCultureIgnoreCase)) // Filter out lyric_config if in json
                 .ToList();
 
             miloDir.Entries.AddRange(extras);
@@ -150,6 +158,125 @@ namespace P9SongTool.Apps
             songPref.LyricPart = preferences.LyricPart;
 
             return songPref;
+        }
+
+        protected PropAnim ConvertFromLyricConfigs(LyricConfig[] lyricConfigs)
+        {
+            if (lyricConfigs is null || lyricConfigs.Length <= 0)
+            {
+                return default;
+            }
+
+            var lyricAnim = new PropAnim()
+            {
+                Name = "lyric_config.anim",
+                AnimName = "",
+                TotalTime = lyricConfigs
+                    .Select(x => x.Events.Count())
+                    .Max()
+            };
+
+            int i = 1;
+            foreach (var lyricConfig in lyricConfigs.OrderBy(x => x.Name))
+            {
+                var name = lyricConfig?.Name ?? $"venue_lyric{i:d2}";
+
+                // Create groups
+                var posGroup = Midi2Anim.CreateDirectorGroup("position", name);
+                var rotGroup = Midi2Anim.CreateDirectorGroup("rotation", name);
+                var scaleGroup = Midi2Anim.CreateDirectorGroup("scale", name);
+
+                // Convert position
+                lyricConfig
+                    .Events
+                    .OrderBy(x => x.Time)
+                    .Select(x => new DirectedEventVector3()
+                    {
+                        Position = x.Time,
+                        Value = new Vector3()
+                        {
+                            X = (!(x.Position is null)
+                                && x.Position.Length > 0)
+                                ? x.Position[0]
+                                : 0.0f,
+                            Y = (!(x.Position is null)
+                                && x.Position.Length > 1)
+                                ? x.Position[1]
+                                : 0.0f,
+                            Z = (!(x.Position is null)
+                                && x.Position.Length > 2)
+                                ? x.Position[2]
+                                : 0.0f,
+                        }
+                    })
+                    .ToList()
+                    .ForEach(x => posGroup.Events.Add(x)); // Must add one at a time because of generic conflict
+
+                // Convert rotation
+                lyricConfig
+                    .Events
+                    .OrderBy(x => x.Time)
+                    .Select(x => new DirectedEventVector4()
+                    {
+                        Position = x.Time,
+                        Value = new Vector4()
+                        {
+                            X = (!(x.Rotation is null)
+                                && x.Rotation.Length > 0)
+                                ? x.Rotation[0]
+                                : 0.0f,
+                            Y = (!(x.Rotation is null)
+                                && x.Rotation.Length > 1)
+                                ? x.Rotation[1]
+                                : 0.0f,
+                            Z = (!(x.Rotation is null)
+                                && x.Rotation.Length > 2)
+                                ? x.Rotation[2]
+                                : 0.0f,
+                            W = (!(x.Rotation is null)
+                                && x.Rotation.Length > 3)
+                                ? x.Rotation[3]
+                                : 0.0f,
+                        }
+                    })
+                    .ToList()
+                    .ForEach(x => rotGroup.Events.Add(x)); // Must add one at a time because of generic conflict
+
+                // Convert scale
+                lyricConfig
+                    .Events
+                    .OrderBy(x => x.Time)
+                    .Select(x => new DirectedEventVector3()
+                    {
+                        Position = x.Time,
+                        Value = new Vector3()
+                        {
+                            X = (!(x.Scale is null)
+                                && x.Scale.Length > 0)
+                                ? x.Scale[0]
+                                : 1.0f,
+                            Y = (!(x.Scale is null)
+                                && x.Scale.Length > 1)
+                                ? x.Scale[1]
+                                : 1.0f,
+                            Z = (!(x.Scale is null)
+                                && x.Scale.Length > 2)
+                                ? x.Scale[2]
+                                : 1.0f,
+                        }
+                    })
+                    .ToList()
+                    .ForEach(x => scaleGroup.Events.Add(x)); // Must add one at a time because of generic conflict
+
+                // Add groups to lyric anim
+                lyricAnim.DirectorGroups.Add(posGroup);
+                lyricAnim.DirectorGroups.Add(rotGroup);
+                lyricAnim.DirectorGroups.Add(scaleGroup);
+
+                i++;
+            }
+
+            return lyricAnim;
         }
 
         protected SystemInfo GetSystemInfo(Project2MiloOptions op)
