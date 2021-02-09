@@ -715,7 +715,10 @@ namespace Mackiloha.Ark
                 if (bestFit == null)
                 {
                     // Adds to end of last archive file
-                    var lastEntry = remainingOffsetEntries.OrderByDescending(x => x.Offset).FirstOrDefault();
+                    var lastEntry = remainingOffsetEntries
+                        .OrderByDescending(x => x.Offset + x.Size) // Ensures 0-length files don't conflict w/ regular files at same offset
+                        .FirstOrDefault();
+
                     long offset = (lastEntry != null) ? lastEntry.Offset + lastEntry.Size : 0;
                     long partOffset = offset - arkSizes.Reverse().Skip(1).Sum();
 
