@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using static Mackiloha.FileHelper;
 
 namespace ArkHelper.Apps
 {
@@ -26,8 +27,8 @@ namespace ArkHelper.Apps
         private string CombinePath(string basePath, string path)
         {
             // Consistent slash
-            basePath = (basePath ?? "").Replace("/", "\\");
-            path = (path ?? "").Replace("/", "\\");
+            basePath = FixSlashes(basePath ?? "");
+            path = FixSlashes(path ?? "");
 
             path = ReplaceDotsInPath(path);
             return Path.Combine(basePath, path);

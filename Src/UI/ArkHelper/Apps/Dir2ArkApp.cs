@@ -65,7 +65,7 @@ namespace ArkHelper.Apps
             foreach (var file in files)
             {
                 var internalPath = FileHelper.GetRelativePath(file, op.InputPath)
-                    .Replace("\\", "/");
+                    .Replace("\\", "/"); // Must be "/" in ark
 
                 string inputFilePath = file;
 
@@ -113,7 +113,7 @@ namespace ArkHelper.Apps
                 }
 
                 var fileName = Path.GetFileName(internalPath);
-                var dirPath = Path.GetDirectoryName(internalPath).Replace("\\", "/");
+                var dirPath = Path.GetDirectoryName(internalPath).Replace("\\", "/"); // Must be "/" in ark
 
                 var pendingEntry = new PendingArkEntry(fileName, dirPath)
                 {

@@ -833,8 +833,15 @@ namespace Mackiloha.Ark
             string[] arkPaths = new string[count + 1];
             arkPaths[0] = hdrPath.Replace("\\", "/");
 
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                directory += "/";
+            }
+
             for (int i = 0; i < count; i++)
-                arkPaths[i+1] = $"{directory}/{fileName}_{i}{extension}";
+            {
+                arkPaths[i+1] = $"{directory}{fileName}_{i}{extension}";
+            }
 
             return arkPaths;
         }
