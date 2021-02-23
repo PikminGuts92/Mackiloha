@@ -39,7 +39,16 @@ namespace ArkHelper.Helpers
             => RuntimeInformation.OSDescription.Contains("Windows") ? ".exe" : "";
 
         protected virtual string GetExeDirectory()
-            => Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+            =>
+            #if DEBUG
+                // Use for debug only
+                // Note: Fixed in .NET 5.0 but why upgrade just for that?
+                AppContext.BaseDirectory
+            #else
+                // Works on published apps
+                Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName)
+            #endif
+            ;
 
         protected virtual void WriteOutput(string text)
             => Console.WriteLine(text);
