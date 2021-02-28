@@ -27,8 +27,10 @@ namespace P9SongTool.Apps
             SupportedExtraTypes = new (string extension, string miloType)[]
             {
                 (".anim", "PropAnim"),
+                (".font", "Font"),
                 (".mat", "Mat"),
-                (".tex", "Tex")
+                (".tex", "Tex"),
+                (".txt", "Text")
             };
         }
 
@@ -41,8 +43,17 @@ namespace P9SongTool.Apps
             var songMetaPath = Path.Combine(inputDir, "song.json");
             var midPath = Path.Combine(inputDir, "venue.mid");
 
-            var lipsyncPaths = Directory.GetFiles(Path.Combine(inputDir, "lipsync"), "*.lipsync");
-            var extrasPaths = Directory.GetFiles(Path.Combine(inputDir, "extra"));
+            // Get lipsync files
+            var lipsyncDir = Path.Combine(inputDir, "lipsync");
+            var lipsyncPaths = Directory.Exists(lipsyncDir)
+                ? Directory.GetFiles(lipsyncDir, "*.lipsync")
+                : Array.Empty<string>();
+
+            // Get extra files
+            var extrasDir = Path.Combine(inputDir, "extra");
+            var extrasPaths = Directory.Exists(extrasDir)
+                ? Directory.GetFiles(extrasDir)
+                : Array.Empty<string>();
 
             // Enforce files exist
             if (!File.Exists(songMetaPath))
