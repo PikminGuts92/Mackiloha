@@ -826,7 +826,7 @@ namespace Mackiloha.App.Extensions
                         };
                     })
                     .SelectMany(x => x)
-                    .ToArray(); ;
+                    .ToArray();
 
                 // Encode as DXT5 for now
                 var rawData = EncodeDxImage(inputBytes, width, height, 0, DxEncoding.DXGI_FORMAT_BC3_UNORM);
