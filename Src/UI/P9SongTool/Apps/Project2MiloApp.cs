@@ -96,7 +96,7 @@ namespace P9SongTool.Apps
             // Get extras as raw entries
             var extras = extrasPaths
                 .Select(x => (x, SupportedExtraTypes.FirstOrDefault(y => x.EndsWith(y.extension, StringComparison.CurrentCultureIgnoreCase)).miloType))
-                .Where(x => !(x.Item1 is null))
+                .Where(x => !(x.Item2 is null)) // Ignore unsupported files
                 .Select(x => new MiloObjectBytes(x.Item2)
                 {
                     Name = Path.GetFileName(x.Item1),
