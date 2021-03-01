@@ -28,7 +28,9 @@ namespace P9SongTool.Apps
             {
                 (".anim", "PropAnim"),
                 (".font", "Font"),
+                (".grp", "Group"),
                 (".mat", "Mat"),
+                (".mesh", "Mesh"),
                 (".tex", "Tex"),
                 (".txt", "Text")
             };
@@ -327,7 +329,7 @@ namespace P9SongTool.Apps
                 Version = 22,
                 SubVersion = 2,
                 ProjectName = "song",
-                ImportedMiloPaths = new[]
+                ImportedMiloPaths = new []
                 {
                     "../../world/shared/camera.milo",
                     "../../world/shared/director.milo"
