@@ -2,8 +2,10 @@
 using ArkHelper.Helpers;
 using ArkHelper.Options;
 using Mackiloha;
+using Mackiloha.App.Extensions;
 using Mackiloha.Ark;
 using Mackiloha.CSV;
+using Mackiloha.IO;
 using Mackiloha.Milo2;
 using System;
 using System.Collections.Generic;
@@ -70,6 +72,7 @@ namespace ArkHelper.Apps
             var csvRegex = new Regex("(?i).csv_([A-Z0-9]+)$");
 
             var dtaRegex = new Regex("(?i).dta$");
+            var textureRegex = new Regex("(?i).((bmp)|(png))(_[A-Z0-9]+)$");
             var miloRegex = new Regex("(?i).milo(_[A-Z0-9]+)?$");
 
             var genPathedFile = new Regex(@"(?i)(([^\/\\]+[\/\\])*)(gen[\/\\])([^\/\\]+)$");
@@ -108,6 +111,11 @@ namespace ArkHelper.Apps
                     && csvRegex.IsMatch(x.FullPath))
                 .ToList();
 
+            var texturesToConvert = ark.Entries
+                .Where(x => op.ConvertTextures
+                    && textureRegex.IsMatch(x.FullPath))
+                .ToList();
+
             var milosToInflate = ark.Entries
                 .Where(x => op.InflateMilos
                     && miloRegex.IsMatch(x.FullPath))
@@ -116,6 +124,7 @@ namespace ArkHelper.Apps
             var entriesToExtract = ark.Entries
                 .Where(x => op.ExtractAll)
                 .Except(scriptsToConvert)
+                .Except(texturesToConvert)
                 .Except(milosToInflate)
                 .ToList();
 
@@ -129,6 +138,34 @@ namespace ArkHelper.Apps
             var tempDir = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
             if (Directory.Exists(tempDir))
                 Directory.Delete(tempDir, true);
+
+            foreach (var textureEntry in texturesToConvert)
+            {
+                using var arkEntryStream = ark.GetArkEntryFileStream(textureEntry);
+
+                var filePath = CombinePath(op.OutputPath, textureEntry.FullPath);
+                var pngPath = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(filePath)), Path.GetFileNameWithoutExtension(filePath) + ".png");
+
+                // Removes gen sub directory
+                if (genPathedFile.IsMatch(pngPath))
+                {
+                    var match = genPathedFile.Match(pngPath);
+                    pngPath = $"{match.Groups[1]}{match.Groups[4]}";
+                }
+
+                var info = new SystemInfo()
+                {
+                    Version = 10,
+                    Platform = Platform.PS2,
+                    BigEndian = false
+                };
+
+                var serializer = new MiloSerializer(info);
+                var bitmap = serializer.ReadFromStream<HMXBitmap>(arkEntryStream);
+
+                bitmap.SaveAs(info, pngPath);
+                Console.WriteLine($"Wrote \"{pngPath}\"");
+            }
 
             foreach (var miloEntry in milosToInflate)
             {

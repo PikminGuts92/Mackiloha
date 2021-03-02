@@ -14,6 +14,9 @@ namespace ArkHelper.Options
         [Option('s', "convertScripts", HelpText = "Convert dtb scripts to dta")]
         public bool ConvertScripts { get; set; }
 
+        [Option('t', "convertTextures", HelpText = "Convert textures to .png", Hidden = true)]
+        public bool ConvertTextures { get; set; }
+
         [Option('m', "inflateMilos", HelpText = "Inflate milo archives (decompress)")]
         public bool InflateMilos { get; set; }
 
