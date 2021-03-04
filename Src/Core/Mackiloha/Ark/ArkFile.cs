@@ -175,8 +175,8 @@ namespace Mackiloha.Ark
                 uint arkPathsCount = ar.ReadUInt32();
                 ark._arkPaths = new string[arkPathsCount + 1];
 
-                string directory = Path.GetDirectoryName(input).Replace("\\", "/");
-                ark._arkPaths[0] = input.Replace("\\", "/");
+                string directory = Path.GetDirectoryName(input);
+                ark._arkPaths[0] = input;
 
                 var hdrFileName = Path.GetFileNameWithoutExtension(input);
 
@@ -184,7 +184,7 @@ namespace Mackiloha.Ark
                 {
                     ar.ReadString(); // Ehh just ignore what's in hdr. Sometimes it'll be absolute instead of relative
 
-                    ark._arkPaths[i+1] = $"{directory}/{hdrFileName}_{i}.ark";
+                    ark._arkPaths[i+1] = Path.Combine(directory, $"{hdrFileName}_{i}.ark");
                 }
             }
             else
@@ -715,7 +715,10 @@ namespace Mackiloha.Ark
                 if (bestFit == null)
                 {
                     // Adds to end of last archive file
-                    var lastEntry = remainingOffsetEntries.OrderByDescending(x => x.Offset).FirstOrDefault();
+                    var lastEntry = remainingOffsetEntries
+                        .OrderByDescending(x => x.Offset + x.Size) // Ensures 0-length files don't conflict w/ regular files at same offset
+                        .FirstOrDefault();
+
                     long offset = (lastEntry != null) ? lastEntry.Offset + lastEntry.Size : 0;
                     long partOffset = offset - arkSizes.Reverse().Skip(1).Sum();
 
@@ -830,8 +833,15 @@ namespace Mackiloha.Ark
             string[] arkPaths = new string[count + 1];
             arkPaths[0] = hdrPath.Replace("\\", "/");
 
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                directory += "/";
+            }
+
             for (int i = 0; i < count; i++)
-                arkPaths[i+1] = $"{directory}/{fileName}_{i}{extension}";
+            {
+                arkPaths[i+1] = $"{directory}{fileName}_{i}{extension}";
+            }
 
             return arkPaths;
         }
@@ -896,14 +906,18 @@ namespace Mackiloha.Ark
 
             var dirPath = Path.GetDirectoryName(path).Replace("\\", "/");
             var fileName = Path.GetFileName(path);
+            var arkPartPath = Path.Combine(dirPath, fileName);
 
+            // Create ark part directory
             if (!Directory.Exists(dirPath))
                 Directory.CreateDirectory(dirPath);
 
-            using var _ = File.Create($"{dirPath}/{fileName}");
+            // Create ark part file
+            using var _ = File.Create(arkPartPath);
 
+            // Append ark part
             _arkPaths = _arkPaths
-                .Concat(new[] { $"{dirPath}/{fileName}" })
+                .Concat(new[] { arkPartPath })
                 .ToArray();
         }
 

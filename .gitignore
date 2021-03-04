@@ -258,3 +258,6 @@ imgui.ini
 
 # VS Code
 .vscode
+
+# Shell script build
+BUILD/

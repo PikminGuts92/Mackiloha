@@ -3,6 +3,7 @@ using Mackiloha.App;
 using Mackiloha.App.Extensions;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
+using Mackiloha.Render;
 using Mackiloha.Song;
 using P9SongTool.Exceptions;
 using P9SongTool.Helpers;
@@ -27,8 +28,13 @@ namespace P9SongTool.Apps
             SupportedExtraTypes = new (string extension, string miloType)[]
             {
                 (".anim", "PropAnim"),
+                (".font", "Font"),
+                (".grp", "Group"),
                 (".mat", "Mat"),
-                (".tex", "Tex")
+                (".mesh", "Mesh"),
+                (".png", "PNG"), // Support png -> tex
+                (".tex", "Tex"),
+                (".txt", "Text")
             };
         }
 
@@ -41,8 +47,17 @@ namespace P9SongTool.Apps
             var songMetaPath = Path.Combine(inputDir, "song.json");
             var midPath = Path.Combine(inputDir, "venue.mid");
 
-            var lipsyncPaths = Directory.GetFiles(Path.Combine(inputDir, "lipsync"), "*.lipsync");
-            var extrasPaths = Directory.GetFiles(Path.Combine(inputDir, "extra"));
+            // Get lipsync files
+            var lipsyncDir = Path.Combine(inputDir, "lipsync");
+            var lipsyncPaths = Directory.Exists(lipsyncDir)
+                ? Directory.GetFiles(lipsyncDir, "*.lipsync")
+                : Array.Empty<string>();
+
+            // Get extra files
+            var extrasDir = Path.Combine(inputDir, "extra");
+            var extrasPaths = Directory.Exists(extrasDir)
+                ? Directory.GetFiles(extrasDir)
+                : Array.Empty<string>();
 
             // Enforce files exist
             if (!File.Exists(songMetaPath))
@@ -52,6 +67,7 @@ namespace P9SongTool.Apps
 
             var p9song = OpenP9File(songMetaPath);
             var songPref = ConvertFromSongPreferences(p9song.Preferences);
+            var lyricConfigAnim = ConvertFromLyricConfigs(p9song.LyricConfigurations);
 
             var converter = new Midi2Anim(midPath);
             var anim = converter.ExportToAnim();
@@ -70,19 +86,26 @@ namespace P9SongTool.Apps
                 miloDirEntry.SubDirectories.Add(subDir);
             }
 
-            // Add preference + anim
+            // Add preference + anims
             miloDir.Entries.Add(songPref);
             miloDir.Entries.Add(anim);
 
+            if (!(lyricConfigAnim is null))
+            {
+                miloDir.Entries.Add(lyricConfigAnim);
+            }
+
             // Get extras as raw entries
             var extras = extrasPaths
-                .Select(x => (x, SupportedExtraTypes.FirstOrDefault(y => x.EndsWith(y.extension, StringComparison.CurrentCultureIgnoreCase)).miloType))
-                .Where(x => !(x.Item1 is null))
-                .Select(x => new MiloObjectBytes(x.Item2)
+                .Select<string, (string path, string miloType)>(x => (x, SupportedExtraTypes.FirstOrDefault(y => x.EndsWith(y.extension, StringComparison.CurrentCultureIgnoreCase)).miloType))
+                .Where(x => !(x.miloType is null)) // Ignore unsupported files
+                .Select(x => x.miloType switch
                 {
-                    Name = Path.GetFileName(x.Item1),
-                    Data = File.ReadAllBytes(x.Item1)
+                    "PNG" => CreateTex(x.path, state.SystemInfo),
+                    _ => CreateObject(x.path, x.miloType)
                 })
+                .Where(x => (lyricConfigAnim is null)
+                    || !x.Name.Equals(lyricConfigAnim.Name, StringComparison.CurrentCultureIgnoreCase)) // Filter out lyric_config if in json
                 .ToList();
 
             miloDir.Entries.AddRange(extras);
@@ -101,6 +124,28 @@ namespace P9SongTool.Apps
 
             miloFile.WriteToFile(op.OutputPath);
             Console.WriteLine($"Successfully created milo at \"{outputMiloPath}\"");
+        }
+
+        protected MiloObject CreateObject(string path, string type)
+        {
+            var fileName = Path.GetFileName(path);
+            var data = File.ReadAllBytes(path);
+            Console.WriteLine($"Adding \"{fileName}\" as {type}");
+
+            return new MiloObjectBytes(type)
+            {
+                Name = fileName,
+                Data = data
+            };
+        }
+
+        protected Tex CreateTex(string pngPath, SystemInfo info)
+        {
+            var fileName = Path.GetFileName(pngPath);
+            Console.WriteLine($"Adding \"{fileName}\" (and encoding) as Tex");
+
+            return TextureExtensions
+                .TexFromImage(pngPath, info);
         }
 
         protected P9Song OpenP9File(string p9songPath)
@@ -152,6 +197,142 @@ namespace P9SongTool.Apps
             return songPref;
         }
 
+        protected PropAnim ConvertFromLyricConfigs(LyricConfig[] lyricConfigs)
+        {
+            if (lyricConfigs is null || lyricConfigs.Length <= 0)
+            {
+                return default;
+            }
+
+            var lyricAnim = new PropAnim()
+            {
+                Name = "lyric_config.anim",
+                AnimName = "",
+                TotalTime = lyricConfigs.Count() // Directed cuts count
+            };
+
+            var maxLyricCount = lyricConfigs
+                .Select(x => x.Lyrics.Count())
+                .Max();
+
+            var propGroups = Enumerable
+                .Range(1, maxLyricCount)
+                .Select(i =>
+                {
+                    var name = $"venue_lyric{i:d2}";
+
+                    return new []
+                    {
+                        Midi2Anim.CreateDirectorGroup("position", name), // Pos
+                        Midi2Anim.CreateDirectorGroup("rotation", name), // Rot
+                        Midi2Anim.CreateDirectorGroup("scale", name)     // Scale
+                    };
+                })
+                .ToArray();
+
+            // Iterate over directed lyric cuts
+            foreach (var lyricConfig in lyricConfigs
+                // TODO: Some sort of name validation
+                .Select(x => (int.Parse(x.Name.Substring(x.Name.LastIndexOf("_") + 1)), x))
+                .OrderBy(x => x.Item1))
+            {
+                var dcIndex = lyricConfig.Item1;
+
+                // Iterate over lyrics
+                int i = 0;
+                foreach (var lyric in lyricConfig.x.Lyrics)
+                {
+                    // Get indexed groups
+                    var posGroup = propGroups[i][0];
+                    var rotGroup = propGroups[i][1];
+                    var scaleGroup = propGroups[i][2];
+
+                    // Convert position
+                    var posEvent = new DirectedEventVector3()
+                    {
+                        Position = dcIndex,
+                        Value = new Vector3()
+                        {
+                            X = (!(lyric.Position is null)
+                                && lyric.Position.Length > 0)
+                                ? lyric.Position[0]
+                                : 0.0f,
+                            Y = (!(lyric.Position is null)
+                                && lyric.Position.Length > 1)
+                                ? lyric.Position[1]
+                                : 0.0f,
+                            Z = (!(lyric.Position is null)
+                                && lyric.Position.Length > 2)
+                                ? lyric.Position[2]
+                                : 0.0f
+                        }
+                    };
+                    posGroup.Events.Add(posEvent);
+
+                    // Convert rotation
+                    var rotEvent = new DirectedEventVector4()
+                    {
+                        Position = dcIndex,
+                        Value = new Vector4()
+                        {
+                            X = (!(lyric.Rotation is null)
+                                && lyric.Rotation.Length > 0)
+                                ? lyric.Rotation[0]
+                                : 0.0f,
+                            Y = (!(lyric.Rotation is null)
+                                && lyric.Rotation.Length > 1)
+                                ? lyric.Rotation[1]
+                                : 0.0f,
+                            Z = (!(lyric.Rotation is null)
+                                && lyric.Rotation.Length > 2)
+                                ? lyric.Rotation[2]
+                                : 0.0f,
+                            W = (!(lyric.Rotation is null)
+                                && lyric.Rotation.Length > 3)
+                                ? lyric.Rotation[3]
+                                : 1.0f,
+                        }
+                    };
+                    rotGroup.Events.Add(rotEvent);
+
+                    // Convert scale
+                    var scaleEvent = new DirectedEventVector3()
+                    {
+                        Position = dcIndex,
+                        Value = new Vector3()
+                        {
+                            X = (!(lyric.Scale is null)
+                                && lyric.Scale.Length > 0)
+                                ? lyric.Scale[0]
+                                : 1.0f,
+                            Y = (!(lyric.Scale is null)
+                                && lyric.Scale.Length > 1)
+                                ? lyric.Scale[1]
+                                : 1.0f,
+                            Z = (!(lyric.Scale is null)
+                                && lyric.Scale.Length > 2)
+                                ? lyric.Scale[2]
+                                : 1.0f
+                        }
+                    };
+                    scaleGroup.Events.Add(scaleEvent);
+
+                    i++;
+                }
+            }
+
+            // Add groups to lyric anim
+            foreach (var group in propGroups)
+            {
+                foreach (var subGroup in group)
+                {
+                    lyricAnim.DirectorGroups.Add(subGroup);
+                }
+            }
+
+            return lyricAnim;
+        }
+
         protected SystemInfo GetSystemInfo(Project2MiloOptions op)
             => new SystemInfo()
             {
@@ -172,7 +353,7 @@ namespace P9SongTool.Apps
                 Version = 22,
                 SubVersion = 2,
                 ProjectName = "song",
-                ImportedMiloPaths = new[]
+                ImportedMiloPaths = new []
                 {
                     "../../world/shared/camera.milo",
                     "../../world/shared/director.milo"

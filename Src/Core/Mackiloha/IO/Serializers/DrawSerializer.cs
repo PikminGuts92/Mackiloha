@@ -31,10 +31,15 @@ namespace Mackiloha.IO.Serializers
                 Radius = ar.ReadSingle()
             };
 
-            if (version >= 3)
+            if (version == 3)
             {
                 // Should always be 0
-                ar.ReadInt32();
+                ar.BaseStream.Position += 4;
+            }
+            else if (version >= 4)
+            {
+                // Should always be 0'd data
+                ar.BaseStream.Position += 8;
             }
         }
 
@@ -87,7 +92,7 @@ namespace Mackiloha.IO.Serializers
                     return new[] { 3 };
                 case 25:
                     // TBRB
-                    return new[] { 3 };
+                    return new[] { 3, 4 /* GDRB */ };
                 default:
                     return Array.Empty<int>();
             }

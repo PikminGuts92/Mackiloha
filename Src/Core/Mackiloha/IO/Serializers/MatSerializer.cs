@@ -204,7 +204,7 @@ namespace Mackiloha.IO.Serializers
                     return new[] { 25, 27 };
                 case 25:
                     // TBRB
-                    return new[] { 55 };
+                    return new[] { 55, 56 /* GDRB */ };
                 default:
                     return Array.Empty<int>();
             }

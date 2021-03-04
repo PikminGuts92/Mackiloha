@@ -2,8 +2,11 @@
 using ArkHelper.Helpers;
 using ArkHelper.Options;
 using Mackiloha;
+using Mackiloha.App;
+using Mackiloha.App.Extensions;
 using Mackiloha.Ark;
 using Mackiloha.CSV;
+using Mackiloha.IO;
 using Mackiloha.Milo2;
 using System;
 using System.Collections.Generic;
@@ -11,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using static Mackiloha.FileHelper;
 
 namespace ArkHelper.Apps
 {
@@ -26,8 +30,8 @@ namespace ArkHelper.Apps
         private string CombinePath(string basePath, string path)
         {
             // Consistent slash
-            basePath = (basePath ?? "").Replace("/", "\\");
-            path = (path ?? "").Replace("/", "\\");
+            basePath = FixSlashes(basePath ?? "");
+            path = FixSlashes(path ?? "");
 
             path = ReplaceDotsInPath(path);
             return Path.Combine(basePath, path);
@@ -69,7 +73,8 @@ namespace ArkHelper.Apps
             var csvRegex = new Regex("(?i).csv_([A-Z0-9]+)$");
 
             var dtaRegex = new Regex("(?i).dta$");
-            var miloRegex = new Regex("(?i).milo(_[A-Z0-9]+)?$");
+            var textureRegex = new Regex("(?i).((bmp)|(png))(_[A-Z0-9]+)$");
+            var miloRegex = new Regex("(?i).((gh)|(milo)|(rnd))(_[A-Z0-9]+)?$");
 
             var genPathedFile = new Regex(@"(?i)(([^\/\\]+[\/\\])*)(gen[\/\\])([^\/\\]+)$");
             var platformExtRegex = new Regex(@"(?i)_([A-Z0-9]+)$");
@@ -107,14 +112,26 @@ namespace ArkHelper.Apps
                     && csvRegex.IsMatch(x.FullPath))
                 .ToList();
 
+            var texturesToConvert = ark.Entries
+                .Where(x => op.ConvertTextures
+                    && textureRegex.IsMatch(x.FullPath))
+                .ToList();
+
             var milosToInflate = ark.Entries
                 .Where(x => op.InflateMilos
+                    && !op.ExtractMilos
+                    && miloRegex.IsMatch(x.FullPath))
+                .ToList();
+
+            var milosToExtract = ark.Entries
+                .Where(x => op.ExtractMilos
                     && miloRegex.IsMatch(x.FullPath))
                 .ToList();
 
             var entriesToExtract = ark.Entries
                 .Where(x => op.ExtractAll)
                 .Except(scriptsToConvert)
+                .Except(texturesToConvert)
                 .Except(milosToInflate)
                 .ToList();
 
@@ -129,6 +146,34 @@ namespace ArkHelper.Apps
             if (Directory.Exists(tempDir))
                 Directory.Delete(tempDir, true);
 
+            foreach (var textureEntry in texturesToConvert)
+            {
+                using var arkEntryStream = ark.GetArkEntryFileStream(textureEntry);
+
+                var filePath = CombinePath(op.OutputPath, textureEntry.FullPath);
+                var pngPath = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(filePath)), Path.GetFileNameWithoutExtension(filePath) + ".png");
+
+                // Removes gen sub directory
+                if (genPathedFile.IsMatch(pngPath))
+                {
+                    var match = genPathedFile.Match(pngPath);
+                    pngPath = $"{match.Groups[1]}{match.Groups[4]}";
+                }
+
+                var info = new SystemInfo()
+                {
+                    Version = 10,
+                    Platform = Platform.PS2,
+                    BigEndian = false
+                };
+
+                var serializer = new MiloSerializer(info);
+                var bitmap = serializer.ReadFromStream<HMXBitmap>(arkEntryStream);
+
+                bitmap.SaveAs(info, pngPath);
+                Console.WriteLine($"Wrote \"{pngPath}\"");
+            }
+
             foreach (var miloEntry in milosToInflate)
             {
                 var filePath = ExtractEntry(ark, miloEntry, CombinePath(op.OutputPath, miloEntry.FullPath));
@@ -139,6 +184,30 @@ namespace ArkHelper.Apps
                 milo.WriteToFile(filePath);
 
                 Console.WriteLine($"Wrote \"{filePath}\"");
+            }
+
+            foreach (var miloEntry in milosToExtract)
+            {
+                var filePath = ExtractEntry(ark, miloEntry, CombinePath(op.OutputPath, miloEntry.FullPath));
+                var dirPath = Path.GetDirectoryName(filePath);
+
+                var tempPath = filePath + "_temp";
+                File.Move(filePath, tempPath, true);
+
+                var extPath = Path.Combine(
+                    Path.GetDirectoryName(filePath),
+                    Path.GetFileName(filePath));
+
+                var state = new AppState(dirPath);
+                state.ExtractMiloContents(
+                    Path.GetFileName(tempPath),
+                    extPath,
+                    op.ConvertTextures);
+
+                // TODO: Refactor IDirectory and remove temp file write/delete
+                File.Delete(tempPath);
+
+                Console.WriteLine($"Wrote \"{extPath}\"");
             }
 
             foreach (var csvEntry in csvsToConvert)

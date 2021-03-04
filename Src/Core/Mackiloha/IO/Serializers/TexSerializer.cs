@@ -34,6 +34,9 @@ namespace Mackiloha.IO.Serializers
 
                 // Extra meta (comment?)
                 var meta = ar.ReadString();
+
+                if (version >= 11)
+                    ar.BaseStream.Position += 1; // Not sure why it has an extra byte
             }
 
             tex.Width = ar.ReadInt32();
@@ -139,7 +142,7 @@ namespace Mackiloha.IO.Serializers
                     return new[] { 10 };
                 case 25:
                     // GH2 360 / RB1
-                    return new[] { 10 };
+                    return new[] { 10, 11 /* GDRB */ };
                 default:
                     return Array.Empty<int>();
             }

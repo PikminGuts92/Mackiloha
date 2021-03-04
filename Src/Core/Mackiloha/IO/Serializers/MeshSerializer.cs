@@ -167,8 +167,10 @@ namespace Mackiloha.IO.Serializers
                     ar.BaseStream.Position += 1;
             }
 
-            if (version >= 36)
+            if (version == 36)
                 ar.BaseStream.Position += 1;
+            else if (version >= 37)
+                ar.BaseStream.Position += 2;
 
             mesh.Groups.Clear();
             if (count <= 0 || groupSizes[0] <= 0 || ar.BaseStream.Length == ar.BaseStream.Position)
@@ -356,7 +358,7 @@ namespace Mackiloha.IO.Serializers
                     return new[] { 28 };
                 case 25:
                     // TBRB
-                    return new[] { 36 };
+                    return new[] { 36, 37 /* GDRB */ };
                 default:
                     return Array.Empty<int>();
             }

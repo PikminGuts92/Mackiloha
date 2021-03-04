@@ -6,6 +6,7 @@ using Mackiloha.Milo2;
 using Mackiloha.Song;
 using P9SongTool.Exceptions;
 using P9SongTool.Helpers;
+using P9SongTool.Json;
 using P9SongTool.Models;
 using P9SongTool.Options;
 using System;
@@ -25,7 +26,8 @@ namespace P9SongTool.Apps
             var appState = AppState.FromFile(op.InputPath);
             appState.UpdateSystemInfo(GetSystemInfo(op));
 
-            var milo = appState.OpenMiloFile(op.InputPath);
+            var inputMiloPath = Path.GetFullPath(op.InputPath); // Use abs path until AppState is updated
+            var milo = appState.OpenMiloFile(inputMiloPath);
 
             // Create output directory
             var outputDir = Path.GetFullPath(op.OutputPath);
@@ -54,10 +56,20 @@ namespace P9SongTool.Apps
             var song = new P9Song()
             {
                 Name = milo.Name,
-                Preferences = ConvertFromP9SongPref(songPref)
+                Preferences = ConvertFromP9SongPref(songPref),
+                LyricConfigurations = Array.Empty<LyricConfig>()
             };
 
-            var songJson = JsonSerializer.Serialize(song, appState.JsonSerializerOptions);
+            // Convert lyric config
+            var lyricConfig = propAnims
+                .FirstOrDefault(x => x.Name == "lyric_config.anim");
+
+            if (!(lyricConfig is null))
+            {
+                song.LyricConfigurations = ConvertFromPropAnim(lyricConfig);
+            }
+
+            var songJson = SerializeSong(song, appState);
             var songJsonPath = Path.Combine(outputDir, "song.json");
 
             File.WriteAllText(songJsonPath, songJson);
@@ -75,7 +87,8 @@ namespace P9SongTool.Apps
             var remaining = entries
                 .Where(x => x.Name != songAnim.Name
                     && x.Type != "CharLipSync"
-                    && x.Type != "P9SongPref")
+                    && x.Type != "P9SongPref"
+                    && x.Name != "lyric_config.anim")
                 .ToList();
 
             var extraDirPath = Path.Combine(outputDir, "extra");
@@ -180,5 +193,88 @@ namespace P9SongTool.Apps
 
                 LyricPart = songPref.LyricPart
             };
+
+        protected LyricConfig[] ConvertFromPropAnim(PropAnim lyricConfigProp)
+        {
+            var groupedConfigs = lyricConfigProp
+                .DirectorGroups
+                .SelectMany(x => x.Events
+                    .Select(y => (y, x.DirectorName, x.PropName))
+                    .ToList())
+                .GroupBy(x => (int)x.y.Position)
+                .OrderBy(x => x.Key) // Order by "dc_lyrics_x"
+                .ToList();
+
+            var lyricConfigs = new List<LyricConfig>();
+
+            foreach (var propConfig in groupedConfigs)
+            {
+                var configName = $"dc_lyrics_{propConfig.Key}";
+
+                var lyrics = propConfig
+                    .OrderBy(x => x.DirectorName) // Order by "venue_lyric_xx"
+                    .GroupBy(x => x.DirectorName)
+                    .ToList();
+
+                var lyricEvents = new List<LyricEvent>();
+
+                foreach (var lyric in lyrics)
+                {
+                    // Assume always pos, rot, scale
+                    var parts = lyric
+                        .OrderBy(x => x.PropName)
+                        .Select(x => x.y)
+                        .ToList();
+
+                    var pos = (DirectedEventVector3)parts[0];
+                    var rot = (DirectedEventVector4)parts[1];
+                    var scale = (DirectedEventVector3)parts[2];
+
+                    lyricEvents.Add(new LyricEvent()
+                    {
+                        Position = new float[]
+                        {
+                            pos.Value.X,
+                            pos.Value.Y,
+                            pos.Value.Z
+                        },
+                        Rotation = new float[]
+                        {
+                            rot.Value.X,
+                            rot.Value.Y,
+                            rot.Value.Z,
+                            rot.Value.W
+                        },
+                        Scale = new float[]
+                        {
+                            scale.Value.X,
+                            scale.Value.Y,
+                            scale.Value.Z
+                        }
+                    });
+                }
+
+                lyricConfigs.Add(new LyricConfig()
+                {
+                    Name = configName,
+                    Lyrics = lyricEvents
+                        .ToArray()
+                });
+            }
+
+            return lyricConfigs
+                .ToArray();
+        }
+
+        public string SerializeSong(P9Song song, AppState appState)
+        {
+            var jsonSettings = new Newtonsoft.Json.JsonSerializerSettings();
+            jsonSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+            jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+            jsonSettings.Converters.Add(new SingleLineFloatArrayConverter());
+
+            return Newtonsoft.Json.JsonConvert.SerializeObject(song, jsonSettings);
+            //return JsonSerializer.Serialize(song, appState.JsonSerializerOptions);
+        }
     }
 }

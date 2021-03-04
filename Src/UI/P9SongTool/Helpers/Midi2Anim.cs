@@ -134,7 +134,7 @@ namespace P9SongTool.Helpers
             return (name, values);
         }
 
-        protected DirectedEventGroup CreateDirectorGroup(string propName)
+        internal static DirectedEventGroup CreateDirectorGroup(string propName, string directorName = null)
             => new DirectedEventGroup()
             {
                 EventType = propName switch
@@ -143,9 +143,12 @@ namespace P9SongTool.Helpers
                     var p when p.StartsWith("lookat") => DirectedEventType.Float,
                     var p when p.StartsWith("face_weight") => DirectedEventType.Float,
                     var p when p.StartsWith("sing") => DirectedEventType.Float,
+                    "position" => DirectedEventType.Vector3,
+                    "rotation" => DirectedEventType.Vector4,
+                    "scale" => DirectedEventType.Vector3,
                     _ => DirectedEventType.Text
                 },
-                DirectorName = "P9Director",
+                DirectorName = directorName ?? "P9Director",
                 PropName = propName,
                 Unknown1 = propName switch
                 {
