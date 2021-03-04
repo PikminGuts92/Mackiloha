@@ -20,6 +20,9 @@ namespace ArkHelper.Options
         [Option('m', "inflateMilos", HelpText = "Inflate milo archives (decompress)")]
         public bool InflateMilos { get; set; }
 
+        [Option('x', "extractMilos", HelpText = "Extract milo archives (can't be used with decompress)", Hidden = true)]
+        public bool ExtractMilos { get; set; }
+
         [Option('a', "extractAll", HelpText = "Extract everything")]
         public bool ExtractAll { get; set; }
     }

@@ -2,6 +2,7 @@
 using ArkHelper.Helpers;
 using ArkHelper.Options;
 using Mackiloha;
+using Mackiloha.App;
 using Mackiloha.App.Extensions;
 using Mackiloha.Ark;
 using Mackiloha.CSV;
@@ -73,7 +74,7 @@ namespace ArkHelper.Apps
 
             var dtaRegex = new Regex("(?i).dta$");
             var textureRegex = new Regex("(?i).((bmp)|(png))(_[A-Z0-9]+)$");
-            var miloRegex = new Regex("(?i).milo(_[A-Z0-9]+)?$");
+            var miloRegex = new Regex("(?i).((gh)|(milo)|(rnd))(_[A-Z0-9]+)?$");
 
             var genPathedFile = new Regex(@"(?i)(([^\/\\]+[\/\\])*)(gen[\/\\])([^\/\\]+)$");
             var platformExtRegex = new Regex(@"(?i)_([A-Z0-9]+)$");
@@ -118,6 +119,12 @@ namespace ArkHelper.Apps
 
             var milosToInflate = ark.Entries
                 .Where(x => op.InflateMilos
+                    && !op.ExtractMilos
+                    && miloRegex.IsMatch(x.FullPath))
+                .ToList();
+
+            var milosToExtract = ark.Entries
+                .Where(x => op.ExtractMilos
                     && miloRegex.IsMatch(x.FullPath))
                 .ToList();
 
@@ -177,6 +184,30 @@ namespace ArkHelper.Apps
                 milo.WriteToFile(filePath);
 
                 Console.WriteLine($"Wrote \"{filePath}\"");
+            }
+
+            foreach (var miloEntry in milosToExtract)
+            {
+                var filePath = ExtractEntry(ark, miloEntry, CombinePath(op.OutputPath, miloEntry.FullPath));
+                var dirPath = Path.GetDirectoryName(filePath);
+
+                var tempPath = filePath + "_temp";
+                File.Move(filePath, tempPath, true);
+
+                var extPath = Path.Combine(
+                    Path.GetDirectoryName(filePath),
+                    Path.GetFileName(filePath));
+
+                var state = new AppState(dirPath);
+                state.ExtractMiloContents(
+                    Path.GetFileName(tempPath),
+                    extPath,
+                    op.ConvertTextures);
+
+                // TODO: Refactor IDirectory and remove temp file write/delete
+                File.Delete(tempPath);
+
+                Console.WriteLine($"Wrote \"{extPath}\"");
             }
 
             foreach (var csvEntry in csvsToConvert)
