@@ -17,6 +17,7 @@ namespace Mackiloha.App
         {
             _workingDirectory = new FileSystemDirectory(workingDirectory);
             _systemInfo.Version = 10; // GH1
+            _systemInfo.Platform = Platform.PS2;
 
             JsonSerializerOptions = new JsonSerializerOptions()
             {
