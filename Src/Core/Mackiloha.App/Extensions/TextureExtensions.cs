@@ -146,9 +146,9 @@ namespace Mackiloha.App.Extensions
         {
             // Updates alpha channels (7-bit -> 8-bit)
             byte al;
-            for (int p = 0; p < image.Length; p += 4)
+            for (int p = 3; p < image.Length; p += 4)
             {
-                al = image[p + 3];
+                al = image[p];
                 image[p] = ((al & 0x80) != 0) ? (byte)0xFF : (byte)(al << 1);
             }
         }
@@ -826,7 +826,7 @@ namespace Mackiloha.App.Extensions
                         };
                     })
                     .SelectMany(x => x)
-                    .ToArray(); ;
+                    .ToArray();
 
                 // Encode as DXT5 for now
                 var rawData = EncodeDxImage(inputBytes, width, height, 0, DxEncoding.DXGI_FORMAT_BC3_UNORM);

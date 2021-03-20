@@ -3,6 +3,7 @@ using Mackiloha.App;
 using Mackiloha.App.Extensions;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
+using Mackiloha.Render;
 using Mackiloha.Song;
 using P9SongTool.Exceptions;
 using P9SongTool.Helpers;
@@ -27,8 +28,13 @@ namespace P9SongTool.Apps
             SupportedExtraTypes = new (string extension, string miloType)[]
             {
                 (".anim", "PropAnim"),
+                (".font", "Font"),
+                (".grp", "Group"),
                 (".mat", "Mat"),
-                (".tex", "Tex")
+                (".mesh", "Mesh"),
+                (".png", "PNG"), // Support png -> tex
+                (".tex", "Tex"),
+                (".txt", "Text")
             };
         }
 
@@ -41,8 +47,17 @@ namespace P9SongTool.Apps
             var songMetaPath = Path.Combine(inputDir, "song.json");
             var midPath = Path.Combine(inputDir, "venue.mid");
 
-            var lipsyncPaths = Directory.GetFiles(Path.Combine(inputDir, "lipsync"), "*.lipsync");
-            var extrasPaths = Directory.GetFiles(Path.Combine(inputDir, "extra"));
+            // Get lipsync files
+            var lipsyncDir = Path.Combine(inputDir, "lipsync");
+            var lipsyncPaths = Directory.Exists(lipsyncDir)
+                ? Directory.GetFiles(lipsyncDir, "*.lipsync")
+                : Array.Empty<string>();
+
+            // Get extra files
+            var extrasDir = Path.Combine(inputDir, "extra");
+            var extrasPaths = Directory.Exists(extrasDir)
+                ? Directory.GetFiles(extrasDir)
+                : Array.Empty<string>();
 
             // Enforce files exist
             if (!File.Exists(songMetaPath))
@@ -82,12 +97,12 @@ namespace P9SongTool.Apps
 
             // Get extras as raw entries
             var extras = extrasPaths
-                .Select(x => (x, SupportedExtraTypes.FirstOrDefault(y => x.EndsWith(y.extension, StringComparison.CurrentCultureIgnoreCase)).miloType))
-                .Where(x => !(x.Item1 is null))
-                .Select(x => new MiloObjectBytes(x.Item2)
+                .Select<string, (string path, string miloType)>(x => (x, SupportedExtraTypes.FirstOrDefault(y => x.EndsWith(y.extension, StringComparison.CurrentCultureIgnoreCase)).miloType))
+                .Where(x => !(x.miloType is null)) // Ignore unsupported files
+                .Select(x => x.miloType switch
                 {
-                    Name = Path.GetFileName(x.Item1),
-                    Data = File.ReadAllBytes(x.Item1)
+                    "PNG" => CreateTex(x.path, state.SystemInfo),
+                    _ => CreateObject(x.path, x.miloType)
                 })
                 .Where(x => (lyricConfigAnim is null)
                     || !x.Name.Equals(lyricConfigAnim.Name, StringComparison.CurrentCultureIgnoreCase)) // Filter out lyric_config if in json
@@ -109,6 +124,28 @@ namespace P9SongTool.Apps
 
             miloFile.WriteToFile(op.OutputPath);
             Console.WriteLine($"Successfully created milo at \"{outputMiloPath}\"");
+        }
+
+        protected MiloObject CreateObject(string path, string type)
+        {
+            var fileName = Path.GetFileName(path);
+            var data = File.ReadAllBytes(path);
+            Console.WriteLine($"Adding \"{fileName}\" as {type}");
+
+            return new MiloObjectBytes(type)
+            {
+                Name = fileName,
+                Data = data
+            };
+        }
+
+        protected Tex CreateTex(string pngPath, SystemInfo info)
+        {
+            var fileName = Path.GetFileName(pngPath);
+            Console.WriteLine($"Adding \"{fileName}\" (and encoding) as Tex");
+
+            return TextureExtensions
+                .TexFromImage(pngPath, info);
         }
 
         protected P9Song OpenP9File(string p9songPath)
@@ -316,7 +353,7 @@ namespace P9SongTool.Apps
                 Version = 22,
                 SubVersion = 2,
                 ProjectName = "song",
-                ImportedMiloPaths = new[]
+                ImportedMiloPaths = new []
                 {
                     "../../world/shared/camera.milo",
                     "../../world/shared/director.milo"

@@ -800,11 +800,18 @@ namespace Mackiloha.App.Extensions
                     continue;
                 }
 
-                var texPath = Path.Combine(state.GetWorkingDirectory().FullPath, MakeGenPath(texture.ExternalPath, state.SystemInfo.Platform));
-                var bitmap = serializer.ReadFromFile<HMXBitmap>(texPath);
+                try
+                {
+                    var texPath = Path.Combine(state.GetWorkingDirectory().FullPath, MakeGenPath(texture.ExternalPath, state.SystemInfo.Platform));
+                    var bitmap = serializer.ReadFromFile<HMXBitmap>(texPath);
 
-                texture.Bitmap = bitmap;
-                texture.UseExternal = false;
+                    texture.Bitmap = bitmap;
+                    texture.UseExternal = false;
+                }
+                catch
+                {
+
+                }
             }
 
             var defaultMeta = TexMeta.DefaultFor(state.SystemInfo.Platform);
@@ -814,6 +821,7 @@ namespace Mackiloha.App.Extensions
 
                 // TODO: Skip?
                 texEntry.UseExternal = false;
+                if (texEntry.Bitmap is null) continue; // Skip for now
 
                 if (texEntry.UseExternal)
                     throw new NotSupportedException("Can't extract external textures yet");

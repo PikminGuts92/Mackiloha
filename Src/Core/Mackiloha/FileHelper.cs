@@ -12,6 +12,14 @@ namespace Mackiloha
     // Just in case I port this to other platforms and something breaks
     public static class FileHelper
     {
+        private static Regex DirSeparatorRegex = new Regex(@"[\/\\]");
+
+        public static string FixSlashes(string path)
+        {
+            // Fix directory slash characters
+            return DirSeparatorRegex.Replace(path, $"{Path.DirectorySeparatorChar}");
+        }
+
         public static string SanitizePath(string path)
         {
             var regex = new Regex(@"\n|\r|\t");

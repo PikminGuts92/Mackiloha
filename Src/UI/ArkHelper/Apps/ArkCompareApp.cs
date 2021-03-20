@@ -31,7 +31,7 @@ namespace ArkHelper.Apps
                 {
                     Name = x.FullPath,
                     x.Size,
-                    Hash = Crypt.SHA1Hash(ark1.GetArkEntryFileStream(x))
+                    Hash = Crypt.SHA1Hash(ark2.GetArkEntryFileStream(x))
                 })
                 .ToList();
 
@@ -46,6 +46,9 @@ namespace ArkHelper.Apps
             var ark2UniqueEntries = ark2Entries
                 .Except(sharedEntries)
                 .ToList();
+
+            var newFiles = string.Join('\n', ark1UniqueEntries
+                .Select(x => x.Name));
 
             // TODO: Create formatted console output
         }

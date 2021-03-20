@@ -16,8 +16,14 @@ namespace ArkHelper.Options
         [Option('i', "indentSize", HelpText = "Tab indention size when converting scripts", Default = 3)]
         public int IndentSize { get; set; }
 
+        [Option('t', "convertTextures", HelpText = "Convert textures to .png", Hidden = true)]
+        public bool ConvertTextures { get; set; }
+
         [Option('m', "inflateMilos", HelpText = "Inflate milo archives (decompress)")]
         public bool InflateMilos { get; set; }
+
+        [Option('x', "extractMilos", HelpText = "Extract milo archives (can't be used with decompress)", Hidden = true)]
+        public bool ExtractMilos { get; set; }
 
         [Option('a', "extractAll", HelpText = "Extract everything")]
         public bool ExtractAll { get; set; }
