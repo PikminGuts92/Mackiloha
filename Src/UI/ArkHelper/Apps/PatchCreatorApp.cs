@@ -45,20 +45,34 @@ namespace ArkHelper.Apps
 
             var platformExt = GuessPlatform(op.InputPath);
 
+            var hdrFileName = new FileInfo(op.InputPath).Name;
+            var isUppercase = Path
+                .GetFileNameWithoutExtension(hdrFileName)
+                .All(c => char.IsUpper(c));
+
+            var genDirName = isUppercase
+                ? "GEN"
+                : "gen";
+
+            var arkExt = isUppercase
+                ? ".ARK"
+                : ".ark";
+
             if (!inplaceEdit)
             {
-                if ((int)ark.Version <= 3)
+                if ((int)ark.Version < 3)
                 {
                     // If ark version doesn't support multiple parts then copy entire ark to new directory
-                    ark = ark.CopyToDirectory(Path.Combine(op.OutputPath, "gen"));
+                    ark = ark.CopyToDirectory(Path.Combine(op.OutputPath, genDirName));
                     inplaceEdit = true;
                 }
                 else
                 {
                     // Add additional ark park
-                    var patchPartName = $"{Path.GetFileNameWithoutExtension(op.InputPath)}_{ark.PartCount()}.ark";
+                    var patchPartName = $"{Path.GetFileNameWithoutExtension(hdrFileName)}_{ark.PartCount()}{arkExt}";
+
                     var fullPartPath = ((int)ark.Version < 9)
-                        ? Path.Combine(op.OutputPath, "gen", patchPartName)
+                        ? Path.Combine(op.OutputPath, genDirName, patchPartName)
                         : Path.Combine(op.OutputPath, patchPartName);
 
                     ark.AddAdditionalPart(fullPartPath);
@@ -99,7 +113,7 @@ namespace ArkHelper.Apps
                     internalPath = $"{internalPath.Substring(0, internalPath.Length - 1)}b";
 
                     if (!genPathedFile.IsMatch(internalPath))
-                        internalPath = internalPath.Insert(internalPath.LastIndexOf('/'), "/gen");
+                        internalPath = internalPath.Insert(internalPath.LastIndexOf('/'), $"/{genDirName}");
 
                     // Creates temp dtb file
                     inputFilePath = ScriptHelper.ConvertDtaToDtb(file, tempDir, ark.Encrypted, (int)ark.Version);
@@ -150,8 +164,8 @@ namespace ArkHelper.Apps
             {
                 // Writes header
                 var hdrPath = ((int)ark.Version < 9)
-                    ? Path.Combine(op.OutputPath, "gen", Path.GetFileName(op.InputPath))
-                    : Path.Combine(op.OutputPath, Path.GetFileName(op.InputPath));
+                    ? Path.Combine(op.OutputPath, genDirName, Path.GetFileName(hdrFileName))
+                    : Path.Combine(op.OutputPath, Path.GetFileName(hdrFileName));
                 ark.WriteHeader(hdrPath);
             }
             else

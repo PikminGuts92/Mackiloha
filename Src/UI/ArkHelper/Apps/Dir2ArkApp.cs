@@ -50,8 +50,14 @@ namespace ArkHelper.Apps
             if (!Directory.Exists(arkDir))
                 Directory.CreateDirectory(arkDir);
 
+            // If name is all caps, match extension
+            var hdrExt = op.ArkName
+                .All(c => char.IsUpper(c))
+                ? ".HDR"
+                : ".hdr";
+
             // Create ark
-            var hdrPath = Path.Combine(arkDir, $"{op.ArkName}.hdr");
+            var hdrPath = Path.Combine(arkDir, $"{op.ArkName}{hdrExt}");
             var ark = ArkFile.Create(hdrPath, (ArkVersion)op.ArkVersion, (int?)op.EncryptKey);
 
             var files = Directory.GetFiles(op.InputPath, "*", SearchOption.AllDirectories);
