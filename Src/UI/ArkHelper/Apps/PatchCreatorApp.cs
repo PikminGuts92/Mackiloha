@@ -158,6 +158,7 @@ namespace ArkHelper.Apps
                 updatedHashes.Add(hashInfo);
             }
 
+            Console.WriteLine("Executing file changes");
             ark.CommitChanges(inplaceEdit);
 
             // Clean up temp files
@@ -178,9 +179,13 @@ namespace ArkHelper.Apps
                 return;
             }
 
+            Console.WriteLine($"Wrote hdr/ark files");
+
             // Copy exe
-            var exePath = Path.Combine(op.OutputPath, Path.GetFileName(op.ExePath));
+            var exeName = Path.GetFileName(op.ExePath);
+            var exePath = Path.Combine(op.OutputPath, exeName);
             File.Copy(op.ExePath, exePath, true);
+            Console.WriteLine($"Copied executable \"{exeName}\"");
 
             if (updatedHashes.Count <= 0)
                 return;
