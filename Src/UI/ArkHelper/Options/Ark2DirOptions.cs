@@ -13,6 +13,8 @@ namespace ArkHelper.Options
 
         [Option('s', "convertScripts", HelpText = "Convert dtb scripts to dta")]
         public bool ConvertScripts { get; set; }
+        [Option('i', "indentSize", HelpText = "Tab indention size when converting scripts", Default = 3)]
+        public int IndentSize { get; set; }
 
         [Option('m', "inflateMilos", HelpText = "Inflate milo archives (decompress)")]
         public bool InflateMilos { get; set; }

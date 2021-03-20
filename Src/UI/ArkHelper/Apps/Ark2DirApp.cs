@@ -182,7 +182,7 @@ namespace ArkHelper.Apps
 
                 try
                 {
-                    ScriptHelper.ConvertDtbToDta(tempDtbPath, tempDir, arkEncrypted, arkVersion, dtaPath);
+                    ScriptHelper.ConvertDtbToDta(tempDtbPath, tempDir, arkEncrypted, arkVersion, dtaPath, op.IndentSize);
                     Console.WriteLine($"Wrote \"{dtaPath}\"");
                     successDtas++;
                 }

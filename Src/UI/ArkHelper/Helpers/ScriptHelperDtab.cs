@@ -5,18 +5,24 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ArkHelper.Helpers
 {
     public class ScriptHelperDtab : IScriptHelper
     {
         protected readonly string DtabPath;
+        protected readonly Encoding Encoding;
+        protected readonly Regex IndentRegex;
 
         public ScriptHelperDtab()
         {
             DtabPath = ResolveDtabPath();
+            Encoding = Encoding.UTF8;
+            IndentRegex = new Regex(@"^[\s]+");
         }
 
         protected virtual string ResolveDtabPath()
@@ -53,7 +59,7 @@ namespace ArkHelper.Helpers
             dtb.SaveToFile(oldDtbPath);
         }
 
-        public virtual string ConvertDtbToDta(string dtbPath, string tempDir, bool newEncryption, int arkVersion, string dtaPath = null)
+        public virtual string ConvertDtbToDta(string dtbPath, string tempDir, bool newEncryption, int arkVersion, string dtaPath = null, int indentSize = 3)
         {
             if (!Directory.Exists(tempDir))
                 Directory.CreateDirectory(tempDir);
@@ -103,6 +109,8 @@ namespace ArkHelper.Helpers
             if (result.ExitCode != 0)
                 throw new DTBParseException($"dtab.exe was unable to parse file from \'{decDtbPath}\'");
 
+            // Update dta indention
+            UpdateTabIndention(dtaPath, dtaPath, indentSize);
             return dtaPath;
         }
 
@@ -161,6 +169,79 @@ namespace ArkHelper.Helpers
             }
 
             return encDtbPath;
+        }
+
+        protected void UpdateTabIndention_Orig(string inputDta, string outputDta, int indentSize = 3)
+        {
+            var lines = File.ReadAllLines(inputDta, Encoding)
+                .Select(line => IndentRegex
+                    .Replace(line, new string(' ', IndentRegex.Match(line).Length * indentSize)))
+                .ToArray();
+
+            File.WriteAllLines(outputDta, lines);
+        }
+
+        public void UpdateTabIndention(string inputDta, string outputDta, int indentSize = 3)
+        {
+            // Insert spaces without affecting encoding
+            const byte NEWLINE = 0x0A;
+            const byte SPACE = 0x20;
+
+            var inData = File.ReadAllBytes(inputDta);
+            using var bw = new BinaryWriter(new MemoryStream());
+
+            int i = 0;
+            while (i < inData.Length)
+            {
+                var prependStart = i;
+                var spaceCount = 0;
+
+                // Skip newlines
+                while (i < inData.Length
+                    && inData[i] == NEWLINE) i++;
+
+                // Count spaces
+                while (i < inData.Length
+                    && inData[i] == SPACE)
+                {
+                    spaceCount++;
+                    i++;
+                }
+
+                // Write prepend text
+                if (prependStart < i)
+                {
+                    bw.Write(inData[prependStart..i]);
+                }
+
+                // Write extra spaces
+                if (spaceCount > 0
+                    && indentSize > 1)
+                {
+                    var extraSpaceSize = (indentSize * spaceCount) - spaceCount;
+                    var extraSpaces = Enumerable
+                        .Range(0, extraSpaceSize)
+                        .Select(x => SPACE)
+                        .ToArray();
+
+                    bw.Write(extraSpaces);
+                }
+
+                var appendStart = i;
+
+                // Count until newline or eof
+                while (i < inData.Length
+                    && inData[i] != NEWLINE) i++;
+
+                // Write append text
+                if (appendStart < i)
+                {
+                    bw.Write(inData[appendStart..i]);
+                }
+            }
+
+            // Write to file
+            File.WriteAllBytes(outputDta, ((MemoryStream)bw.BaseStream).ToArray());
         }
     }
 }
