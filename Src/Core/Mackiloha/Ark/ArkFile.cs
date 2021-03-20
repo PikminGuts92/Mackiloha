@@ -333,8 +333,11 @@ namespace Mackiloha.Ark
 
         public void WriteHeader(string path)
         {
-            using (var fs = File.Open(path, FileMode.Create, FileAccess.ReadWrite))
-                WriteHeader(fs);
+            using var ms = new MemoryStream();
+
+            // Write to memory then file (faster)
+            WriteHeader(ms);
+            File.WriteAllBytes(path, ms.ToArray());
         }
 
         private void WriteHeader(Stream stream)
