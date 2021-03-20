@@ -62,12 +62,16 @@ namespace ArkHelper.Apps
             {
                 if ((int)ark.Version < 3)
                 {
+                    Console.WriteLine("Hdr version doesn't support multi-part arks, copying single ark for edit");
+
                     // If ark version doesn't support multiple parts then copy entire ark to new directory
                     ark = ark.CopyToDirectory(Path.Combine(op.OutputPath, genDirName));
                     inplaceEdit = true;
                 }
                 else
                 {
+                    Console.WriteLine("Adding additional ark part");
+
                     // Add additional ark park
                     var patchPartName = $"{Path.GetFileNameWithoutExtension(hdrFileName)}_{ark.PartCount()}{arkExt}";
 
