@@ -62,6 +62,14 @@ namespace Mackiloha.IO.Serializers
                 default:
                     throw new NotSupportedException($"Unexpected number, got {tex.Index}");
             }
+
+            if (version == 7
+                && ar.BaseStream.Position == ar.BaseStream.Length)
+            {
+                tex.UseExternal = true;
+                tex.Bitmap = null;
+                return;
+            }
             
             tex.UseExternal = ar.ReadBoolean();
             tex.Bitmap = null;
@@ -136,7 +144,7 @@ namespace Mackiloha.IO.Serializers
             {
                 case 10:
                     // GH1
-                    return new[] { 8 };
+                    return new[] { 7 /* GH1 proto */, 8 };
                 case 24:
                     // GH2 PS2
                     return new[] { 10 };
