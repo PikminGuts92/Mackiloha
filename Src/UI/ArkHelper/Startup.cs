@@ -12,6 +12,7 @@ namespace ArkHelper
         public static void ConfigureServices(IServiceCollection services)
         {
             // Helpers
+            services.AddSingleton<ICacheHelper, CacheHelper>();
             services.AddSingleton<IScriptHelper, ScriptHelperDtab>();
 
             // Apps
