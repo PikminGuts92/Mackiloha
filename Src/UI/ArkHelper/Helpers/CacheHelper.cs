@@ -10,11 +10,19 @@ namespace ArkHelper.Helpers
 {
     public class CacheHelper : ICacheHelper
     {
+        protected readonly static JsonSerializerOptions JsonSettings;
+
         protected string CacheDirectory;
         protected int ArkVersion;
         protected bool ArkEncrypted;
 
         protected Dictionary<string, CachedFileInfo> MappedCachedFiles;
+
+        static CacheHelper()
+        {
+            JsonSettings = new JsonSerializerOptions();
+            JsonSettings.WriteIndented = true;
+        }
 
         public virtual void LoadCache(string path, int arkVersion, bool arkEncrypted)
         {
@@ -34,6 +42,10 @@ namespace ArkHelper.Helpers
                 {
                     // Ignore cached files
                     cache.Files.Clear();
+
+                    var cachedFiles = Path.Combine(CacheDirectory, "files");
+                    if (Directory.Exists(cachedFiles))
+                        Directory.Delete(cachedFiles, true);
                 }
                 else
                 {
@@ -47,14 +59,33 @@ namespace ArkHelper.Helpers
             }
         }
 
-        public virtual string GetCachedPathIfNotUpdated(string realPath, string internalPath)
+        public virtual void SaveCache()
         {
-            var realFileInfo = new FileInfo(realPath);
+            var cachePath = GetCacheFilePath();
+
+            var cache = new ArkCache()
+            {
+                Version = ArkVersion,
+                Encrypted = ArkEncrypted,
+                Files = MappedCachedFiles
+                    .Select(x => x.Value)
+                    .OrderBy(x => x.InternalPath)
+                    .ToList()
+            };
+
+            var cacheJson = JsonSerializer.Serialize<ArkCache>(cache, JsonSettings);
+            File.WriteAllText(cachePath, cacheJson);
+        }
+
+        public virtual string GetCachedPathIfNotUpdated(string sourcePath, string internalPath)
+        {
+            var fullSourcePath = Path.GetFullPath(sourcePath);
+            var lastWriteTime = File.GetLastWriteTime(sourcePath);
 
             if (MappedCachedFiles
                 .TryGetValue(internalPath, out var info)
-                && info.RealPath == realPath
-                && info.LastUpdated >= realFileInfo.LastWriteTime)
+                && info.SourcePath == fullSourcePath
+                && info.LastUpdated >= lastWriteTime)
             {
                 var filePath = Path.Combine(CacheDirectory, "files", internalPath);
 
@@ -66,27 +97,34 @@ namespace ArkHelper.Helpers
             return null;
         }
 
-        public virtual void UpdateCachedFile(string realPath, string internalPath)
+        public virtual void UpdateCachedFile(string sourcePath, string internalPath, string genFilePath)
         {
-            var realFileInfo = new FileInfo(realPath);
+            var fullSourcePath = Path.GetFullPath(sourcePath);
+            var lastWriteTime = File.GetLastWriteTime(sourcePath);
 
-            var filePath = Path.Combine(CacheDirectory, "files", internalPath);
-            File.Copy(realPath, filePath, true);
+            var internalFilePath = Path.GetFullPath(Path.Combine(CacheDirectory, "files", internalPath));
+
+            // Create directory if one doesn't exist
+            var internalFileDirectory = Path.GetDirectoryName(internalFilePath);
+            CreateDirectory(internalFileDirectory);
+
+            // Copy gen file to internal
+            File.Copy(genFilePath, internalFilePath, true);
 
             if (MappedCachedFiles.TryGetValue(internalPath, out var info))
             {
                 // Update existing
-                info.RealPath = realPath;
-                info.LastUpdated = realFileInfo.LastWriteTime;
+                info.SourcePath = fullSourcePath;
+                info.LastUpdated = lastWriteTime;
             }
             else
             {
                 // Add new entry
                 var newInfo = new CachedFileInfo()
                 {
-                    RealPath = realPath,
+                    SourcePath = fullSourcePath,
                     InternalPath = internalPath,
-                    LastUpdated = realFileInfo.LastWriteTime
+                    LastUpdated = lastWriteTime
                 };
 
                 MappedCachedFiles.Add(newInfo.InternalPath, newInfo);

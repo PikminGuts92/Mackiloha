@@ -16,10 +16,12 @@ namespace ArkHelper.Apps
 {
     public class Dir2ArkApp
     {
+        protected readonly ICacheHelper CacheHelper;
         protected readonly IScriptHelper ScriptHelper;
 
-        public Dir2ArkApp(IScriptHelper scriptHelper)
+        public Dir2ArkApp(ICacheHelper cacheHelper, IScriptHelper scriptHelper)
         {
+            CacheHelper = cacheHelper;
             ScriptHelper = scriptHelper;
         }
 
@@ -44,6 +46,14 @@ namespace ArkHelper.Apps
             {
                 // Don't encrypt unless explicitly stated
                 op.EncryptKey = default;
+            }
+
+            // Load ark cache if path given
+            bool usingCache = false;
+            if (!(op.CachePath is null))
+            {
+                CacheHelper.LoadCache(op.CachePath, op.ArkVersion, op.Encrypt);
+                usingCache = true;
             }
 
             // Create directory if it doesn't exist
@@ -83,8 +93,30 @@ namespace ArkHelper.Apps
                     if (!genPathedFile.IsMatch(internalPath))
                         internalPath = internalPath.Insert(internalPath.LastIndexOf('/'), "/gen");
 
-                    // Creates temp dtb file
-                    inputFilePath = ScriptHelper.ConvertDtaToDtb(file, tempDir, ark.Encrypted, (int)ark.Version);
+                    // Use cache if available
+                    if (usingCache)
+                    {
+                        var cachePath = CacheHelper
+                            .GetCachedPathIfNotUpdated(inputFilePath, internalPath);
+
+                        if (cachePath is null)
+                        {
+                            var dtbPath = ScriptHelper
+                                .ConvertDtaToDtb(file, tempDir, ark.Encrypted, (int)ark.Version);
+
+                            CacheHelper.UpdateCachedFile(inputFilePath, internalPath, dtbPath);
+                            inputFilePath = dtbPath;
+                        }
+                        else
+                        {
+                            inputFilePath = cachePath;
+                        }
+                    }
+                    else
+                    {
+                        // Creates temp dtb file
+                        inputFilePath = ScriptHelper.ConvertDtaToDtb(file, tempDir, ark.Encrypted, (int)ark.Version);
+                    }
                 }
                 else if ((int)ark.Version >= 7 && forgeScriptRegex.IsMatch(internalPath))
                 {
@@ -134,6 +166,11 @@ namespace ArkHelper.Apps
 
             ark.CommitChanges(true);
             Console.WriteLine($"Wrote hdr to \"{hdrPath}\"");
+
+            if (usingCache)
+            {
+                CacheHelper.SaveCache();
+            }
         }
 
         protected virtual string GuessPlatform(string arkPath)

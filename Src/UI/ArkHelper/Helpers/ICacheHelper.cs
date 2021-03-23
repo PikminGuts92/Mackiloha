@@ -7,7 +7,8 @@ namespace ArkHelper.Helpers
     public interface ICacheHelper
     {
         void LoadCache(string path, int arkVersion, bool arkEncrypted);
-        string GetCachedPathIfNotUpdated(string realPath, string internalPath);
-        void UpdateCachedFile(string realPath, string internalPath);
+        void SaveCache();
+        string GetCachedPathIfNotUpdated(string sourcePath, string internalPath);
+        void UpdateCachedFile(string sourcePath, string internalPath, string genFilePath);
     }
 }

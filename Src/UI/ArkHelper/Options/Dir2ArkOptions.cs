@@ -25,5 +25,8 @@ namespace ArkHelper.Options
 
         [Option('k', "key", HelpText = "Encryption key (one will be generated if not set)")]
         public uint? EncryptKey { get; set; }
+
+        [Option('c', "cache", HelpText = "Directory path to DTB cache")]
+        public string CachePath { get; set; }
     }
 }
