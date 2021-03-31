@@ -35,7 +35,7 @@ Usage:
 ## SuperFreq (pronounced "Super Freak")
 CLI tool for unpacking/packing rnd archives from milo games. These files usually use the extensions: .gh, .kr, .milo, .rnd
 
-**Warning:** Game compatibility is *very* limited. Editing archives for games beyond GH2 will have mix results.
+**Warning:** Game compatibility is *very* limited. Editing archives for games beyond GH2 will have mixed results.
 
 Usage:
 - Extract rnd archive: `superfreq milo2dir test.milo_ps2 ext_test --convertTextures --preset=gh2`
