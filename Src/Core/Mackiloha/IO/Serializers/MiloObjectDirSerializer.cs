@@ -287,10 +287,10 @@ namespace Mackiloha.IO.Serializers
                     aw.Write((int)num1);
                 if (dir.Extras.TryGetValue("Num2", out var num2))
                     aw.Write((int)num2);
-
-                aw.Write((int)dir.Entries.Count);
             }
 
+            // Write entries
+            aw.Write((int)dir.Entries.Count);
             foreach (var entry in dir.Entries)
             {
                 aw.Write((string)entry.Type);
