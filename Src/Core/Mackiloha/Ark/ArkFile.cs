@@ -84,11 +84,26 @@ namespace Mackiloha.Ark
         public static ArkFile FromFile(string input)
         {
             if (input == null) throw new ArgumentNullException();
-            string ext = Path.GetExtension(input).ToLower(); // TODO: Do something with this
 
-            MemoryStream ms = new MemoryStream();
+            var name = Path.GetFileNameWithoutExtension(input);
+            var ext = Path.GetExtension(input).ToLower();
 
-            using (FileStream fs = File.OpenRead(input))
+            if (ext == ".ark" && Regex.IsMatch(name, @"_\d+$"))
+            {
+                // If ark path is given, correct to hdr
+                var hdrPath = Directory.GetFiles(Path.GetDirectoryName(Path.GetFullPath(input)))
+                    .FirstOrDefault(x => Regex.IsMatch(name, @"(?i).hdr$"));
+
+                input = hdrPath;
+            } else if (ext == ".ark")
+            {
+                // Treat as Freq/Amp
+                using var fs = File.OpenRead(input);
+                return ParseArkHeader(input, fs);
+            }
+
+            var ms = new MemoryStream();
+            using (var fs = File.OpenRead(input))
             {
                 if (fs.Length > MAX_HDR_SIZE)
                     throw new Exception("HDR file is larger than 20MB");
@@ -98,6 +113,59 @@ namespace Mackiloha.Ark
 
             ms.Seek(0, SeekOrigin.Begin);
             return ParseHeader(input, ms);
+        }
+
+        private static ArkFile ParseArkHeader(string input, Stream stream)
+        {
+            ArkFile ark = new ArkFile();
+            ark._encrypted = false;
+            ark._xor = false;
+            ark._arkPaths = new[] { Path.GetFullPath(input) };
+
+            using var ar = new AwesomeReader(stream);
+
+            // Checks version
+            int version = ar.ReadInt32();
+
+            if (!Enum.IsDefined(typeof(ArkVersion), version))
+                throw new NotSupportedException($"Unsupported ark version 0x{version:X8}");
+
+            ark._version = (ArkVersion)version;
+
+            // Skip entries and come back later
+            var entryOffset = ar.BaseStream.Position;
+            var entryCount = ar.ReadInt32();
+            ar.BaseStream.Seek(entryCount * 20, SeekOrigin.Current);
+
+            // Read string blob + string indicies
+            var strings = ReadStringBlob(ar);
+            int[] stringIndex = ReadStringIndicies(ar);
+
+            // Read entries
+            ar.BaseStream.Seek(entryOffset + 4, SeekOrigin.Begin);
+
+            for (int i = 0; i < entryCount; i++)
+            {
+                uint offset = ar.ReadUInt32();
+
+                int fileIdx = ar.ReadInt32();
+                int dirIdx = ar.ReadInt32();
+
+                string filePath = (fileIdx >= 0)
+                    ? strings[stringIndex[fileIdx]]
+                    : "";
+
+                string direPath = (dirIdx >= 0)
+                    ? strings[stringIndex[dirIdx]]
+                    : "";
+
+                uint size = ar.ReadUInt32();
+                uint inflatedSize = ar.ReadUInt32();
+
+                ark._offsetEntries.Add(new OffsetArkEntry(offset, filePath, direPath, size, inflatedSize, 0, offset));
+            }
+
+            return ark;
         }
 
         private static ArkFile ParseHeader(string input, Stream stream)
@@ -215,25 +283,9 @@ namespace Mackiloha.Ark
 
             if (version <= 7)
             {
-                Dictionary<int, string> strings = new Dictionary<int, string>(); // Index, value
-                uint sTableSize = ar.ReadUInt32();
-                int offset = 0;
-                long startPosition = ar.BaseStream.Position;
-
-                // Reads all strings in table
-                while (offset < sTableSize)
-                {
-                    string s = ar.ReadNullString();
-                    strings.Add(offset, s);
-
-                    offset = (int)(ar.BaseStream.Position - startPosition);
-                }
-
-                // Reads string index entries
-                int[] stringIndex = new int[ar.ReadUInt32()];
-
-                for (int i = 0; i < stringIndex.Length; i++)
-                    stringIndex[i] = ar.ReadInt32();
+                // Read string blob + string indicies
+                var strings = ReadStringBlob(ar);
+                int[] stringIndex = ReadStringIndicies(ar);
 
                 // Reads entries
                 uint entryCount = ar.ReadUInt32();
@@ -313,6 +365,36 @@ namespace Mackiloha.Ark
             }
 
             return ark;
+        }
+
+        private static Dictionary<int, string> ReadStringBlob(AwesomeReader ar)
+        {
+            var strings = new Dictionary<int, string>(); // Index, value
+            uint sTableSize = ar.ReadUInt32();
+            int offset = 0;
+            long startPosition = ar.BaseStream.Position;
+
+            // Reads all strings in table
+            while (offset < sTableSize)
+            {
+                string s = ar.ReadNullString();
+                strings.Add(offset, s);
+
+                offset = (int)(ar.BaseStream.Position - startPosition);
+            }
+
+            return strings;
+        }
+
+        private static int[] ReadStringIndicies(AwesomeReader ar)
+        {
+            // Reads string index entries
+            int[] stringIndex = new int[ar.ReadUInt32()];
+
+            for (int i = 0; i < stringIndex.Length; i++)
+                stringIndex[i] = ar.ReadInt32();
+
+            return stringIndex;
         }
 
         private static (int part, long offset) GetArkOffsetForEntry(long entryOffset, long[] partSizes)

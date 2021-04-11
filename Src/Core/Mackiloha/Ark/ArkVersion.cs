@@ -6,9 +6,12 @@ using System.Threading.Tasks;
 
 namespace Mackiloha.Ark
 {
-    public enum ArkVersion
+    public enum ArkVersion : int
     {
-        V3 = 3, // GH1/Amp
+        //V0 = 0x4B5241, // Freq (ARK magic)
+        //V1 = 1, // Amp Demo
+        V2 = 2, // Amp/KR
+        V3, // GH1
         V4,
         V5,
         V6,

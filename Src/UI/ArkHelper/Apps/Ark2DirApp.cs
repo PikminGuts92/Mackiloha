@@ -104,6 +104,7 @@ namespace ArkHelper.Apps
 
             var scriptsToConvert = ark.Entries
                 .Where(x => op.ConvertScripts
+                    && arkVersion >= 3 // Amp dtbs not supported right now
                     && scriptRegex.IsMatch(x.FullPath))
                 .ToList();
 
