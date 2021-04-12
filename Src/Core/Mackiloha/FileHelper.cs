@@ -100,7 +100,8 @@ namespace Mackiloha
 
         public static string GetRelativePath(string path, string basePath)
         {
-            return Path.GetFullPath(path).Substring(Path.GetFullPath(basePath).Length + 1);
+            //return Path.GetFullPath(path).Substring(Path.GetFullPath(basePath).Length + 1);
+            return System.IO.Path.GetRelativePath(Path.GetFullPath(basePath), Path.GetFullPath(path));
         }
 
         public static byte[] GetBytes(string hex)
