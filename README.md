@@ -11,13 +11,14 @@ Run `./build.sh`
 
 # Overview
 ## Ark Helper
-CLI tool for unpacking/repacking .ark archives from milo. Should work with GH1 up to RB3. For dta/dtb serialization support, download [dtab](https://github.com/mtolly/dtab) and place in same directory as ark helper executable.
+CLI tool for unpacking/repacking .ark archives from milo. Should work with Amplitude (PS2) up to RB3. For dta/dtb serialization support, download [dtab](https://github.com/mtolly/dtab) and place in same directory as ark helper executable.
 
 Usage:
 - Extract ark archive:
   - Everything: `arkhelper ark2dir main.hdr ext_dir -a`
   - Everything + convert scripts: `arkhelper ark2dir main.hdr ext_dir -a -s`
 - Repack ark archive:
+  - Amp PS2: `arkhelper dir2ark ext_dir gen_dir -n MAIN -v 2`
   - GH1/GH2 PS2: `arkhelper dir2ark ext_dir gen_dir -n "MAIN"`
   - GH2 360: `arkhelper dir2ark ext_dir gen_dir -e`
   - RB2/TBRB/GDRB PS3: `arkhelper dir2ark ext_dir gen_dir -n "main_ps3" -e -v 5`
