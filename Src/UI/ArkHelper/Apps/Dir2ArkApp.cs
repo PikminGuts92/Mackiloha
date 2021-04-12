@@ -35,10 +35,21 @@ namespace ArkHelper.Apps
                 ? op.PartSizeLimit
                 : uint.MaxValue;
 
+            if (!Directory.Exists(op.InputPath))
+            {
+                throw new DirectoryNotFoundException($"Can't find directory \"{op.InputPath}\"");
+            }
+
             var arkDir = Path.GetFullPath(op.OutputPath);
 
             // Set encrypted data
-            if (op.Encrypt && !op.EncryptKey.HasValue)
+            if (op.ArkVersion < 3)
+            {
+                // Don't encrypt hdr-less arks
+                op.Encrypt = false;
+                op.EncryptKey = default;
+            }
+            else if (op.Encrypt && !op.EncryptKey.HasValue)
             {
                 op.EncryptKey = 0x5A_4C_4F_4C;
             }
@@ -61,10 +72,12 @@ namespace ArkHelper.Apps
                 Directory.CreateDirectory(arkDir);
 
             // If name is all caps, match extension
-            var hdrExt = op.ArkName
-                .All(c => char.IsUpper(c))
-                ? ".HDR"
-                : ".hdr";
+            var hdrExt = op.ArkVersion >= 3
+                ? ".hdr"
+                : ".ark";
+
+            if (op.ArkName.All(c => char.IsUpper(c)))
+                hdrExt = hdrExt.ToUpper();
 
             // Create ark
             var hdrPath = Path.Combine(arkDir, $"{op.ArkName}{hdrExt}");

@@ -54,29 +54,47 @@ namespace Mackiloha.Ark
 
             ark._version = version;
 
-            var directory = Path.GetDirectoryName(hdrPath);
-            var fileNameNoExt = Path.GetFileNameWithoutExtension(hdrPath);
-
-            // TODO: Add additional parts dynamically
-            var arkPaths = Enumerable.Range(0, 1)
-                .Select(x => Path.Combine(directory, $"{fileNameNoExt}_{x}.ark"))
-                .ToList();
-
-            // Create directory
-            if (!Directory.Exists(directory))
-                Directory.CreateDirectory(directory);
-
-            // Create ark parts
-            foreach (var partPath in arkPaths)
+            if ((int)version < 3)
             {
-                using var _ = File.Create(partPath);
+                using var _ = File.Create(hdrPath);
+
+                // Single file, not other ark parts to add
+                ark._arkPaths = new[]
+                {
+                    hdrPath
+                };
             }
-
-            ark._arkPaths = new[]
+            else
             {
-                hdrPath,
-                arkPaths.First()
-            };
+                // Add ark part paths
+                var directory = Path.GetDirectoryName(hdrPath);
+                var fileNameNoExt = Path.GetFileNameWithoutExtension(hdrPath);
+
+                var arkExt = (fileNameNoExt.All(c => char.IsUpper(c)))
+                    ? ".ARK"
+                    : ".ark";
+
+                // TODO: Add additional parts dynamically
+                var arkPaths = Enumerable.Range(0, 1)
+                    .Select(x => Path.Combine(directory, $"{fileNameNoExt}_{x}{arkExt}"))
+                    .ToList();
+
+                // Create directory
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+
+                // Create ark parts
+                foreach (var partPath in arkPaths)
+                {
+                    using var _ = File.Create(partPath);
+                }
+
+                ark._arkPaths = new[]
+                {
+                    hdrPath,
+                    arkPaths.First()
+                };
+            }
 
             return ark;
         }
@@ -447,12 +465,15 @@ namespace Mackiloha.Ark
                 aw.Write((long)-1);
             }
 
-            aw.Write(arkSizes.Length);
-            aw.Write(arkSizes.Length);
+            if ((int)Version >= 3)
+            {
+                aw.Write(arkSizes.Length);
+                aw.Write(arkSizes.Length);
 
-            // Writes ark sizes
-            foreach (var size in arkSizes)
-                aw.Write((uint)size);
+                // Writes ark sizes
+                foreach (var size in arkSizes)
+                    aw.Write((uint)size);
+            }
 
             // Write ark paths
             if ((int)Version >= 5)
@@ -606,12 +627,9 @@ namespace Mackiloha.Ark
             // Creates and writes string blob
             var entries = _offsetEntries.OrderBy(x => x.Offset).ToList();
             byte[] blob = CreateBlob(out var strings, entries);
-            aw.Write((uint)blob.Length);
-            aw.Write(blob);
 
             // Write string offset table
             int[] stringOffsets = new int[(entries.Count * 2) + 200];
-            aw.Write(stringOffsets.Length);
 
             Dictionary<string, int> tableOffsets = new Dictionary<string, int>();
             foreach (var str in strings)
@@ -631,27 +649,36 @@ namespace Mackiloha.Ark
                 tableOffsets.Add(str.Key, hash);
             }
 
-            // Writes offsets
-            foreach (var offset in stringOffsets)
-                aw.Write((uint)offset);
-
-            // Sort by hash index
-            entries.Sort((x, y) =>
+            if ((int)Version >= 3)
             {
-                int xValue = tableOffsets[x.Directory];
-                int yValue = tableOffsets[y.Directory];
-
-                // The directories are the same
-                if (xValue == yValue)
+                // Sort by hash index
+                entries.Sort((x, y) =>
                 {
-                    // So compare file names
-                    xValue = tableOffsets[x.FileName];
-                    yValue = tableOffsets[y.FileName];
-                }
+                    int xValue = tableOffsets[x.Directory];
+                    int yValue = tableOffsets[y.Directory];
 
-                return xValue - yValue;
-            });
+                    // The directories are the same
+                    if (xValue == yValue)
+                    {
+                        // So compare file names
+                        xValue = tableOffsets[x.FileName];
+                        yValue = tableOffsets[y.FileName];
+                    }
 
+                    return xValue - yValue;
+                });
+
+                // Write string blob
+                aw.Write((uint)blob.Length);
+                aw.Write(blob);
+
+                // Write string indicies
+                aw.Write(stringOffsets.Length);
+                foreach (var offset in stringOffsets)
+                    aw.Write((uint)offset);
+            }
+
+            // Write entries
             aw.Write((uint)entries.Count);
 
             // TODO: Check for versions below 3 or above 6
@@ -676,6 +703,19 @@ namespace Mackiloha.Ark
                     aw.Write((uint)entry.Size);
                     aw.Write((uint)entry.InflatedSize);
                 }
+            }
+
+            // Write string indicies
+            if ((int)Version < 3)
+            {
+                // Write string blob
+                aw.Write((uint)blob.Length);
+                aw.Write(blob);
+
+                // Write string indicies
+                aw.Write(stringOffsets.Length);
+                foreach (var offset in stringOffsets)
+                    aw.Write((uint)offset);
             }
         }
 
@@ -739,6 +779,21 @@ namespace Mackiloha.Ark
                 .Select(x => x as OffsetArkEntry)
                 .OrderBy(x => x.Offset)
                 .ToList();
+
+            if ((int)_version < 3)
+            {
+                if (remainingOffsetEntries.Count != 0)
+                    throw new NotSupportedException($"Can't add more files to an existing ark for version {_version}");
+
+                _offsetEntries
+                    .AddRange(_pendingEntries
+                        .Select(x => new OffsetArkEntry(0, x.FileName, x.Directory, 0, 0, 0, 0)));
+
+                // Write temp header
+                WriteHeader(_arkPaths.First());
+
+                _offsetEntries.Clear();
+            }
 
             List<EntryOffset> GetGaps()
             {
@@ -804,8 +859,18 @@ namespace Mackiloha.Ark
                         .OrderByDescending(x => x.Offset + x.Size) // Ensures 0-length files don't conflict w/ regular files at same offset
                         .FirstOrDefault();
 
-                    long offset = (lastEntry != null) ? lastEntry.Offset + lastEntry.Size : 0;
-                    long partOffset = offset - arkSizes.Reverse().Skip(1).Sum();
+                    long offset = (lastEntry != null)
+                        ? lastEntry.Offset + lastEntry.Size
+                        : Version switch
+                        {
+                            ArkVersion.V2 => arkSizes.First(),
+                            _ => 0
+                        };
+
+                    long partOffset = offset - arkSizes
+                        .Reverse()
+                        .Skip(1)
+                        .Sum();
 
                     // Copies entry to ark file
                     CopyToArchive(_arkPaths.Last(), partOffset, pending.Entry.LocalFilePath);
@@ -844,15 +909,28 @@ namespace Mackiloha.Ark
             _offsetEntries.AddRange(remainingOffsetEntries);
 
             // Re-writes header file
-            if (writeHeader)
+            if (writeHeader && (int)Version >= 3)
                 WriteHeader(_arkPaths[0]);
+            else if ((int)Version < 3)
+            {
+                // Update header
+                using var fs = File.OpenWrite(_arkPaths.First());
+                WriteHeader(fs);
+            }
 
             // TODO: Add an output log
         }
 
         protected (long size, bool encrypted)[] GetPartSizes()
         {
-            if ((int)Version < 10)
+            if ((int)Version < 3)
+            {
+                return _arkPaths
+                    .Take(1)
+                    .Select(x => (new FileInfo(x).Length, false))
+                    .ToArray();
+            }
+            else if ((int)Version < 10)
             {
                 return _arkPaths
                     .Skip(1)
