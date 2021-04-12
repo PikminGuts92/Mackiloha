@@ -178,7 +178,10 @@ namespace ArkHelper.Apps
             }
 
             ark.CommitChanges(true);
-            Console.WriteLine($"Wrote hdr to \"{hdrPath}\"");
+            if (op.ArkVersion < 3)
+                Console.WriteLine($"Wrote ark to \"{hdrPath}\"");
+            else
+                Console.WriteLine($"Wrote hdr to \"{hdrPath}\"");
 
             if (usingCache)
             {

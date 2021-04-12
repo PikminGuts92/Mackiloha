@@ -875,8 +875,13 @@ namespace Mackiloha.Ark
                     // Copies entry to ark file
                     CopyToArchive(_arkPaths.Last(), partOffset, pending.Entry.LocalFilePath);
 
+                    // Get inflate size if v2 or lower
+                    var inflateSize = ((int)Version < 3)
+                        ? GetGZipInflateSize(pending.Entry.LocalFilePath)
+                        : 0;
+
                     // Adds ark offset entry
-                    remainingOffsetEntries.Add(new OffsetArkEntry(offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, 0, arkSizes.Length, partOffset));
+                    remainingOffsetEntries.Add(new OffsetArkEntry(offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, inflateSize, arkSizes.Length, partOffset));
                 }
                 else
                 {
@@ -885,8 +890,13 @@ namespace Mackiloha.Ark
                     // Copies entry to ark file (TODO: Calculate arkPath beforehand)
                     CopyToArchive(_arkPaths[partIdx + 1], partOffset, pending.Entry.LocalFilePath);
 
+                    // Get inflate size if v2 or lower
+                    var inflateSize = ((int)Version < 3)
+                        ? GetGZipInflateSize(pending.Entry.LocalFilePath)
+                        : 0;
+
                     // Adds ark offset entry
-                    remainingOffsetEntries.Add(new OffsetArkEntry(bestFit.Offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, 0, partIdx + 1, partOffset));
+                    remainingOffsetEntries.Add(new OffsetArkEntry(bestFit.Offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, inflateSize, partIdx + 1, partOffset));
 
                     // Updates gap entry
                     if (bestFit.Size == pending.Length)
@@ -919,6 +929,31 @@ namespace Mackiloha.Ark
             }
 
             // TODO: Add an output log
+        }
+
+        protected uint GetGZipInflateSize(string path)
+        {
+            if (!Regex.IsMatch(path, "(?i).gz$"))
+                return 0;
+
+            try
+            {
+                using var fs = File.OpenRead(path);
+                var ar = new AwesomeReader(fs);
+
+                // Read gz magic
+                var magic = ar.ReadUInt16();
+                if (magic != 0x8B1F)
+                    return 0;
+
+                // Read inflate size
+                fs.Seek(-4, SeekOrigin.End);
+                return ar.ReadUInt32();
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
         protected (long size, bool encrypted)[] GetPartSizes()
