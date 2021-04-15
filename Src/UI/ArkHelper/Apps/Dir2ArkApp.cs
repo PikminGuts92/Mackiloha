@@ -154,7 +154,7 @@ namespace ArkHelper.Apps
                 {
                     throw new NotSupportedException($"File size above 4GB is unsupported for \"{file}\"");
                 }
-                else if (potentialPartSize >= arkPartSizeLimit)
+                else if ((int)ark.Version >= 3 && potentialPartSize >= arkPartSizeLimit)
                 {
                     // Kind of hacky but multiple part writing isn't implemented in commit changes yet
                     ark.CommitChanges(true);
