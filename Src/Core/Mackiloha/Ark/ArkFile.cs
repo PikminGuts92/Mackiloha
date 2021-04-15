@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.IO;
 using System.Collections;
+using System.IO.Compression;
 
 namespace Mackiloha.Ark
 {
@@ -33,6 +34,7 @@ namespace Mackiloha.Ark
         private readonly List<OffsetArkEntry> _offsetEntries;
 
         private const int MAX_HDR_SIZE = 20 * 0x100000; // 20MB
+        private readonly byte[] ReadBuffer = new byte[0x800];
 
         private ArkFile() : base()
         {
@@ -876,9 +878,7 @@ namespace Mackiloha.Ark
                     CopyToArchive(_arkPaths.Last(), partOffset, pending.Entry.LocalFilePath);
 
                     // Get inflate size if v2 or lower
-                    var inflateSize = ((int)Version < 3)
-                        ? GetGZipInflateSize(pending.Entry.LocalFilePath)
-                        : 0;
+                    var inflateSize = GetInflateSize(pending.Entry.LocalFilePath);
 
                     // Adds ark offset entry
                     remainingOffsetEntries.Add(new OffsetArkEntry(offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, inflateSize, arkSizes.Length, partOffset));
@@ -891,9 +891,7 @@ namespace Mackiloha.Ark
                     CopyToArchive(_arkPaths[partIdx + 1], partOffset, pending.Entry.LocalFilePath);
 
                     // Get inflate size if v2 or lower
-                    var inflateSize = ((int)Version < 3)
-                        ? GetGZipInflateSize(pending.Entry.LocalFilePath)
-                        : 0;
+                    var inflateSize = GetInflateSize(pending.Entry.LocalFilePath);
 
                     // Adds ark offset entry
                     remainingOffsetEntries.Add(new OffsetArkEntry(bestFit.Offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, inflateSize, partIdx + 1, partOffset));
@@ -931,11 +929,29 @@ namespace Mackiloha.Ark
             // TODO: Add an output log
         }
 
+        protected uint GetInflateSize(string path)
+        {
+            if ((int)Version >= 3)
+            {
+                // Don't care when version is 3 or above
+                return 0;
+            }
+            else if (Regex.IsMatch(path, "(?i).gz$"))
+            {
+                return GetGZipInflateSize(path);
+            }
+            else if (path.EndsWith(".z") || path.EndsWith(".Z"))
+            {
+                return GetZlibInflateSize(path);
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
         protected uint GetGZipInflateSize(string path)
         {
-            if (!Regex.IsMatch(path, "(?i).gz$"))
-                return 0;
-
             try
             {
                 using var fs = File.OpenRead(path);
@@ -949,6 +965,32 @@ namespace Mackiloha.Ark
                 // Read inflate size
                 fs.Seek(-4, SeekOrigin.End);
                 return ar.ReadUInt32();
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        protected uint GetZlibInflateSize(string path)
+        {
+            try
+            {
+                using var fs = File.OpenRead(path);
+                using var outZStream = new DeflateStream(fs, CompressionMode.Decompress, true);
+
+                uint size = 0;
+                int read;
+                while (true)
+                {
+                    read = outZStream.Read(ReadBuffer, 0, ReadBuffer.Length);
+                    if (read <= 0)
+                        break;
+
+                    size += (uint)read;
+                }
+
+                return size;
             }
             catch
             {
