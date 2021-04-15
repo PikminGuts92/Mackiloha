@@ -18,7 +18,7 @@ Usage:
   - Everything: `arkhelper ark2dir main.hdr ext_dir -a`
   - Everything + convert scripts: `arkhelper ark2dir main.hdr ext_dir -a -s`
 - Repack ark archive:
-  - Amp PS2: `arkhelper dir2ark ext_dir gen_dir -n "MAIN" -v 2`
+  - Amp/KR/AntiGrav PS2: `arkhelper dir2ark ext_dir gen_dir -n "MAIN" -v 2`
   - GH1/GH2 PS2: `arkhelper dir2ark ext_dir gen_dir -n "MAIN"`
   - GH2 360: `arkhelper dir2ark ext_dir gen_dir -e`
   - RB2/TBRB/GDRB PS3: `arkhelper dir2ark ext_dir gen_dir -n "main_ps3" -e -v 5`
