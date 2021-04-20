@@ -9,6 +9,18 @@ namespace Mackiloha.IO.Serializers
     public class MiloObjectDirSerializer : AbstractSerializer
     {
         private static readonly byte[] ADDE_PADDING = { 0xAD, 0xDE, 0xAD, 0xDE }; // Used to pad files
+        protected Dictionary<string, int> SortValues = new Dictionary<string, int>()
+        {
+            // Common types
+            {   "Tex", 0 },
+            {   "Mat", 1 },
+            {  "Font", 2 },
+            {  "Text", 3 },
+            {  "Mesh", 4 },
+            { "Group", 5 },
+            {  "View", 5 }, // Old version of group
+            { "Trans", 6 }
+        };
 
         public MiloObjectDirSerializer(MiloSerializer miloSerializer) : base(miloSerializer) { }
 
@@ -264,10 +276,25 @@ namespace Mackiloha.IO.Serializers
             }
         }
 
+        protected int GetEntryTypeSortValue(string type)
+        {
+            if (SortValues.TryGetValue(type, out var v))
+            {
+                return v;
+            }
+
+            return 99;
+        }
+
         public override void WriteToStream(AwesomeWriter aw, ISerializable data)
         {
             var dir = data as MiloObjectDir;
             aw.Write((int)Magic());
+
+            // Sort entries using sort order defined in games
+            var sortedEntries = dir.Entries
+                .OrderBy(x => GetEntryTypeSortValue(x.Type))
+                .ToList();
 
             if (Magic() >= 24)
             {
@@ -277,16 +304,16 @@ namespace Mackiloha.IO.Serializers
                 aw.Write((string)dirEntry.Name);
 
                 // Calculate hash + blob sizes
-                var hashCount = (dir.Entries.Count + 1) * 2;
-                var blobSize = dir.Entries.Select(x => x.Name.Length + 1).Sum() + (dirEntry.Name.Length + 1);
+                var hashCount = (sortedEntries.Count + 1) * 2;
+                var blobSize = sortedEntries.Select(x => x.Name.Length + 1).Sum() + (dirEntry.Name.Length + 1);
 
                 aw.Write((int)hashCount);
                 aw.Write((int)blobSize);
             }
 
             // Write entries
-            aw.Write((int)dir.Entries.Count);
-            foreach (var entry in dir.Entries)
+            aw.Write((int)sortedEntries.Count);
+            foreach (var entry in sortedEntries)
             {
                 aw.Write((string)entry.Type);
                 aw.Write((string)entry.Name);
@@ -395,7 +422,7 @@ namespace Mackiloha.IO.Serializers
                 external.ForEach(x => aw.Write((string)x));
             }
 
-            foreach (var entry in dir.Entries)
+            foreach (var entry in sortedEntries)
             {
                 MiloSerializer.WriteToStream(aw.BaseStream, entry as ISerializable); // TODO: Don't cast
                 aw.Write(ADDE_PADDING);
