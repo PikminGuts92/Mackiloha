@@ -16,6 +16,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace P9SongTool.Apps
 {
@@ -95,20 +96,30 @@ namespace P9SongTool.Apps
                 miloDir.Entries.Add(lyricConfigAnim);
             }
 
-            // Get extras as raw entries
-            var extras = extrasPaths
-                .Select<string, (string path, string miloType)>(x => (x, SupportedExtraTypes.FirstOrDefault(y => x.EndsWith(y.extension, StringComparison.CurrentCultureIgnoreCase)).miloType))
-                .Where(x => !(x.miloType is null)) // Ignore unsupported files
-                .Select(x => x.miloType switch
+            // Iterate over extra milo objects
+            Parallel.ForEach(extrasPaths,
+                path =>
                 {
-                    "PNG" => CreateTex(x.path, state.SystemInfo),
-                    _ => CreateObject(x.path, x.miloType)
-                })
-                .Where(x => (lyricConfigAnim is null)
-                    || !x.Name.Equals(lyricConfigAnim.Name, StringComparison.CurrentCultureIgnoreCase)) // Filter out lyric_config if in json
-                .ToList();
+                    // Get milo type
+                    var miloType = GetMiloType(path);
 
-            miloDir.Entries.AddRange(extras);
+                    // Ignore unsupported files and filter out lyric_config if in json
+                    if (miloType is null
+                        || (!(lyricConfigAnim is null) && path.EndsWith(lyricConfigAnim.Name, StringComparison.CurrentCultureIgnoreCase)))
+                        return;
+
+                    var miloObj = miloType switch
+                    {
+                        "PNG" => CreateTex(path, state.SystemInfo),
+                        _ => CreateObject(path, miloType)
+                    };
+
+                    // Add milo object to directory
+                    lock (miloDir.Entries)
+                    {
+                        miloDir.Entries.Add(miloObj);
+                    }
+                });
 
             var serializer = state.GetSerializer();
             var outputMiloPath = Path.GetFullPath(op.OutputPath);
@@ -125,6 +136,12 @@ namespace P9SongTool.Apps
             miloFile.WriteToFile(op.OutputPath);
             Console.WriteLine($"Successfully created milo at \"{outputMiloPath}\"");
         }
+
+        protected string GetMiloType(string path)
+            => SupportedExtraTypes
+                .Where(x => path.EndsWith(x.extension, StringComparison.CurrentCultureIgnoreCase))
+                .Select(x => x.miloType)
+                .FirstOrDefault();
 
         protected MiloObject CreateObject(string path, string type)
         {
