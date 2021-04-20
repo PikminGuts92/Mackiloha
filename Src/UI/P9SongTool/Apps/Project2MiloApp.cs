@@ -97,6 +97,7 @@ namespace P9SongTool.Apps
             }
 
             // Iterate over extra milo objects
+            var extras = new List<MiloObject>();
             Parallel.ForEach(extrasPaths,
                 path =>
                 {
@@ -115,14 +116,41 @@ namespace P9SongTool.Apps
                     };
 
                     // Add milo object to directory
-                    lock (miloDir.Entries)
+                    lock (extras)
                     {
-                        miloDir.Entries.Add(miloObj);
+                        extras.Add(miloObj);
                     }
                 });
 
             var serializer = state.GetSerializer();
             var outputMiloPath = Path.GetFullPath(op.OutputPath);
+
+            // Add extra milo entries and parse prop anim files
+            foreach (var extra in extras)
+            {
+                if (!(extra is MiloObjectBytes mob)
+                    || !(extra.Type is "PropAnim"))
+                {
+                    miloDir.Entries.Add(extra);
+                    continue;
+                }
+
+                try
+                {
+                    var extraAnim = state
+                        .GetSerializer()
+                        .ReadFromMiloObjectBytes<PropAnim>(mob);
+
+                    if (extraAnim.AnimName is "song_anim")
+                    {
+                        MergePropAnims(anim, extraAnim);
+                        continue;
+                    }
+                }
+                catch { }
+
+                miloDir.Entries.Add(extra);
+            }
 
             var miloFile = new MiloFile
             {
@@ -142,6 +170,26 @@ namespace P9SongTool.Apps
                 .Where(x => path.EndsWith(x.extension, StringComparison.CurrentCultureIgnoreCase))
                 .Select(x => x.miloType)
                 .FirstOrDefault();
+
+        protected void MergePropAnims(PropAnim baseAnim, PropAnim anim)
+        {
+            foreach (var inDirGroup in anim.DirectorGroups)
+            {
+                var baseDirGroupIdx = baseAnim
+                    .DirectorGroups
+                    .FindIndex(x => x.DirectorName == inDirGroup.DirectorName
+                        && x.PropName == inDirGroup.PropName
+                        && x.PropName2 == inDirGroup.PropName2);
+
+                if (baseDirGroupIdx == -1)
+                {
+                    baseAnim.DirectorGroups.Add(inDirGroup);
+                    continue;
+                }
+
+                // TODO: Merge events to existing group
+            }
+        }
 
         protected MiloObject CreateObject(string path, string type)
         {
