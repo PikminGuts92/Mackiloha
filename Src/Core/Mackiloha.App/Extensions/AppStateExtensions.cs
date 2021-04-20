@@ -149,8 +149,6 @@ namespace Mackiloha.App.Extensions
                 };
 
                 miloDir.Extras.Add("DirectoryEntry", dirEntry);
-                miloDir.Extras.Add("Num1", 0);
-                miloDir.Extras.Add("Num2", 0);
 
                 miloTypes.Remove(dirType);
             }

@@ -432,8 +432,6 @@ namespace P9SongTool.Apps
             };
 
             miloDir.Extras.Add("DirectoryEntry", miloDirEntry);
-            miloDir.Extras.Add("Num1", 0);
-            miloDir.Extras.Add("Num2", 0);
             return miloDir;
         }
         
@@ -466,8 +464,6 @@ namespace P9SongTool.Apps
 
             miloDir.Entries.Add(lipsync);
             miloDir.Extras.Add("DirectoryEntry", miloDirEntry);
-            miloDir.Extras.Add("Num1", 0);
-            miloDir.Extras.Add("Num2", 0);
             return miloDir;
         }
     }

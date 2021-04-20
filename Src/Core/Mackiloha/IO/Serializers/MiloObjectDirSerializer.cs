@@ -26,9 +26,8 @@ namespace Mackiloha.IO.Serializers
                 dirType = ar.ReadString();
                 dirName = FileHelper.SanitizePath(ar.ReadString());
 
-                //ar.BaseStream.Position += 8; // Skips string count + total length
-                dir.Extras.Add("Num1", ar.ReadInt32());
-                dir.Extras.Add("Num2", ar.ReadInt32());
+                // Skip string hash related values (re-calculated during repack)
+                ar.BaseStream.Position += 8;
             }
 
             int entryCount = ar.ReadInt32();
@@ -277,16 +276,12 @@ namespace Mackiloha.IO.Serializers
                 aw.Write((string)dirEntry.Type);
                 aw.Write((string)dirEntry.Name);
 
-                /*
-                var entryNameLengths = dir.Entries.Select(x => ((string)x.Name).Length).Sum();
-                aw.Write(0); // Unknown
-                aw.Write(1 + ((string)dirEntry.Name).Length + dir.Entries.Count + entryNameLengths);
-                */
+                // Calculate hash + blob sizes
+                var hashCount = (dir.Entries.Count + 1) * 2;
+                var blobSize = dir.Entries.Select(x => x.Name.Length + 1).Sum() + (dirEntry.Name.Length + 1);
 
-                if (dir.Extras.TryGetValue("Num1", out var num1))
-                    aw.Write((int)num1);
-                if (dir.Extras.TryGetValue("Num2", out var num2))
-                    aw.Write((int)num2);
+                aw.Write((int)hashCount);
+                aw.Write((int)blobSize);
             }
 
             // Write entries
