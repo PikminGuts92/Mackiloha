@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Mackiloha.IO.Serializers
 {
@@ -23,6 +24,31 @@ namespace Mackiloha.IO.Serializers
         };
 
         public MiloObjectDirSerializer(MiloSerializer miloSerializer) : base(miloSerializer) { }
+
+        protected bool Is360GH2()
+        {
+            var info = MiloSerializer.Info;
+
+            return info.Version == 25
+                && info.Platform == Platform.X360
+                && !info.BigEndian;
+        }
+
+        protected string SanitizeFileName(string fileName)
+        {
+            fileName = Regex.Replace(fileName, "/", "[f_slash]");
+            fileName = Regex.Replace(fileName, @"\\", "[b_slash]");
+
+            return fileName;
+        }
+
+        protected string UnsanitizeFileName(string fileName)
+        {
+            fileName = Regex.Replace(fileName, @"\[f_slash\]", "/");
+            fileName = Regex.Replace(fileName, @"\[b_slash\]", @"\");
+
+            return fileName;
+        }
 
         public override void ReadFromStream(AwesomeReader ar, ISerializable data)
         {
@@ -46,9 +72,10 @@ namespace Mackiloha.IO.Serializers
             var entries = Enumerable.Range(0, entryCount).Select(x => new
             {
                 Type = ar.ReadString(),
-                Name = FileHelper.SanitizePath(ar.ReadString())
+                Name = SanitizeFileName(FileHelper.SanitizePath(ar.ReadString()))
             }).ToArray();
 
+            var is360Gh2 = Is360GH2();
             if (version == 10)
             {
                 // Parses external resource paths?
@@ -61,188 +88,35 @@ namespace Mackiloha.IO.Serializers
 
                 dir.Extras.Add("ExternalResources", external);
             }
-            else if (version == 25 && dirType == "ObjectDir")
+            else if (version == 25 && !is360Gh2)
             {
-                // Hack for project 9
-                var dirEntry = new MiloObjectDirEntry() { Name = dirName };
-                dirEntry.Version = ar.ReadInt32();
-                dirEntry.SubVersion = ar.ReadInt32();
-                dirEntry.ProjectName = ar.ReadString();
+                var startOffset = ar.BaseStream.Position;
+                MiloObject dirEntry;
 
-                // Skip matrices + constants
-                var matCount = ar.ReadInt32(); // Usually 7
-                ar.BaseStream.Position += (matCount * 48) + 9;
-
-                // Read imported milos
-                var importedMiloCount = ar.ReadInt32();
-                dirEntry.ImportedMiloPaths = Enumerable.Range(0, importedMiloCount)
-                    .Select(x => ar.ReadString())
-                    .ToArray();
-
-                // Boolean, true when sub directory?
-                ar.ReadBoolean();
-
-                // Sub directory names seem to be in reverse order of serialization...
-                var subDirCount = ar.ReadInt32();
-                var subDirNames = Enumerable.Range(0, subDirCount)
-                    .Select(x => ar.ReadString())
-                    .ToArray();
-
-                // Read subdirectories
-                foreach (var _ in subDirNames.Reverse())
+                try
                 {
-                    var subDir = new MiloObjectDir();
-                    ReadFromStream(ar, subDir);
-
-                    dirEntry.SubDirectories.Add(subDir);
+                    dirEntry = dirType switch
+                    {
+                        "ObjectDir" => ParseObjectDir(ar, dir),
+                        "WorldDir" => ParseWorldDir(ar, dir),
+                        "RndDir" => ParseRndDir(ar, dir),
+                        "SynthDir" => ParseSynthDir(ar, dir),
+                        _ => ParseDirEntryAsBlob(ar, dir)
+                    };
+                }
+                catch
+                {
+                    ar.BaseStream.Seek(startOffset, SeekOrigin.Begin);
+                    dirEntry = ParseDirEntryAsBlob(ar, dir);
                 }
 
                 dir.Extras.Add("DirectoryEntry", dirEntry);
-                ar.BaseStream.Position += 17; // 0'd data + ADDE
-            }
-            else if (version == 25 && (dirType == "WorldDir"))
-            {
-
-                // Read past unknown stuff, big hack
-                int unk1 = ar.ReadInt32();
-                int unk2 = ar.ReadInt32();
-                float unk3 = ar.ReadSingle();
-                string unk4 = ar.ReadString();
-                int unk5 = ar.ReadInt32();
-                int unk6 = ar.ReadInt32();
-
-                // Hack for project 9
-                var dirEntry = new MiloObjectDirEntry() { Name = dirName };
-                dirEntry.Version = ar.ReadInt32();
-                dirEntry.SubVersion = ar.ReadInt32();
-                dirEntry.ProjectName = ar.ReadString();
-
-                // Skip matrices + constants
-                var matCount = ar.ReadInt32(); // Usually 7
-                ar.BaseStream.Position += (matCount * 48) + 9;
-
-                // Read imported milos
-                var importedMiloCount = ar.ReadInt32();
-                dirEntry.ImportedMiloPaths = Enumerable.Range(0, importedMiloCount)
-                    .Select(x => ar.ReadString())
-                    .ToArray();
-
-                // Boolean, true when sub directory?
-                ar.ReadBoolean();
-
-                // Sub directory names seem to be in reverse order of serialization...
-                var subDirCount = ar.ReadInt32();
-                var subDirNames = Enumerable.Range(0, subDirCount)
-                    .Select(x => ar.ReadString())
-                    .ToArray();
-
-                // Read subdirectories
-                foreach (var _ in subDirNames.Reverse())
-                {
-                    var subDir = new MiloObjectDir();
-                    ReadFromStream(ar, subDir);
-
-                    dirEntry.SubDirectories.Add(subDir);
-                }
-
-                dir.Extras.Add("DirectoryEntry", dirEntry);
-                ar.BaseStream.Position += 17; // 0'd data + ADDE
-            }
-            else if (version == 25 && (dirType == "RndDir"))
-            {
-                // Read past unknown stuff, big hack
-                int unk1 = ar.ReadInt32();
-
-                // Hack for project 9
-                var dirEntry = new MiloObjectDirEntry() { Name = dirName };
-                dirEntry.Version = ar.ReadInt32();
-                dirEntry.SubVersion = ar.ReadInt32();
-                dirEntry.ProjectName = ar.ReadString();
-
-                // Skip matrices + constants
-                var matCount = ar.ReadInt32(); // Usually 7
-                ar.BaseStream.Position += (matCount * 48) + 9;
-
-                // Read imported milos
-                var importedMiloCount = ar.ReadInt32();
-                dirEntry.ImportedMiloPaths = Enumerable.Range(0, importedMiloCount)
-                    .Select(x => ar.ReadString())
-                    .ToArray();
-
-                // Boolean, true when sub directory?
-                ar.ReadBoolean();
-
-                // Sub directory names seem to be in reverse order of serialization...
-                var subDirCount = ar.ReadInt32();
-                var subDirNames = Enumerable.Range(0, subDirCount)
-                    .Select(x => ar.ReadString())
-                    .ToArray();
-
-                // Read subdirectories
-                foreach (var _ in subDirNames.Reverse())
-                {
-                    var subDir = new MiloObjectDir();
-                    ReadFromStream(ar, subDir);
-
-                    dirEntry.SubDirectories.Add(subDir);
-                }
-
-                dir.Extras.Add("DirectoryEntry", dirEntry);
-                ar.BaseStream.Position += 17; // 0'd data + ADDE
-            }
-            else if (version == 25 && (dirType == "SynthDir"))
-            {
-                // Read past unknown stuff, big hack
-                int unk1 = ar.ReadInt32();
-
-                // Hack for project 9
-                var dirEntry = new MiloObjectDirEntry() { Name = dirName };
-                dirEntry.Version = ar.ReadInt32();
-                dirEntry.SubVersion = ar.ReadInt32();
-                dirEntry.ProjectName = ar.ReadString();
-
-                // Skip matrices + constants
-                var matCount = ar.ReadInt32(); // Usually 7
-                ar.BaseStream.Position += (matCount * 48) + 9;
-
-                // Read imported milos
-                var importedMiloCount = ar.ReadInt32();
-                dirEntry.ImportedMiloPaths = Enumerable.Range(0, importedMiloCount)
-                    .Select(x => ar.ReadString())
-                    .ToArray();
-
-                // Boolean, true when sub directory?
-                ar.ReadBoolean();
-
-                // Sub directory names seem to be in reverse order of serialization...
-                var subDirCount = ar.ReadInt32();
-                var subDirNames = Enumerable.Range(0, subDirCount)
-                    .Select(x => ar.ReadString())
-                    .ToArray();
-
-                // Read subdirectories
-                foreach (var _ in subDirNames.Reverse())
-                {
-                    var subDir = new MiloObjectDir();
-                    ReadFromStream(ar, subDir);
-
-                    dirEntry.SubDirectories.Add(subDir);
-                }
-
-                dir.Extras.Add("DirectoryEntry", dirEntry);
-                ar.BaseStream.Position += 17; // 0'd data + ADDE
             }
             else if (version >= 24)
             {
                 // GH2 and above
-
-                // Reads data as a byte array
-                var entrySize = GuessEntrySize(ar);
-                var entryBytes = new MiloObjectBytes(dirType) { Name = dirName };
-                entryBytes.Data = ar.ReadBytes((int)entrySize);
-
-                dir.Extras.Add("DirectoryEntry", entryBytes);
-                ar.BaseStream.Position += 4;
+                var dirEntry = ParseDirEntryAsBlob(ar, dir);
+                dir.Extras.Add("DirectoryEntry", dirEntry);
             }
 
 
@@ -274,6 +148,191 @@ namespace Mackiloha.IO.Serializers
                 dir.Entries.Add(entryBytes);
                 ar.BaseStream.Position += 4;
             }
+        }
+
+        protected MiloObjectDirEntry ParseSynthDir(AwesomeReader ar, MiloObjectDir dir)
+        {
+            // Read past unknown stuff, big hack
+            int unk1 = ar.ReadInt32();
+
+            // Hack for project 9
+            var dirEntry = new MiloObjectDirEntry() { Name = dir.Name };
+            dirEntry.Version = ar.ReadInt32();
+            dirEntry.SubVersion = ar.ReadInt32();
+            dirEntry.ProjectName = ar.ReadString();
+
+            // Skip matrices + constants
+            var matCount = ar.ReadInt32(); // Usually 7
+            ar.BaseStream.Position += (matCount * 48) + 9;
+
+            // Read imported milos
+            var importedMiloCount = ar.ReadInt32();
+            dirEntry.ImportedMiloPaths = Enumerable.Range(0, importedMiloCount)
+                .Select(x => ar.ReadString())
+                .ToArray();
+
+            // Boolean, true when sub directory?
+            ar.ReadBoolean();
+
+            // Sub directory names seem to be in reverse order of serialization...
+            var subDirCount = ar.ReadInt32();
+            var subDirNames = Enumerable.Range(0, subDirCount)
+                .Select(x => ar.ReadString())
+                .ToArray();
+
+            // Read subdirectories
+            foreach (var _ in subDirNames.Reverse())
+            {
+                var subDir = new MiloObjectDir();
+                ReadFromStream(ar, subDir);
+
+                dirEntry.SubDirectories.Add(subDir);
+            }
+
+            ar.BaseStream.Position += 17; // 0'd data + ADDE
+            return dirEntry;
+        }
+
+        protected MiloObjectDirEntry ParseRndDir(AwesomeReader ar, MiloObjectDir dir)
+        {
+            // Read past unknown stuff, big hack
+            int unk1 = ar.ReadInt32();
+
+            // Hack for project 9
+            var dirEntry = new MiloObjectDirEntry() { Name = dir.Name };
+            dirEntry.Version = ar.ReadInt32();
+            dirEntry.SubVersion = ar.ReadInt32();
+            dirEntry.ProjectName = ar.ReadString();
+
+            // Skip matrices + constants
+            var matCount = ar.ReadInt32(); // Usually 7
+            ar.BaseStream.Position += (matCount * 48) + 9;
+
+            // Read imported milos
+            var importedMiloCount = ar.ReadInt32();
+            dirEntry.ImportedMiloPaths = Enumerable.Range(0, importedMiloCount)
+                .Select(x => ar.ReadString())
+                .ToArray();
+
+            // Boolean, true when sub directory?
+            ar.ReadBoolean();
+
+            // Sub directory names seem to be in reverse order of serialization...
+            var subDirCount = ar.ReadInt32();
+            var subDirNames = Enumerable.Range(0, subDirCount)
+                .Select(x => ar.ReadString())
+                .ToArray();
+
+            // Read subdirectories
+            foreach (var _ in subDirNames.Reverse())
+            {
+                var subDir = new MiloObjectDir();
+                ReadFromStream(ar, subDir);
+
+                dirEntry.SubDirectories.Add(subDir);
+            }
+
+            ar.BaseStream.Position += 17; // 0'd data + ADDE
+            return dirEntry;
+        }
+
+        protected MiloObjectDirEntry ParseWorldDir(AwesomeReader ar, MiloObjectDir dir)
+        {
+            // Read past unknown stuff, big hack
+            int unk1 = ar.ReadInt32();
+            int unk2 = ar.ReadInt32();
+            float unk3 = ar.ReadSingle();
+            string unk4 = ar.ReadString();
+            int unk5 = ar.ReadInt32();
+            int unk6 = ar.ReadInt32();
+
+            // Hack for project 9
+            var dirEntry = new MiloObjectDirEntry() { Name = dir.Name };
+            dirEntry.Version = ar.ReadInt32();
+            dirEntry.SubVersion = ar.ReadInt32();
+            dirEntry.ProjectName = ar.ReadString();
+
+            // Skip matrices + constants
+            var matCount = ar.ReadInt32(); // Usually 7
+            ar.BaseStream.Position += (matCount * 48) + 9;
+
+            // Read imported milos
+            var importedMiloCount = ar.ReadInt32();
+            dirEntry.ImportedMiloPaths = Enumerable.Range(0, importedMiloCount)
+                .Select(x => ar.ReadString())
+                .ToArray();
+
+            // Boolean, true when sub directory?
+            ar.ReadBoolean();
+
+            // Sub directory names seem to be in reverse order of serialization...
+            var subDirCount = ar.ReadInt32();
+            var subDirNames = Enumerable.Range(0, subDirCount)
+                .Select(x => ar.ReadString())
+                .ToArray();
+
+            // Read subdirectories
+            foreach (var _ in subDirNames.Reverse())
+            {
+                var subDir = new MiloObjectDir();
+                ReadFromStream(ar, subDir);
+
+                dirEntry.SubDirectories.Add(subDir);
+            }
+
+            ar.BaseStream.Position += 17; // 0'd data + ADDE
+            return dirEntry;
+        }
+
+        protected MiloObjectDirEntry ParseObjectDir(AwesomeReader ar, MiloObjectDir dir)
+        {
+            // Hack for project 9
+            var dirEntry = new MiloObjectDirEntry() { Name = dir.Name };
+            dirEntry.Version = ar.ReadInt32();
+            dirEntry.SubVersion = ar.ReadInt32();
+            dirEntry.ProjectName = ar.ReadString();
+
+            // Skip matrices + constants
+            var matCount = ar.ReadInt32(); // Usually 7
+            ar.BaseStream.Position += (matCount * 48) + 9;
+
+            // Read imported milos
+            var importedMiloCount = ar.ReadInt32();
+            dirEntry.ImportedMiloPaths = Enumerable.Range(0, importedMiloCount)
+                .Select(x => ar.ReadString())
+                .ToArray();
+
+            // Boolean, true when sub directory?
+            ar.ReadBoolean();
+
+            // Sub directory names seem to be in reverse order of serialization...
+            var subDirCount = ar.ReadInt32();
+            var subDirNames = Enumerable.Range(0, subDirCount)
+                .Select(x => ar.ReadString())
+                .ToArray();
+
+            // Read subdirectories
+            foreach (var _ in subDirNames.Reverse())
+            {
+                var subDir = new MiloObjectDir();
+                ReadFromStream(ar, subDir);
+
+                dirEntry.SubDirectories.Add(subDir);
+            }
+
+            ar.BaseStream.Position += 17; // 0'd data + ADDE
+            return dirEntry;
+        }
+
+        protected MiloObject ParseDirEntryAsBlob(AwesomeReader ar, MiloObjectDir dir)
+        {
+            // Reads data as a byte array
+            var entrySize = GuessEntrySize(ar);
+            var entryBytes = new MiloObjectBytes(dir.Type) { Name = dir.Name };
+            entryBytes.Data = ar.ReadBytes((int)entrySize);
+
+            ar.BaseStream.Position += 4;
+            return entryBytes;
         }
 
         protected int GetEntryTypeSortValue(string type)
@@ -315,8 +374,11 @@ namespace Mackiloha.IO.Serializers
             aw.Write((int)sortedEntries.Count);
             foreach (var entry in sortedEntries)
             {
+                // Used to preserve file name
+                var dirtyName = UnsanitizeFileName(entry.Name);
+
                 aw.Write((string)entry.Type);
-                aw.Write((string)entry.Name);
+                aw.Write((string)dirtyName);
             }
 
             if (Magic() >= 24)
