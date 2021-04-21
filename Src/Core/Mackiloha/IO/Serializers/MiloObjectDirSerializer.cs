@@ -101,21 +101,24 @@ namespace Mackiloha.IO.Serializers
                         "WorldDir" => ParseWorldDir(ar, dir),
                         "RndDir" => ParseRndDir(ar, dir),
                         "SynthDir" => ParseSynthDir(ar, dir),
-                        _ => ParseDirEntryAsBlob(ar, dir)
+                        _ => ParseDirEntryAsBlob(ar, dir, dirType)
                     };
                 }
                 catch
                 {
                     ar.BaseStream.Seek(startOffset, SeekOrigin.Begin);
-                    dirEntry = ParseDirEntryAsBlob(ar, dir);
+                    dirEntry = ParseDirEntryAsBlob(ar, dir, dirType);
                 }
 
+                dirEntry.Name = dirName;
                 dir.Extras.Add("DirectoryEntry", dirEntry);
             }
             else if (version >= 24)
             {
                 // GH2 and above
-                var dirEntry = ParseDirEntryAsBlob(ar, dir);
+                var dirEntry = ParseDirEntryAsBlob(ar, dir, dirType);
+
+                dirEntry.Name = dirName;
                 dir.Extras.Add("DirectoryEntry", dirEntry);
             }
 
@@ -324,11 +327,11 @@ namespace Mackiloha.IO.Serializers
             return dirEntry;
         }
 
-        protected MiloObject ParseDirEntryAsBlob(AwesomeReader ar, MiloObjectDir dir)
+        protected MiloObject ParseDirEntryAsBlob(AwesomeReader ar, MiloObjectDir dir, string dirType)
         {
             // Reads data as a byte array
             var entrySize = GuessEntrySize(ar);
-            var entryBytes = new MiloObjectBytes(dir.Type) { Name = dir.Name };
+            var entryBytes = new MiloObjectBytes(dirType) { Name = dir.Name };
             entryBytes.Data = ar.ReadBytes((int)entrySize);
 
             ar.BaseStream.Position += 4;
