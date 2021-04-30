@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,6 +12,8 @@ namespace P9SongTool.Json
 {
     public class SingleLineFloatArrayConverter : JsonConverter<float[]>
     {
+        protected readonly CultureInfo CurrentCulture = new CultureInfo("en-US");
+
         public override float[] ReadJson(JsonReader reader, Type objectType, float[] existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             // Shouldn't be used!
@@ -25,7 +28,10 @@ namespace P9SongTool.Json
                 return;
             }
 
-            writer.WriteRawValue($"[ {string.Join(", ", value)} ]");
+            var valuesWithPeriod = value
+                .Select(x => x.ToString(CurrentCulture));
+
+            writer.WriteRawValue($"[ {string.Join(", ", valuesWithPeriod)} ]");
         }
     }
 }
