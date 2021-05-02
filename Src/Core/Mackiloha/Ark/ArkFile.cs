@@ -1141,7 +1141,11 @@ namespace Mackiloha.Ark
                 var hdrDir = Path.GetDirectoryName(hdrPath);
                 var nextPartIdx = _arkPaths.Count() - 1;
 
-                path = Path.Combine(hdrDir, $"{fileNameNoExt}_{nextPartIdx}.ark");
+                var arkExt = (fileNameNoExt.All(c => char.IsUpper(c)))
+                    ? ".ARK"
+                    : ".ark";
+
+                path = Path.Combine(hdrDir, $"{fileNameNoExt}_{nextPartIdx}{arkExt}");
             }
 
             var dirPath = Path.GetDirectoryName(path).Replace("\\", "/");
