@@ -473,8 +473,17 @@ namespace Mackiloha.Ark
                 aw.Write(arkSizes.Length);
 
                 // Writes ark sizes
-                foreach (var size in arkSizes)
-                    aw.Write((uint)size);
+                if (Version != ArkVersion.V4)
+                {
+                    foreach (var size in arkSizes)
+                        aw.Write((uint)size);
+                }
+                else
+                {
+                    // v4 is 64-bit for some reason
+                    foreach (var size in arkSizes)
+                        aw.Write((ulong)size);
+                }
             }
 
             // Write ark paths
