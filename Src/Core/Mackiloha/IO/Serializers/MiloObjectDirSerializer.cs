@@ -10,18 +10,32 @@ namespace Mackiloha.IO.Serializers
     public class MiloObjectDirSerializer : AbstractSerializer
     {
         private static readonly byte[] ADDE_PADDING = { 0xAD, 0xDE, 0xAD, 0xDE }; // Used to pad files
-        protected Dictionary<string, int> SortValues = new Dictionary<string, int>()
+        protected static readonly Dictionary<string, int> SortValues;
+
+        static MiloObjectDirSerializer()
         {
-            // Common types
-            {   "Tex", 0 },
-            {   "Mat", 1 },
-            {  "Font", 2 },
-            {  "Text", 3 },
-            {  "Mesh", 4 },
-            { "Group", 5 },
-            {  "View", 5 }, // Old version of group
-            { "Trans", 6 }
-        };
+            var i = 0;
+            SortValues = new[]
+            {
+                // Common types
+                "Tex",
+                "Mat",
+                "Font",
+                "Text",
+                "Mesh",
+                "Blur",
+                "Group",
+                "View", // Old version of group
+                "Trans",
+                "OutfitLoader",
+                "Waypoint",
+                "CharDriver",
+                "CharDriverMidi",
+                "CharClipGroup",
+                "CharClipSetCallback",
+                "CharClipSamples"
+            }.ToDictionary(x => x, y => i++);
+        }
 
         public MiloObjectDirSerializer(MiloSerializer miloSerializer) : base(miloSerializer) { }
 
