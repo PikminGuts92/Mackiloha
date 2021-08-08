@@ -77,10 +77,20 @@ namespace P9SongTool.Helpers
                 .Select(x => x.Value)
                 .ToList();
 
-            var totalTime = eventGroups
-                .SelectMany(x => x.Events)
-                .Select(x => x.Position)
-                .Max();
+            float totalTime;
+            if (eventGroups.Count > 0)
+            {
+                totalTime = eventGroups
+                    .SelectMany(x => x.Events)
+                    .Select(x => x.Position)
+                    .Max();
+            }
+            else
+            {
+                // No events parsed
+                totalTime = 0.0f;
+                Console.WriteLine("Warning: No venue events found");
+            }
 
             var anim = new PropAnim()
             {
