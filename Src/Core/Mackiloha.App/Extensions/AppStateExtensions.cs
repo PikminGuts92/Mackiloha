@@ -125,11 +125,13 @@ namespace Mackiloha.App.Extensions
             {
                 // Finds rnd.json file
                 var dirMetaPath = Path.Combine(dirPath, "rnd.json");
+                string dirName = null;
                 string dirType = null;
                 if (File.Exists(dirMetaPath))
                 {
                     // Deserializes rnd meta
                     var dirMeta = JsonSerializer.Deserialize<DirectoryMeta>(File.ReadAllText(dirMetaPath), state.JsonSerializerOptions);
+                    dirName = dirMeta.Name;
                     dirType = dirMeta.Type;
                 }
 
@@ -137,10 +139,42 @@ namespace Mackiloha.App.Extensions
                 dirType = dirType ?? directoryTypes
                     .Intersect(miloTypes)
                     .Where(x => groupedFiles[x].Count == 1)
-                    .First();
+                    .FirstOrDefault();
 
-                var dirEntryPath = groupedFiles[dirType]
-                    .Single();
+                if (dirType is null)
+                {
+                    throw new Exception($"Can't determine directory type for milo");
+                }
+
+                string dirEntryPath;
+                if (!groupedFiles.TryGetValue(dirType, out var dirFiles))
+                {
+                    throw new Exception($"Can't find file for \"{dirType}\" type");
+                }
+
+                if (string.IsNullOrEmpty(dirName))
+                {
+                    // Just use whatever is available
+                    dirEntryPath = dirFiles
+                        .First();
+
+                    Console.WriteLine($"Explicit directory name not given for \"{dirType}\" type, using \"{Path.GetFileName(dirEntryPath)}\"");
+                }
+                else
+                {
+                    // Filter by given file name
+                    dirEntryPath = dirFiles
+                        .FirstOrDefault(x => string.Equals(Path.GetFileName(x), dirName, StringComparison.CurrentCultureIgnoreCase));
+
+                    if (dirEntryPath is null)
+                    {
+                        // Just use whatever is available
+                        dirEntryPath = dirFiles
+                            .First();
+
+                        Console.WriteLine($"Can't find file with name \"{dirName ?? "(null)"}\" for \"{dirType}\" type, using \"{Path.GetFileName(dirEntryPath)}\" instead");
+                    }
+                }
 
                 var dirEntry = new MiloObjectBytes(dirType)
                 {

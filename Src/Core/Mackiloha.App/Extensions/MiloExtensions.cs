@@ -734,6 +734,7 @@ namespace Mackiloha.App.Extensions
                     // Create meta
                     var dirMeta = new DirectoryMeta()
                     {
+                        Name = dirEntry.Name,
                         Type = dirEntry.Type
                     };
 
