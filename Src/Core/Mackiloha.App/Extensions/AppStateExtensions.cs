@@ -117,9 +117,10 @@ namespace Mackiloha.App.Extensions
                 .ToDictionary(x => x.Key, y => y.ToList());
 
             var metaRegex = new Regex("[.]meta[.]json$", RegexOptions.IgnoreCase);
-            
+
             var miloDir = new MiloObjectDir();
             var miloTypes = groupedFiles.Keys.ToList();
+            MiloObjectBytes dirEntry = null;
 
             if (state.SystemInfo.Version >= 24)
             {
@@ -176,15 +177,13 @@ namespace Mackiloha.App.Extensions
                     }
                 }
 
-                var dirEntry = new MiloObjectBytes(dirType)
+                dirEntry = new MiloObjectBytes(dirType)
                 {
                     Name = Path.GetFileName(dirEntryPath),
                     Data = File.ReadAllBytes(dirEntryPath)
                 };
 
                 miloDir.Extras.Add("DirectoryEntry", dirEntry);
-
-                miloTypes.Remove(dirType);
             }
             else if (state.SystemInfo.Version < 24)
             {
@@ -251,9 +250,15 @@ namespace Mackiloha.App.Extensions
 
                 foreach (var entryPath in filePaths)
                 {
+                    var entryName = Path.GetFileName(entryPath);
+
+                    // Skip writing directory entry
+                    if (dirEntry?.Type == type && dirEntry?.Name == entryName)
+                        continue;
+
                     var entry = new MiloObjectBytes(type)
                     {
-                        Name = Path.GetFileName(entryPath),
+                        Name = entryName,
                         Data = File.ReadAllBytes(entryPath)
                     };
 
