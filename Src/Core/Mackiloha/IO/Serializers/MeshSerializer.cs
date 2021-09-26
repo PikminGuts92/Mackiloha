@@ -354,8 +354,12 @@ namespace Mackiloha.IO.Serializers
                     // GH2
                     return new[] { 28 };
                 case 25:
-                    // TBRB
-                    return new[] { 36, 37 /* GDRB */ };
+                    return new[]
+                    {
+                        34, // RB2
+                        36, // TBRB
+                        37  // GDRB
+                    };
                 default:
                     return Array.Empty<int>();
             }
