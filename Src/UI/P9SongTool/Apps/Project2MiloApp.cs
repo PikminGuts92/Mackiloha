@@ -54,12 +54,6 @@ namespace P9SongTool.Apps
                 ? Directory.GetFiles(lipsyncDir, "*.lipsync")
                 : Array.Empty<string>();
 
-            // Get extra files
-            var extrasDir = Path.Combine(inputDir, "extra");
-            var extrasPaths = Directory.Exists(extrasDir)
-                ? Directory.GetFiles(extrasDir)
-                : Array.Empty<string>();
-
             // Enforce files exist
             if (!File.Exists(songMetaPath))
                 throw new MiloBuildException("Can't find \"song.json\" file");
@@ -77,7 +71,7 @@ namespace P9SongTool.Apps
             var state = new AppState(inputDir);
             state.UpdateSystemInfo(GetSystemInfo(op));
 
-            var miloDir = CreateRootDirectory(p9song.Name?.ToLower());
+            var miloDir = CreateRootDirectory(p9song.Name?.ToLower() ?? "song");
             var miloDirEntry = miloDir.Extras["DirectoryEntry"] as MiloObjectDirEntry;
 
             // Add lipsync files
@@ -96,47 +90,27 @@ namespace P9SongTool.Apps
                 miloDir.Entries.Add(lyricConfigAnim);
             }
 
-            // Iterate over extra milo objects
-            var extras = new List<MiloObject>();
-            Parallel.ForEach(extrasPaths,
-                path =>
-                {
-                    // Get milo type
-                    var miloType = GetMiloType(path);
-
-                    // Ignore unsupported files and filter out lyric_config if in json
-                    if (miloType is null
-                        || (!(lyricConfigAnim is null) && path.EndsWith(lyricConfigAnim.Name, StringComparison.CurrentCultureIgnoreCase)))
-                        return;
-
-                    var miloObj = miloType switch
-                    {
-                        "PNG" => CreateTex(path, state.SystemInfo),
-                        _ => CreateObject(path, miloType)
-                    };
-
-                    // Add milo object to directory
-                    lock (extras)
-                    {
-                        extras.Add(miloObj);
-                    }
-                });
-
-            var serializer = state.GetSerializer();
-            var outputMiloPath = Path.GetFullPath(op.OutputPath);
-
-            // Add extra milo entries and parse prop anim files
-            foreach (var extra in extras)
+            // Process extra files
+            var extrasDir = Path.Combine(inputDir, "extra");
+            if (Directory.Exists(extrasDir))
             {
-                if (!(extra is MiloObjectBytes mob)
-                    || !(extra.Type is "PropAnim"))
-                {
-                    miloDir.Entries.Add(extra);
-                    continue;
-                }
+                ProcessExtraFiles(extrasDir, miloDir, state);
+            }
+
+            // Merge anim entries in root directory
+            var animEntries = miloDir
+                .Entries
+                .Where(x => x.Name != "song.anim"
+                    && x.Type == "PropAnim")
+                .ToList();
+
+            foreach (var animEntry in animEntries)
+            {
+                if (!(animEntry is MiloObjectBytes mob)) continue;
 
                 try
                 {
+                    // Try parsing as prop anim
                     var extraAnim = state
                         .GetSerializer()
                         .ReadFromMiloObjectBytes<PropAnim>(mob);
@@ -144,13 +118,17 @@ namespace P9SongTool.Apps
                     if (extraAnim.AnimName is "song_anim")
                     {
                         MergePropAnims(anim, extraAnim);
+
+                        // Remove old entry
+                        miloDir.Entries.Remove(animEntry);
                         continue;
                     }
                 }
                 catch { }
-
-                miloDir.Entries.Add(extra);
             }
+
+            var serializer = state.GetSerializer();
+            var outputMiloPath = Path.GetFullPath(op.OutputPath);
 
             var miloFile = new MiloFile
             {
@@ -163,6 +141,89 @@ namespace P9SongTool.Apps
 
             miloFile.WriteToFile(op.OutputPath);
             Console.WriteLine($"Successfully created milo at \"{outputMiloPath}\"");
+        }
+
+        protected void ProcessExtraFiles(string extrasDir, MiloObjectDir miloDir, AppState state)
+        {
+            var existingEntries = miloDir
+                .Entries
+                .Select(x => x.Name.ToLower())
+                .ToHashSet();
+
+            // Get extra files
+            var extraFiles = GetExtraFilesToProcess(extrasDir, miloDir);
+
+            // Iterate over extra milo objects
+            Parallel.ForEach(extraFiles,
+                extraFile =>
+                {
+                    var (miloDir, miloType, path) = extraFile;
+
+                    var miloObj = miloType switch
+                    {
+                        "PNG" => CreateTex(path, state.SystemInfo),
+                        _ => CreateObject(path, miloType)
+                    };
+
+                    // Add milo object to directory
+                    lock (miloDir)
+                    {
+                        miloDir.Entries.Add(miloObj);
+                    }
+                });
+        }
+
+        protected List<(MiloObjectDir, string, string)> GetExtraFilesToProcess(string extraPath, MiloObjectDir miloDir)
+        {
+            var filesToProcess = new List<(MiloObjectDir, string, string)>(); // (Dir, type, path)
+
+            var existingEntries = miloDir
+                .Entries
+                .Select(x => x.Name.ToLower())
+                .ToHashSet();
+
+            // Process entries
+            foreach (var filePath in Directory.GetFiles(extraPath))
+            {
+                // Get milo type
+                var miloType = GetMiloType(filePath);
+
+                // Ignore unsupported files and existing entries
+                if (miloType is null
+                    || (existingEntries.Contains(Path.GetFileName(filePath).ToLower())))
+                    continue;
+
+                filesToProcess.Add((miloDir, miloType, filePath));
+            }
+
+            var miloDirEntry = miloDir.Extras["DirectoryEntry"] as MiloObjectDirEntry;
+
+            var existingDirs = miloDirEntry
+                .SubDirectories
+                .ToDictionary(x => x.Name.ToLower(), y => y);
+
+            // Process directories
+            foreach (var dirPath in Directory.GetDirectories(extraPath))
+            {
+                var dirName = Path.GetFileName(dirPath);
+                var isNewDir = false;
+
+                if (!existingDirs.TryGetValue(dirName.ToLower(), out var subDir))
+                {
+                    // Create sub dir
+                    subDir = CreateMiloDir(dirName);
+                    isNewDir = true;
+                }
+
+                var subFiles = GetExtraFilesToProcess(dirPath, subDir);
+                if (!subFiles.Any()) continue;
+
+                // Add files to process
+                filesToProcess.AddRange(subFiles);
+                if (isNewDir) miloDirEntry.SubDirectories.Add(subDir);
+            }
+
+            return filesToProcess;
         }
 
         protected string GetMiloType(string path)
@@ -428,25 +489,15 @@ namespace P9SongTool.Apps
 
             var miloDir = new MiloObjectDir()
             {
-                Name = name
+                Name = name ?? ""
             };
 
             miloDir.Extras.Add("DirectoryEntry", miloDirEntry);
             return miloDir;
         }
-        
-        protected MiloObjectDir GetCharSubDirectory(string lipPath)
+
+        protected MiloObjectDir CreateMiloDir(string name)
         {
-            var name = Path.GetFileNameWithoutExtension(lipPath).ToLower();
-            var fileName = Path.GetFileName(lipPath).ToLower();
-            var data = File.ReadAllBytes(lipPath);
-
-            var lipsync = new MiloObjectBytes("CharLipSync")
-            {
-                Name = fileName,
-                Data = data
-            };
-
             var miloDirEntry = new MiloObjectDirEntry()
             {
                 Name = name,
@@ -462,8 +513,25 @@ namespace P9SongTool.Apps
                 Name = name
             };
 
-            miloDir.Entries.Add(lipsync);
             miloDir.Extras.Add("DirectoryEntry", miloDirEntry);
+            return miloDir;
+        }
+
+        protected MiloObjectDir GetCharSubDirectory(string lipPath)
+        {
+            var name = Path.GetFileNameWithoutExtension(lipPath).ToLower();
+            var fileName = Path.GetFileName(lipPath).ToLower();
+            var data = File.ReadAllBytes(lipPath);
+
+            var lipsync = new MiloObjectBytes("CharLipSync")
+            {
+                Name = fileName,
+                Data = data
+            };
+
+            var miloDir = CreateMiloDir(name);
+
+            miloDir.Entries.Add(lipsync);
             return miloDir;
         }
     }
