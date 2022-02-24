@@ -198,6 +198,7 @@ namespace Mackiloha.Ark
             
             // Checks version
             int version = ar.ReadInt32();
+            bool brokenV4 = false;
             
             if (Enum.IsDefined(typeof(ArkVersion), version))
                 ark._version = (ArkVersion)version;
@@ -246,18 +247,33 @@ namespace Mackiloha.Ark
             uint arkFileSizeCount = ar.ReadUInt32(); // Should be same as ark file count
 
             long[] partSizes = new long[arkFileSizeCount];
-            
+
             // Reads ark file sizes
             if (version != 4)
                 for (int i = 0; i < partSizes.Length; i++)
                     partSizes[i] = ar.ReadUInt32();
             else
+            {
+                var partSizeStart = ar.BaseStream.Position;
+
                 // Version 4 uses 64-bit sizes
                 for (int i = 0; i < partSizes.Length; i++)
                     partSizes[i] = ar.ReadInt64();
 
+                // Hacky way to check if v4 is v3/v5 hybrid (i.e. "broken")
+                if (partSizes.Last() > (long)uint.MaxValue)
+                {
+                    brokenV4 = true;
+                    ar.BaseStream.Seek(partSizeStart, SeekOrigin.Begin);
+
+                    // Re-read sizes but as 32-bit instead
+                    for (int i = 0; i < partSizes.Length; i++)
+                        partSizes[i] = ar.ReadUInt32();
+                }
+            }
+
             // TODO: Verify the ark parts exist and the sizes match header listing
-            if (version >= 5)
+            if (version >= 5 || brokenV4)
             {
                 // Read ark names from hdr
                 uint arkPathsCount = ar.ReadUInt32();
@@ -310,7 +326,7 @@ namespace Mackiloha.Ark
                 // Reads entries
                 uint entryCount = ar.ReadUInt32();
 
-                if (version >= 4)   
+                if (version >= 4 && !brokenV4)
                     for (int i = 0; i < entryCount; i++)
                     {
                         long entryOffset = ar.ReadInt64();
