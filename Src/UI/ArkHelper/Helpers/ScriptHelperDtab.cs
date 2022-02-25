@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace ArkHelper.Helpers
 {
@@ -45,16 +46,7 @@ namespace ArkHelper.Helpers
             => RuntimeInformation.OSDescription.Contains("Windows") ? ".exe" : "";
 
         protected virtual string GetExeDirectory()
-            =>
-            #if DEBUG
-                // Use for debug only
-                // Note: Fixed in .NET 5.0 but why upgrade just for that?
-                AppContext.BaseDirectory
-            #else
-                // Works on published apps
-                Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName)
-            #endif
-            ;
+            => AppContext.BaseDirectory;
 
         protected virtual void WriteOutput(string text)
             => Console.WriteLine(text);
@@ -84,16 +76,17 @@ namespace ArkHelper.Helpers
             {
                 // Decrypt dtb
                 Cli.Wrap(DtabPath)
-                    .SetArguments(new[]
+                    .WithArguments(new[]
                     {
                         newEncryption ? "-d" : "-D",
                         dtbPath,
                         decDtbPath
                     })
-                    .EnableExitCodeValidation(false)
-                    .SetStandardOutputCallback(WriteOutput)
-                    .SetStandardErrorCallback(WriteOutput)
-                    .Execute();
+                    .WithValidation(CommandResultValidation.None)
+                    .WithStandardOutputPipe(PipeTarget.ToDelegate(WriteOutput))
+                    .WithStandardErrorPipe(PipeTarget.ToDelegate(WriteOutput))
+                    .ExecuteAsync()
+                    .Task.Wait();
             }
             else
             {
@@ -104,16 +97,17 @@ namespace ArkHelper.Helpers
 
             // Convert to dta (plaintext)
             var result = Cli.Wrap(DtabPath)
-                .SetArguments(new[]
+                .WithArguments(new[]
                 {
                     "-a",
                     decDtbPath,
                     dtaPath
                 })
-                .EnableExitCodeValidation(false)
-                .SetStandardOutputCallback(WriteOutput)
-                .SetStandardErrorCallback(WriteOutput)
-                .Execute();
+                .WithValidation(CommandResultValidation.None)
+                .WithStandardOutputPipe(PipeTarget.ToDelegate(WriteOutput))
+                .WithStandardErrorPipe(PipeTarget.ToDelegate(WriteOutput))
+                .ExecuteAsync()
+                .Task.Result;
 
             if (result.ExitCode != 0)
                 throw new DTBParseException($"dtab.exe was unable to parse file from \'{decDtbPath}\'");
@@ -142,16 +136,17 @@ namespace ArkHelper.Helpers
 
             // Convert to dtb
             var result = Cli.Wrap(DtabPath)
-                .SetArguments(new[]
+                .WithArguments(new[]
                 {
                     "-b",
                     dtaPath,
                     dtbPath
                 })
-                .EnableExitCodeValidation(false)
-                .SetStandardOutputCallback(WriteOutput)
-                .SetStandardErrorCallback(WriteOutput)
-                .Execute();
+                .WithValidation(CommandResultValidation.None)
+                .WithStandardOutputPipe(PipeTarget.ToDelegate(WriteOutput))
+                .WithStandardErrorPipe(PipeTarget.ToDelegate(WriteOutput))
+                .ExecuteAsync()
+                .Task.Result;
 
             if (result.ExitCode != 0)
                 throw new DTBParseException($"dtab.exe was unable to parse file from \'{dtaPath}\'");
@@ -160,16 +155,17 @@ namespace ArkHelper.Helpers
             {
                 // Encrypt dtb (binary)
                 Cli.Wrap(DtabPath)
-                    .SetArguments(new[]
+                    .WithArguments(new[]
                     {
                         newEncryption ? "-e" : "-E",
                         dtbPath,
                         encDtbPath
                     })
-                    .EnableExitCodeValidation(false)
-                    .SetStandardOutputCallback(WriteOutput)
-                    .SetStandardErrorCallback(WriteOutput)
-                    .Execute();
+                    .WithValidation(CommandResultValidation.None)
+                    .WithStandardOutputPipe(PipeTarget.ToDelegate(WriteOutput))
+                    .WithStandardErrorPipe(PipeTarget.ToDelegate(WriteOutput))
+                    .ExecuteAsync()
+                    .Task.Wait();
             }
             else
             {

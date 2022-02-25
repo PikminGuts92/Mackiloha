@@ -871,7 +871,7 @@ namespace Mackiloha.App.Extensions
 
                 var i = 0;
 
-                var paletteIndicies = new Dictionary<MagickColor, int>();
+                var paletteIndicies = new Dictionary<IMagickColor<byte>, int>();
 
                 foreach (var c in uniqueColors)
                 {
