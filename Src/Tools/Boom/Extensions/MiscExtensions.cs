@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Mackiloha.Milo2;
 using Mackiloha;
 
@@ -24,6 +26,11 @@ namespace Boom.Extensions
             if (magic < 0 || magic > 100) magic = GetNumber(entryBytes.Data, true);
 
             return magic;
+        }
+
+        public static bool IsDevelopment(this IWebHostEnvironment env)
+        {
+            return Environments.Development.Equals(env.EnvironmentName);
         }
     }
 }

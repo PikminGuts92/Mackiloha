@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Boom.Data;
+using Boom.Extensions;
 
 namespace Boom
 {
@@ -34,8 +35,8 @@ namespace Boom
                 op.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
             });
         }
-        
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+ 
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {

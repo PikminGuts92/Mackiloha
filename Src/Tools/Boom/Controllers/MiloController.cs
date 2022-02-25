@@ -482,7 +482,7 @@ namespace Boom.Controllers
                                     throw new Exception("Bytes don't match");
                             }
                         }
-                        catch (Exception ex)
+                        catch
                         {
                             perfectSerialize = false;
                         }

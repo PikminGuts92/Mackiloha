@@ -677,22 +677,26 @@ namespace Mackiloha.App.Extensions
         
         private static int AddRGBAColors(int c1, int c2)
         {
+#pragma warning disable CS0675
             return (int)((((c1 & 0xFF_00_00_00) + (c2 & 0xFF_00_00_00)) & 0xFF_00_00_00)
                       |  (((c1 & 0x00_FF_00_00) + (c2 & 0x00_FF_00_00)) & 0x00_FF_00_00)
                       |  (((c1 & 0x00_00_FF_00) + (c2 & 0x00_00_FF_00)) & 0x00_00_FF_00)
                       //|  (((c1 & 0x00_00_00_FF) + (c2 & 0x00_00_00_FF)) & 0x00_00_00_FF));
                       | 0xFF);
+#pragma warning restore CS0675
         }
 
         private static int MultiplyRGBAColors(int c, float m)
         {
+#pragma warning disable CS0675
             return (int)(((byte)(((c & 0xFF_00_00_00) >> 24) * m) << 24 & 0xFF_00_00_00)
                       |  ((byte)(((c & 0x00_FF_00_00) >> 16) * m) << 16 & 0x00_FF_00_00)
                       |  ((byte)(((c & 0x00_00_FF_00) >>  8) * m) <<  8 & 0x00_00_FF_00)
                       //|  ((int)((c & 0x00_00_00_FF) * m) & 0x00_00_00_FF));
                       | 0xFF);
+#pragma warning restore CS0675
         }
-        
+
         private static void ReadRGBAFromRGB565(byte[] rgba, int c)
         {
             rgba[0] = (byte)((c & 0b1111_1000_0000_0000) >> 8);
