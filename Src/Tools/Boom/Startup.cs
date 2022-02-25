@@ -29,7 +29,7 @@ namespace Boom
             services.AddDbContext<MiloContext>(op =>
                 op.UseSqlite(Configuration.GetConnectionString("Milo")));
 
-            services.AddMvc().AddJsonOptions(op =>
+            services.AddControllers().AddNewtonsoftJson(op =>
             {
                 op.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
             });
@@ -42,7 +42,13 @@ namespace Boom
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseMvc();
+            app.UseRouting();
+            //app.MapControllers();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
     }
 }
