@@ -76,7 +76,7 @@ namespace ArkHelper.Apps
             var textureRegex = new Regex("(?i).((bmp)|(png))(_[A-Z0-9]+)$");
             var miloRegex = new Regex("(?i).((gh)|(milo)|(rnd))(_[A-Z0-9]+)?$");
 
-            var genPathedFile = new Regex(@"(?i)(([^\/\\]+[\/\\])*)(gen[\/\\])([^\/\\]+)$");
+            var genPathedFile = new Regex(@"(?i)([\/\\]?(([^\/\\]+[\/\\])*))(gen[\/\\])([^\/\\]+)$");
             var platformExtRegex = new Regex(@"(?i)_([A-Z0-9]+)$");
 
             Archive ark;
@@ -158,7 +158,7 @@ namespace ArkHelper.Apps
                 if (genPathedFile.IsMatch(pngPath))
                 {
                     var match = genPathedFile.Match(pngPath);
-                    pngPath = $"{match.Groups[1]}{match.Groups[4]}";
+                    pngPath = $"{match.Groups[1]}{match.Groups[5]}";
                 }
 
                 var info = new SystemInfo()
@@ -245,7 +245,7 @@ namespace ArkHelper.Apps
                 if (genPathedFile.IsMatch(dtaPath))
                 {
                     var match = genPathedFile.Match(dtaPath);
-                    dtaPath = $"{match.Groups[1]}{match.Groups[4]}";
+                    dtaPath = $"{match.Groups[1]}{match.Groups[5]}";
                 }
 
                 var tempDtbPath = ExtractEntry(ark, scriptEntry, Path.Combine(tempDir, Path.GetRandomFileName()));
