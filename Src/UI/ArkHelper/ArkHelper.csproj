@@ -6,7 +6,8 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
     <AssemblyName>arkhelper</AssemblyName>
-    <PublishSingleFile>true</PublishSingleFile>
+    <!-- Workaround until Microsoft fixes https://github.com/dotnet/runtime/issues/45382 -->
+    <PublishSingleFile Condition="'$(Configuration)' == 'Release'">true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
