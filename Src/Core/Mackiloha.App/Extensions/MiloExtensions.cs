@@ -11,7 +11,6 @@ using Mackiloha.App.Metadata;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
 using Mackiloha.Render;
-using MiloOG = Mackiloha.Milo;
 using GLTFTools;
 
 namespace Mackiloha.App.Extensions
