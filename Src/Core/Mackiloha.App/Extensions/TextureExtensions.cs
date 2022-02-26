@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Mackiloha.IO;
 using Mackiloha.Render;
-using ImageMagick;
 
 namespace Mackiloha.App.Extensions
 {
@@ -615,8 +614,16 @@ namespace Mackiloha.App.Extensions
 
         private static byte[] EncodeDxImage(byte[] raw, int width, int height, int mips, DxEncoding encoding)
         {
-            var image = new MagickImage(raw, new PixelReadSettings(width, height, StorageType.Char, PixelMapping.RGBA));
+            using var image = ImageWrapper.FromRGBA(raw, width, height);
 
+            return encoding switch
+            {
+                DxEncoding.DXGI_FORMAT_BC1_UNORM => image.AsDXT1(),
+                DxEncoding.DXGI_FORMAT_BC5_UNORM => image.AsDXT5(),
+                _ => image.AsDXT5() // TODO: Support ATI2 somehow
+            };
+
+            /*
             using var ddsStream = new MemoryStream();
             var format = encoding switch
             {
@@ -639,7 +646,7 @@ namespace Mackiloha.App.Extensions
             var data = new byte[dataSize];
             ddsStream.Read(data, 0, data.Length);
 
-            return data;
+            return data;*/
         }
 
         private static int LinearOffset(int x, int y, int w) => (y * (w << 2)) + (x << 2);
@@ -793,13 +800,13 @@ namespace Mackiloha.App.Extensions
             if (!Directory.Exists(Path.GetDirectoryName(path)))
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-            new MagickImage(rgba, new PixelReadSettings(bitmap.Width, bitmap.Height, StorageType.Char, PixelMapping.RGBA))
-                .Write(path);
+            using var image = ImageWrapper.FromRGBA(rgba, bitmap.Width, bitmap.Height);
+            image.WriteToFile(path);
         }
 
         public static HMXBitmap BitmapFromImage(string imagePath, SystemInfo info)
         {
-            using var image = new MagickImage(imagePath);
+            using var image = new ImageWrapper(imagePath);
 
             var width = image.Width;
             var height = image.Height;
@@ -810,27 +817,13 @@ namespace Mackiloha.App.Extensions
                 || ((width & (width - 1)) != 0)
                 || (height < 4)
                 || ((height & (height - 1)) != 0))
-                throw new Exception($"Inavlid image resolution of {width}x{height}. Both must be a power of 2 and at least 4px.");
+                throw new Exception($"Invalid image resolution of {width}x{height}. Both must be a power of 2 and at least 4px.");
 
             if (info.Platform == Platform.PS3
                 || info.Platform == Platform.X360)
             {
                 // TODO: Refactor to be more efficient
-                var inputBytes = image
-                    .GetPixels()
-                    .Select(x =>
-                    {
-                        var c = x.ToColor();
-                        return new[]
-                        {
-                            c.R,
-                            c.G,
-                            c.B,
-                            c.A
-                        };
-                    })
-                    .SelectMany(x => x)
-                    .ToArray();
+                var inputBytes = image.AsRGBA();
 
                 // Encode as DXT5 for now
                 var rawData = EncodeDxImage(inputBytes, width, height, 0, DxEncoding.DXGI_FORMAT_BC3_UNORM);
@@ -851,18 +844,15 @@ namespace Mackiloha.App.Extensions
                 };
             }
 
-            var uniqueColors = image
-                    .GetPixels()
-                    .Select(x => x.ToColor())
-                    .Distinct()
-                    .ToList();
+            var uniqueColors = image.GetUniqueColors();
+            var hasAlpha = uniqueColors.Any(c => c.A < byte.MaxValue);
 
             byte[] data;
             int bpp = image switch
             {
                 var img when info.Platform == Platform.PS2 && uniqueColors.Count <= 16 => 4,
                 var img when info.Platform == Platform.PS2 && uniqueColors.Count <= 256 => 8,
-                var img when info.Platform == Platform.PS2 && img.ChannelCount <= 3 => 24,
+                var img when info.Platform == Platform.PS2 && !hasAlpha => 24,
                 _ => 32
             };
             //int bpp = 32;
@@ -875,7 +865,7 @@ namespace Mackiloha.App.Extensions
 
                 var i = 0;
 
-                var paletteIndicies = new Dictionary<IMagickColor<byte>, int>();
+                var paletteIndicies = new Dictionary<RGBAColor, int>();
 
                 foreach (var c in uniqueColors)
                 {
@@ -907,7 +897,7 @@ namespace Mackiloha.App.Extensions
                 {
                     foreach (var p in image.GetPixels())
                     {
-                        var cIdx = paletteIndicies[p.ToColor()];
+                        var cIdx = paletteIndicies[p];
                         var bit3 = cIdx & 0b0000_1000;
                         var bit4 = cIdx & 0b0001_0000;
 
@@ -922,7 +912,7 @@ namespace Mackiloha.App.Extensions
                     // Encodes two pixels into single byte
                     foreach (var p in image.GetPixels())
                     {
-                        var cIdx = paletteIndicies[p.ToColor()]; // Color index
+                        var cIdx = paletteIndicies[p]; // Color index
                         var dIdx = paletteSize + ((i - paletteSize) >> 1); // Data index
                         var dValue = data[dIdx]; // Data value
 
@@ -945,10 +935,8 @@ namespace Mackiloha.App.Extensions
 
                 if (bpp == 32)
                 {
-                    foreach (var p in image.GetPixels())
+                    foreach (var c in image.GetPixels())
                     {
-                        var c = p.ToColor();
-
                         if (info.Platform != Platform.X360)
                         {
                             data[    i] = c.R;
@@ -972,10 +960,8 @@ namespace Mackiloha.App.Extensions
                 }
                 else // bpp = 24
                 {
-                    foreach (var p in image.GetPixels())
+                    foreach (var c in image.GetPixels())
                     {
-                        var c = p.ToColor();
-
                         data[i    ] = c.B;
                         data[i + 1] = c.G;
                         data[i + 2] = c.R;

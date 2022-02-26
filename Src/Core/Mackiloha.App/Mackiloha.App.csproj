@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCnEncoder.Net.ImageSharp" Version="1.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\GLTFTools\GLTFTools.csproj" />
     <ProjectReference Include="..\Mackiloha\Mackiloha.csproj" />
   </ItemGroup>
