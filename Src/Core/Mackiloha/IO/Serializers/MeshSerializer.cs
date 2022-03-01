@@ -78,8 +78,8 @@ namespace Mackiloha.IO.Serializers
                 else
                 {
                     // Half precision
-                    vertex.U = ar.ReadHalf();
-                    vertex.V = ar.ReadHalf();
+                    vertex.U = ar.ReadHalfAsSingle();
+                    vertex.V = ar.ReadHalfAsSingle();
 
                     // Not sure what this value is but it's usually pretty high
                     ar.BaseStream.Position += 8;

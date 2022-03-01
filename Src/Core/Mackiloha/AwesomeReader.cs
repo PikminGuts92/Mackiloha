@@ -39,44 +39,22 @@ namespace Mackiloha
         /// Reads 16-bit float (Half-Precision)
         /// </summary>
         /// <returns>Float</returns>
-        public float ReadHalf()
+        public override Half ReadHalf()
         {
-            // TODO: Replace with System.Half when .NET 5 releases
-            double GetSummation(int man, int expSize)
-            {
-                int i = 1, p = expSize - 1;
-                double sum = 1;
+            byte[] data = this.ReadBytes(2);
+            if (_big) Array.Reverse(data);
+            return BitConverter.ToHalf(data, 0);
+        }
 
-                while (i <= expSize)
-                {
-                    sum += ((man & (1 << p)) >> p) * Math.Pow(2, -i);
-                    i++;
-                    p--;
-                }
-
-                return sum;
-            }
-
-            // Assume little endian
-            var b = this.ReadBytes(2);
-            if (_big)
-                Array.Reverse(b);
-
-            int sign = (b[1] & 0b1000_0000) >> 7;
-            int exp = (b[1] & 0b0111_1100) >> 2;
-            int man = ((b[1] & 0b0000_0011) << 8) | (b[0]);
-
-            // Checks if zero, infinity, or NaN
-            if (exp == 0 && man == 0)
-                return 0;
-            else if (exp == 0x1F && man == 0)
-                return (sign == 1) ? float.NegativeInfinity : float.PositiveInfinity;
-            else if (exp == 0x1F && man != 0)
-                return float.NaN;
-
-            // Pretty hacky way of doing this
-            var value = Math.Pow(-1, sign) * Math.Pow(2, exp - 15) * GetSummation(man, 10);
-            return (float)value;
+        /// <summary>
+        /// Reads 16-bit float (Half-Precision)
+        /// </summary>
+        /// <returns>Float</returns>
+        public float ReadHalfAsSingle()
+        {
+            byte[] data = this.ReadBytes(2);
+            if (_big) Array.Reverse(data);
+            return (float)BitConverter.ToHalf(data, 0);
         }
 
         /// <summary>
