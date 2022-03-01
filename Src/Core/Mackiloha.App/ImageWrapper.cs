@@ -13,12 +13,12 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace Mackiloha.App
 {
-    public struct RGBAColor
+    public readonly record struct RGBAColor
     {
-        public byte R;
-        public byte G;
-        public byte B;
-        public byte A;
+        public byte R { get; init; }
+        public byte G { get; init; }
+        public byte B { get; init; }
+        public byte A { get; init; }
     }
 
     public interface IImageWrapper
@@ -110,10 +110,10 @@ namespace Mackiloha.App
             return pixels
                 .Select(x => new RGBAColor()
                 {
-                    R = (byte)((x & 0xFF_00_00_00) >> 24),
-                    G = (byte)((x & 0x00_FF_00_00) >> 16),
-                    B = (byte)((x & 0x00_00_FF_00) >>  8),
-                    A = (byte)((x & 0x00_00_00_FF)),
+                    R = (byte)((x & 0x00_00_00_FF)),
+                    G = (byte)((x & 0x00_00_FF_00) >> 8),
+                    B = (byte)((x & 0x00_FF_00_00) >> 16),
+                    A = (byte)((x & 0xFF_00_00_00) >> 24),
                 })
                 .ToList();
         }
