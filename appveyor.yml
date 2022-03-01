@@ -1,0 +1,26 @@
+version: 1.0.{build}
+image: Ubuntu
+build_script:
+- sh: >-
+    sudo chmod +x ./build.sh
+
+    echo "Building for Windows..."
+    ./build.sh -v ${APPVEYOR_BUILD_VERSION} -r win-x64 -o ./BUILD_WIN
+
+    echo "Building for Windows... (x86)"
+    ./build.sh -v ${APPVEYOR_BUILD_VERSION} -r win-x86 -o ./BUILD_WIN_32
+
+    echo "Building for Linux..."
+    ./build.sh -v ${APPVEYOR_BUILD_VERSION} -r linux-x64 -o ./BUILD_LINUX
+
+    echo "Building for Mac..."
+    ./build.sh -v ${APPVEYOR_BUILD_VERSION} -r osx-x64 -o ./BUILD_MAC
+artifacts:
+- path: BUILD_WIN/Mackiloha_v${APPVEYOR_BUILD_VERSION}-win-x64.zip
+  name: Mackiloha_v${APPVEYOR_BUILD_VERSION}-win-x64.zip
+- path: BUILD_WIN_32/Mackiloha_v${APPVEYOR_BUILD_VERSION}-win-x86.zip
+  name: Mackiloha_v${APPVEYOR_BUILD_VERSION}-win-x86.zip
+- path: BUILD_LINUX/Mackiloha_v${APPVEYOR_BUILD_VERSION}-linux-x64.zip
+  name: Mackiloha_v${APPVEYOR_BUILD_VERSION}-linux-x64.zip
+- path: BUILD_MAC/Mackiloha_v${APPVEYOR_BUILD_VERSION}-osx-x64.zip
+  name: Mackiloha_v${APPVEYOR_BUILD_VERSION}-mac-x64.zip
