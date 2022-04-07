@@ -50,7 +50,7 @@ namespace Mackiloha.App
             _image = image;
         }
 
-        public static ImageWrapper FromRGBA(byte[] data, int height, int width)
+        public static ImageWrapper FromRGBA(byte[] data, int width, int height)
         {
             var image = Image.LoadPixelData<Rgba32>(data, width, height);
             return new ImageWrapper(image);
