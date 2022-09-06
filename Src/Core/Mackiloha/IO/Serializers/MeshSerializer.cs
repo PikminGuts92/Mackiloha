@@ -9,7 +9,7 @@ namespace Mackiloha.IO.Serializers
     public class MeshSerializer : AbstractSerializer
     {
         public MeshSerializer(MiloSerializer miloSerializer) : base(miloSerializer) { }
-        
+
         public override void ReadFromStream(AwesomeReader ar, ISerializable data)
         {
             var mesh = data as Mesh;
@@ -33,7 +33,7 @@ namespace Mackiloha.IO.Serializers
                     break;
                 default:
                     throw new Exception($"Unexpected number, got {mesh.Unknown}");
-            }                
+            }
 
             var num = ar.ReadInt32();
             if (!(num == 0 || num == 1))
@@ -121,7 +121,7 @@ namespace Mackiloha.IO.Serializers
 
             if (groupSizes.Select(x => (int)x).Sum() != mesh.Faces.Count)
                 throw new Exception("Sum should equal count of faces");
-            
+
             var charCount = ar.ReadInt32();
             ar.BaseStream.Position -= 4;
 
@@ -129,7 +129,7 @@ namespace Mackiloha.IO.Serializers
             mesh.Bones.Clear();
             if (charCount > 0)
             {
-                if (version >= 36)
+                if (version >= 34)
                 {
                     // Uses variable length bone count
                     ar.BaseStream.Position += 4;
@@ -272,7 +272,7 @@ namespace Mackiloha.IO.Serializers
             // Write group sizes
             aw.Write((int)mesh.Groups.Count);
             mesh.Groups.ForEach(x => aw.Write((byte)x.Size));
-            
+
             const int boneCount = 4; // Always 4?
             var bones = mesh.Bones
                 .Take(boneCount)
