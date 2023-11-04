@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mackiloha", "Src\Core\Macki
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GLTFTools", "Src\Core\GLTFTools\GLTFTools.csproj", "{DA9AA7F3-6D6A-46F6-A692-C630CC4D1CB2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Boom", "Src\Tools\Boom\Boom.csproj", "{37D0BE92-0C3C-4750-A379-727ECA7F79F2}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SuperFreqCLI", "Src\UI\SuperFreqCLI\SuperFreqCLI.csproj", "{9C672ED2-8C14-47D3-9869-9B418977CFDE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mackiloha.App", "Src\Core\Mackiloha.App\Mackiloha.App.csproj", "{508FDBB0-649B-4E2B-9FD9-1725387A37A9}"
