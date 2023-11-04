@@ -46,13 +46,14 @@ PROJECTS=$(find Src/UI/**/*.csproj)
 # Build + publish projects
 echo ">> Building solution"
 for proj in $PROJECTS; do
-    dotnet publish $proj -c $BUILD_MODE -o $OUTPUT_PATH -p:Version=$BUILD_VERSION --self-contained=false -r=$RUNTIME
+    dotnet publish $proj -c $BUILD_MODE -o $OUTPUT_PATH -p:Version=$BUILD_VERSION -r=$RUNTIME
 done
 
 # Delete debug + config files
 echo ">> Removing debug files"
 rm ./$OUTPUT_PATH/*.config -f
 rm ./$OUTPUT_PATH/*.pdb -f
+rm ./$OUTPUT_PATH/*.dbg -f # Mac debug
 
 # Copy licences + README
 echo ">> Copying licenses and README"
