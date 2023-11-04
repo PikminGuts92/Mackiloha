@@ -3,13 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
+    <PublishAot>true</PublishAot>
     <AssemblyName>arkhelper</AssemblyName>
-    <!-- Workaround until Microsoft fixes https://github.com/dotnet/runtime/issues/45382 -->
-    <PublishSingleFile Condition="'$(Configuration)' == 'Release'">true</PublishSingleFile>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>
