@@ -34,8 +34,6 @@ then
     esac
 fi
 
-ZIP_PATH="$OUTPUT_PATH/Mackiloha_v$BUILD_VERSION-$RUNTIME.zip"
-
 # Clear previous build
 echo ">> Clearing old files"
 rm $OUTPUT_PATH -rf
@@ -60,7 +58,3 @@ echo ">> Copying licenses and README"
 cp ./LICENSE ./$OUTPUT_PATH/LICENSE -f
 cp ./THIRDPARTY ./$OUTPUT_PATH/THIRDPARTY -f
 cp ./README.md ./$OUTPUT_PATH/README.md -f
-
-# Zip everything up
-echo ">> Zipping everything up"
-zip $ZIP_PATH $OUTPUT_PATH -jr
