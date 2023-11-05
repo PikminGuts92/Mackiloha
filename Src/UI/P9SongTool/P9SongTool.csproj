@@ -5,6 +5,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <PublishAot>true</PublishAot>
     <AssemblyName>p9songtool</AssemblyName>
+    <!-- https://github.com/dotnet/sdk/issues/34568 -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
