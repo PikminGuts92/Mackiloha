@@ -49,12 +49,12 @@ done
 
 # Delete debug + config files
 echo ">> Removing debug files"
-rm ./$OUTPUT_PATH/*.config -f
-rm ./$OUTPUT_PATH/*.pdb -f
-rm ./$OUTPUT_PATH/*.dbg -f # Mac debug
+rm -f ./$OUTPUT_PATH/*.config
+rm -f ./$OUTPUT_PATH/*.pdb
+rm -f ./$OUTPUT_PATH/*.dbg # Mac debug
 
 # Copy licences + README
 echo ">> Copying licenses and README"
-cp ./LICENSE ./$OUTPUT_PATH/LICENSE -f
-cp ./THIRDPARTY ./$OUTPUT_PATH/THIRDPARTY -f
-cp ./README.md ./$OUTPUT_PATH/README.md -f
+cp -f ./LICENSE ./$OUTPUT_PATH/LICENSE
+cp -f ./THIRDPARTY ./$OUTPUT_PATH/THIRDPARTY
+cp -f ./README.md ./$OUTPUT_PATH/README.md
