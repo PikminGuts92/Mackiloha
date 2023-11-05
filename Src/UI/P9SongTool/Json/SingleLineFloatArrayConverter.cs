@@ -1,12 +1,10 @@
-﻿/*using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-// using System.Text.Json; // TODO: Migrate when dotnet is updated https://github.com/dotnet/runtime/issues/1784
-//using System.Text.Json.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace P9SongTool.Json
 {
@@ -14,13 +12,13 @@ namespace P9SongTool.Json
     {
         protected readonly CultureInfo CurrentCulture = new CultureInfo("en-US");
 
-        public override float[] ReadJson(JsonReader reader, Type objectType, float[] existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override float[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            // Shouldn't be used!
-            throw new NotImplementedException();
+            // Just use default (separate context to avoid circular reference)
+            return JsonSerializer.Deserialize<float[]>(ref reader, PrimitiveJsonContext.Default.SingleArray);
         }
 
-        public override void WriteJson(JsonWriter writer, float[] value, JsonSerializer serializer)
+        public override void Write(Utf8JsonWriter writer, float[] value, JsonSerializerOptions options)
         {
             if (value is null || value.Length <= 0)
             {
@@ -34,4 +32,4 @@ namespace P9SongTool.Json
             writer.WriteRawValue($"[ {string.Join(", ", valuesWithPeriod)} ]");
         }
     }
-}*/
+}
