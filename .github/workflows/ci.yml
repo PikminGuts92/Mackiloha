@@ -1,0 +1,35 @@
+on: [push, pull_request]
+
+name: CI
+
+jobs:
+  build:
+    name: Build (${{ matrix.osname }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+        fail-fast: false
+        matrix:
+          include:
+            - os: macos-latest
+              osname: "osx-x64"
+            - os: ubuntu-latest
+              osname: "linux-x64"
+            - os: windows-latest
+              osname: "win-x64"
+    env:
+      ZIP_NAME: ${{ github.event.repository.name }}-ci-${{ github.sha }}-${{ matrix.osname }}
+      OUTPUT_PATH: ./build
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+      - name: Publish applications
+        shell: bash
+        run: |
+          ./build.sh -r ${{ matrix.osname }} -o ${{ env.OUTPUT_PATH }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: ${{ env.OUTPUT_PATH }}
