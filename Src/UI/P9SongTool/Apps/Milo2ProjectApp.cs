@@ -268,7 +268,7 @@ namespace P9SongTool.Apps
 
         protected string SerializeSong(P9Song song)
         {
-            var str = JsonSerializer.Serialize(song, DefaultJsonContext.Default.P9Song);
+            var str = JsonSerializer.Serialize(song, P9SongToolJsonContext.Default.P9Song);
             return str;
 
             /*var jsonSettings = new Newtonsoft.Json.JsonSerializerSettings();

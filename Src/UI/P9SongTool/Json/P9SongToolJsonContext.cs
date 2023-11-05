@@ -13,5 +13,5 @@ namespace P9SongTool.Json
 {
     [JsonSourceGenerationOptions(WriteIndented = true)]
     [JsonSerializable(typeof(P9Song))]
-    public partial class DefaultJsonContext : JsonSerializerContext { }
+    public partial class P9SongToolJsonContext : JsonSerializerContext { }
 }

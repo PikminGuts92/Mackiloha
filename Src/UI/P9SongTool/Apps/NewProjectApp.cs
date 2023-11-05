@@ -137,7 +137,7 @@ namespace P9SongTool.Apps
 
         protected string SerializeSong(P9Song song)
         {
-            return JsonSerializer.Serialize(song, DefaultJsonContext.Default.P9Song);
+            return JsonSerializer.Serialize(song, P9SongToolJsonContext.Default.P9Song);
         }
     }
 }
