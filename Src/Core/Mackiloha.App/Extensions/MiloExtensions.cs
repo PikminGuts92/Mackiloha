@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Mackiloha;
+using Mackiloha.App.Json;
 using Mackiloha.App.Metadata;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
@@ -74,7 +75,7 @@ namespace Mackiloha.App.Extensions
 
                     // Write meta
                     var metaPath = Path.Combine(path, "rnd.json");
-                    var metaJson = JsonSerializer.Serialize(dirMeta, typeof(DirectoryMeta), state.JsonSerializerOptions);
+                    var metaJson = JsonSerializer.Serialize(dirMeta, MackilohaJsonContext.Default.DirectoryMeta);
                     File.WriteAllText(metaPath, metaJson);
                 }
             }
@@ -187,7 +188,7 @@ namespace Mackiloha.App.Extensions
                 if ((meta.Encoding == null || meta.Encoding == defaultMeta.Encoding) && meta.MipMaps == defaultMeta.MipMaps)
                     continue;
 
-                var metaJson = JsonSerializer.Serialize(meta, typeof(TexMeta), state.JsonSerializerOptions);
+                var metaJson = JsonSerializer.Serialize(meta, MackilohaJsonContext.Default.TexMeta);
                 File.WriteAllText(metaPath, metaJson);
             }
         }

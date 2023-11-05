@@ -280,7 +280,7 @@ namespace P9SongTool.Apps
             var appState = AppState.FromFile(p9songPath);
             var jsonText = File.ReadAllText(p9songPath);
 
-            return JsonSerializer.Deserialize(jsonText, typeof(P9Song), DefaultJsonContext.Default) as P9Song;
+            return JsonSerializer.Deserialize<P9Song>(jsonText, DefaultJsonContext.Default.P9Song);
         }
 
         protected P9SongPref ConvertFromSongPreferences(SongPreferences preferences)

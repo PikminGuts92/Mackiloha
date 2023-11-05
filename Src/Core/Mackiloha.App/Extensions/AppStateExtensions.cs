@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Mackiloha.App.Json;
 using Mackiloha.App.Metadata;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
@@ -131,7 +132,7 @@ namespace Mackiloha.App.Extensions
                 if (File.Exists(dirMetaPath))
                 {
                     // Deserializes rnd meta
-                    var dirMeta = (DirectoryMeta)JsonSerializer.Deserialize(File.ReadAllText(dirMetaPath), typeof(DirectoryMeta), state.JsonSerializerOptions);
+                    var dirMeta = JsonSerializer.Deserialize<DirectoryMeta>(File.ReadAllText(dirMetaPath), MackilohaJsonContext.Default.DirectoryMeta);
                     dirName = dirMeta.Name;
                     dirType = dirMeta.Type;
                 }
@@ -209,7 +210,7 @@ namespace Mackiloha.App.Extensions
                     var texRegex = new Regex("[.]tex$", RegexOptions.IgnoreCase);
 
                     var texMetas = metaPaths
-                        .ToDictionary(x => metaRegex.Replace(Path.GetFileName(x), ""), y => (TexMeta)JsonSerializer.Deserialize(File.ReadAllText(y), typeof(TexMeta), state.JsonSerializerOptions));
+                        .ToDictionary(x => metaRegex.Replace(Path.GetFileName(x), ""), y => JsonSerializer.Deserialize<TexMeta>(File.ReadAllText(y), MackilohaJsonContext.Default.TexMeta));
 
                     var uniquePaths = filePaths
                         .GroupBy(x => Path.GetFileNameWithoutExtension(x))

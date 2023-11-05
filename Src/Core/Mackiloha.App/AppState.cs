@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Mackiloha.App.Json;
 using Mackiloha.IO;
 
 namespace Mackiloha.App
@@ -19,12 +16,6 @@ namespace Mackiloha.App
             _workingDirectory = new FileSystemDirectory(workingDirectory);
             _systemInfo.Version = 10; // GH1
             _systemInfo.Platform = Platform.PS2;
-
-            JsonSerializerOptions = new JsonSerializerOptions()
-            {
-                TypeInfoResolver = MackilohaJsonContext.Default,
-                WriteIndented = true,
-            };
         }
 
         public void UpdateSystemInfo(SystemInfo info)
@@ -35,8 +26,6 @@ namespace Mackiloha.App
 
         public IDirectory GetWorkingDirectory() => _workingDirectory;
         public SystemInfo SystemInfo => _systemInfo;
-
-        public JsonSerializerOptions JsonSerializerOptions { get; }
 
         public static AppState FromFile(string filePath) => new AppState(Path.GetDirectoryName(Path.GetFullPath(filePath)));
     }
