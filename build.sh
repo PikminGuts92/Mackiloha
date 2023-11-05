@@ -50,9 +50,9 @@ done
 # Delete debug + config files
 echo ">> Removing debug files"
 rm -f ./$OUTPUT_PATH/*.config
-rm -f ./$OUTPUT_PATH/*.pdb
-rm -f ./$OUTPUT_PATH/*.dbg # Mac debug
-rm -rf ./$OUTPUT_PATH/*.dsym
+rm -f ./$OUTPUT_PATH/*.pdb # Windows debug
+rm -f ./$OUTPUT_PATH/*.dbg # Linux debug
+rm -rf ./$OUTPUT_PATH/*.dsym # Mac debug
 
 # Copy licences + README
 echo ">> Copying licenses and README"
