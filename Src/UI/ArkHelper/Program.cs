@@ -5,11 +5,19 @@ using Mackiloha.App;
 using Mackiloha.App.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ArkHelper
 {
     class Program
     {
+        // Fixes AOT for CommandLine
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Ark2DirOptions))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ArkCompareOptions))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Dir2ArkOptions))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FixHdrOptions))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(HashFinderOptions))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(PatchCreatorOptions))]
         static void Main(string[] args)
         {
             using var serviceProvider = CreateProvider();
