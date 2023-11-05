@@ -1,4 +1,5 @@
-﻿using ArkHelper.Models;
+﻿using ArkHelper.Json;
+using ArkHelper.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,19 +11,11 @@ namespace ArkHelper.Helpers
 {
     public class CacheHelper : ICacheHelper
     {
-        protected readonly static JsonSerializerOptions JsonSettings;
-
         protected string CacheDirectory;
         protected int ArkVersion;
         protected bool ArkEncrypted;
 
         protected Dictionary<string, CachedFileInfo> MappedCachedFiles;
-
-        static CacheHelper()
-        {
-            JsonSettings = new JsonSerializerOptions();
-            JsonSettings.WriteIndented = true;
-        }
 
         public virtual void LoadCache(string path, int arkVersion, bool arkEncrypted)
         {
@@ -35,7 +28,7 @@ namespace ArkHelper.Helpers
             if (File.Exists(cachePath))
             {
                 var cacheJson = File.ReadAllText(cachePath);
-                var cache = JsonSerializer.Deserialize<ArkCache>(cacheJson);
+                var cache = JsonSerializer.Deserialize<ArkCache>(cacheJson, ArkHelperJsonContext.Default.ArkCache);
 
                 if (cache.Version != arkVersion
                     || cache.Encrypted != arkEncrypted)
@@ -73,7 +66,7 @@ namespace ArkHelper.Helpers
                     .ToList()
             };
 
-            var cacheJson = JsonSerializer.Serialize<ArkCache>(cache, JsonSettings);
+            var cacheJson = JsonSerializer.Serialize<ArkCache>(cache, ArkHelperJsonContext.Default.ArkCache);
             File.WriteAllText(cachePath, cacheJson);
         }
 
