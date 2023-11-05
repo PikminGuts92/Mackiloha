@@ -1,10 +1,7 @@
-# Mackiloha [![Build status](https://ci.appveyor.com/api/projects/status/toda9bnsi5ur1k4b/branch/master?svg=true)](https://ci.appveyor.com/project/PikminGuts92/mackiloha/branch/master)
-A suite of modding software for hacking milo engine based games. This is still very much a work-in-progress project. So don't expect perfection. Although feel free to submit [issues](https://github.com/PikminGuts92/Mackiloha/issues) for any bugs found.
+# Mackiloha [![CI](https://github.com/PikminGuts92/Mackiloha/workflows/CI/badge.svg)](https://github.com/PikminGuts92/Mackiloha/actions?query=workflow%3ACI)
+A suite of modding software for hacking milo engine based games. This is still very much a work-in-progress project. So don't expect perfection. Although feel free to submit [issues](https://github.com/PikminGuts92/Mackiloha/issues) for any bugs found. The latest CI build can be found [here](https://github.com/PikminGuts92/Mackiloha/actions/workflows/ci.yml).
 
-The latest build can be found on [AppVeyor](https://ci.appveyor.com/project/PikminGuts92/mackiloha/branch/master/artifacts).
-
-# System Requirements
-You will need at least [.NET 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) runtime installed.
+[Download](https://github.com/PikminGuts92/Mackiloha/releases/latest)
 
 # Build Instructions
 Run `./build.sh`
