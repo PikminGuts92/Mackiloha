@@ -256,13 +256,13 @@ namespace ArkHelper.Apps
                     Console.WriteLine($"Wrote \"{dtaPath}\"");
                     successDtas++;
                 }
-                catch (DTBParseException ex)
+                catch (DTBParseException)
                 {
                     Console.WriteLine($"Unable to convert to script, skipping \'{scriptEntry.FullPath}\'");
                     if (File.Exists(dtaPath))
                         File.Delete(dtaPath);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
 
                 }
