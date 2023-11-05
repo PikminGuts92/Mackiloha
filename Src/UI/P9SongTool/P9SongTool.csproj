@@ -8,9 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.8.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
-    <PackageReference Include="NAudio.Midi" Version="2.0.1" />
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <!-- TODO: Migrate to stable 8.0.0 after .NET releases -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0-rc.2.23479.6" />
+    <PackageReference Include="NAudio.Midi" Version="2.2.1" />
   </ItemGroup>
 
   <ItemGroup>
