@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using CommandLine;
 using Mackiloha.App;
@@ -9,6 +10,12 @@ namespace SuperFreqCLI
 {
     class Program
     {
+        // Fixes AOT for CommandLine
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(CryptOptions))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Dir2MiloOptions))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Milo2DirOptions))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(PngToTextureOptions))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TextureToPngOptions))]
         static void Main(string[] args)
         {
             // TODO: Make pretty
