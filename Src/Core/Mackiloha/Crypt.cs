@@ -138,11 +138,10 @@ namespace Mackiloha
 
         public static string SHA1Hash(Stream stream)
         {
-            using (SHA1Managed sha = new SHA1Managed())
-            {
-                byte[] hash = sha.ComputeHash(stream);
-                return string.Join("", hash.Select(b => b.ToString("X2")).ToArray());
-            }
+            using var sha = SHA1.Create(); // Not sure if using is still required
+
+            byte[] hash = sha.ComputeHash(stream);
+            return string.Join("", hash.Select(b => b.ToString("X2")).ToArray());
         }
     }
 }
