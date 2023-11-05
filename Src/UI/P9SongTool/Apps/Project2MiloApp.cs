@@ -7,6 +7,7 @@ using Mackiloha.Render;
 using Mackiloha.Song;
 using P9SongTool.Exceptions;
 using P9SongTool.Helpers;
+using P9SongTool.Json;
 using P9SongTool.Models;
 using P9SongTool.Options;
 using System;
@@ -279,7 +280,7 @@ namespace P9SongTool.Apps
             var appState = AppState.FromFile(p9songPath);
             var jsonText = File.ReadAllText(p9songPath);
 
-            return JsonSerializer.Deserialize<P9Song>(jsonText, appState.JsonSerializerOptions);
+            return JsonSerializer.Deserialize(jsonText, typeof(P9Song), DefaultJsonContext.Default) as P9Song;
         }
 
         protected P9SongPref ConvertFromSongPreferences(SongPreferences preferences)
@@ -290,19 +291,19 @@ namespace P9SongTool.Apps
             songPref.Venue = preferences.Venue;
             songPref.MiniVenues.AddRange(preferences.MiniVenues);
             songPref.Scenes.AddRange(preferences.Scenes);
-            
+
             songPref.DreamscapeOutfit = preferences.DreamscapeOutfit;
             songPref.StudioOutfit = preferences.StudioOutfit;
-            
+
             songPref.GeorgeInstruments.AddRange(preferences.GeorgeInstruments);
             songPref.JohnInstruments.AddRange(preferences.JohnInstruments);
             songPref.PaulInstruments.AddRange(preferences.PaulInstruments);
             songPref.RingoInstruments.AddRange(preferences.RingoInstruments);
-            
+
             songPref.Tempo = preferences.Tempo;
             songPref.SongClips = preferences.SongClips;
             songPref.DreamscapeFont = preferences.DreamscapeFont;
-            
+
             // TBRB specific
             songPref.GeorgeAmp = preferences.GeorgeAmp;
             songPref.JohnAmp = preferences.JohnAmp;
