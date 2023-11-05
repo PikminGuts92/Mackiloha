@@ -69,7 +69,7 @@ namespace P9SongTool.Apps
                 song.LyricConfigurations = ConvertFromPropAnim(lyricConfig);
             }
 
-            var songJson = SerializeSong(song, appState);
+            var songJson = SerializeSong(song);
             var songJsonPath = Path.Combine(outputDir, "song.json");
 
             File.WriteAllText(songJsonPath, songJson);
@@ -266,15 +266,20 @@ namespace P9SongTool.Apps
                 .ToArray();
         }
 
-        public string SerializeSong(P9Song song, AppState appState)
+        protected string SerializeSong(P9Song song)
         {
-            var jsonSettings = new Newtonsoft.Json.JsonSerializerSettings();
+            var str = JsonSerializer.Serialize(song, DefaultJsonContext.Default.P9Song);
+            return str;
+
+            /*var jsonSettings = new Newtonsoft.Json.JsonSerializerSettings();
             jsonSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
             jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-            jsonSettings.Converters.Add(new SingleLineFloatArrayConverter());
+
+            // TODO: Fix single line float arrays
+            //jsonSettings.Converters.Add(new SingleLineFloatArrayConverter());
 
             return Newtonsoft.Json.JsonConvert.SerializeObject(song, jsonSettings);
-            //return JsonSerializer.Serialize(song, appState.JsonSerializerOptions);
+            //return JsonSerializer.Serialize(song, appState.JsonSerializerOptions);*/
         }
     }
 }

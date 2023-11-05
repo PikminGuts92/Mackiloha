@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿/*using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -34,4 +34,4 @@ namespace P9SongTool.Json
             writer.WriteRawValue($"[ {string.Join(", ", valuesWithPeriod)} ]");
         }
     }
-}
+}*/

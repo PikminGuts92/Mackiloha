@@ -7,6 +7,7 @@ using Mackiloha.Song;
 using NAudio.Midi;
 using P9SongTool.Exceptions;
 using P9SongTool.Helpers;
+using P9SongTool.Json;
 using P9SongTool.Models;
 using P9SongTool.Options;
 using System;
@@ -60,8 +61,8 @@ namespace P9SongTool.Apps
             var appState = new AppState(outputDir);
 
             var song = CreateP9Song(op.ProjectName);
-            var songJson = JsonSerializer.Serialize(song, appState.JsonSerializerOptions);
-            var songJsonPath = Path.Combine(outputDir, "song.json");
+            var songJson = SerializeSong(song);
+            var songJsonPath = songMetaPath;
 
             File.WriteAllText(songJsonPath, songJson);
             Console.WriteLine($"Wrote \"song.json\"");
@@ -132,6 +133,11 @@ namespace P9SongTool.Apps
 
             MidiFile.Export(midPath, mid);
             Console.WriteLine("Wrote \"venue.mid\"");
+        }
+
+        protected string SerializeSong(P9Song song)
+        {
+            return JsonSerializer.Serialize(song, DefaultJsonContext.Default.P9Song);
         }
     }
 }
