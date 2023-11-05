@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 using Mackiloha.IO;
 
 namespace Mackiloha.App.Metadata
 {
+    [JsonConverter(typeof(JsonStringEnumConverter<TexEncoding>))]
     public enum TexEncoding
     {
         Bitmap,
@@ -15,6 +17,7 @@ namespace Mackiloha.App.Metadata
 
     public struct TexMeta
     {
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public TexEncoding? Encoding { get; set; }
         public bool MipMaps { get; set; }
 

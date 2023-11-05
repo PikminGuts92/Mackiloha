@@ -74,7 +74,7 @@ namespace Mackiloha.App.Extensions
 
                     // Write meta
                     var metaPath = Path.Combine(path, "rnd.json");
-                    var metaJson = JsonSerializer.Serialize(dirMeta, state.JsonSerializerOptions);
+                    var metaJson = JsonSerializer.Serialize(dirMeta, typeof(DirectoryMeta), state.JsonSerializerOptions);
                     File.WriteAllText(metaPath, metaJson);
                 }
             }
@@ -187,7 +187,7 @@ namespace Mackiloha.App.Extensions
                 if ((meta.Encoding == null || meta.Encoding == defaultMeta.Encoding) && meta.MipMaps == defaultMeta.MipMaps)
                     continue;
 
-                var metaJson = JsonSerializer.Serialize(meta, state.JsonSerializerOptions);
+                var metaJson = JsonSerializer.Serialize(meta, typeof(TexMeta), state.JsonSerializerOptions);
                 File.WriteAllText(metaPath, metaJson);
             }
         }

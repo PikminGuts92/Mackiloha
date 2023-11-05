@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Mackiloha.App.Json;
 using Mackiloha.IO;
 
 namespace Mackiloha.App
@@ -21,11 +22,9 @@ namespace Mackiloha.App
 
             JsonSerializerOptions = new JsonSerializerOptions()
             {
-                IgnoreNullValues = true,
-                WriteIndented = true
+                TypeInfoResolver = MackilohaJsonContext.Default,
+                WriteIndented = true,
             };
-
-            JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         }
 
         public void UpdateSystemInfo(SystemInfo info)
