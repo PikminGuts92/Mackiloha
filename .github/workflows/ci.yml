@@ -28,7 +28,8 @@ jobs:
       - name: Publish applications
         shell: bash
         run: |
-          sudo ./build.sh -r ${{ matrix.osname }} -o ${{ env.OUTPUT_PATH }}
+          chmod +x ./build.sh
+          ./build.sh -r ${{ matrix.osname }} -o ${{ env.OUTPUT_PATH }}
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ env.ZIP_NAME }}
