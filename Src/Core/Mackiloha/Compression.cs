@@ -22,7 +22,6 @@ namespace Mackiloha
         {
             if (offset < 0) offset = 0;
             byte[] outBlock;
-            const int MAX_READ_SIZE = 0x8000;
 
             switch(type)
             {

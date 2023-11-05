@@ -164,10 +164,6 @@ namespace Mackiloha.DTB
                         WriteItemToDTA(sb, parent[i], depth, false);
 
                         if (i != parent.Count - 1) sb.Append("\n");
-                        else
-                        {
-                            int y = 9;
-                        }
                     }
 
 
@@ -262,10 +258,6 @@ namespace Mackiloha.DTB
                         WriteItemToDTA(sb, parent[i], depth, false);
                         
                         if (i != parent.Count - 1) sb.Append("\r\n");
-                        else
-                        {
-                            int y = 9;
-                        }
                     }
 
 
