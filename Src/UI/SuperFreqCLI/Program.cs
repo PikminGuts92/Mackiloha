@@ -1,6 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using CommandLine;
+﻿using CommandLine;
 using SuperFreqCLI.Options;
+using System.Diagnostics.CodeAnalysis;
 
 namespace SuperFreqCLI
 {
