@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using CommandLine;
-using Mackiloha;
+﻿using CommandLine;
 using Mackiloha.App;
 using Mackiloha.App.Extensions;
-using Mackiloha.IO;
 
 namespace SuperFreqCLI.Options
 {

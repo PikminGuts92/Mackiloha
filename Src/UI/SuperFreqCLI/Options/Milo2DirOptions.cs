@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using CommandLine;
+﻿using CommandLine;
 using Mackiloha.App;
 using Mackiloha.App.Extensions;
 
