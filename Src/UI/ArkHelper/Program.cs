@@ -1,11 +1,7 @@
 ﻿using ArkHelper.Apps;
 using ArkHelper.Options;
 using CommandLine;
-using Mackiloha.App;
-using Mackiloha.App.Extensions;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
-using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace ArkHelper

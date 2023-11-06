@@ -8,12 +8,6 @@ using Mackiloha.Ark;
 using Mackiloha.CSV;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
-using Serilog;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using static Mackiloha.FileHelper;
 

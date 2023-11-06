@@ -2,14 +2,7 @@
 using ArkHelper.Options;
 using Mackiloha;
 using Mackiloha.Ark;
-using Serilog;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace ArkHelper.Apps
