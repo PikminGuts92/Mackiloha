@@ -2,7 +2,6 @@
 using Mackiloha.App.Metadata;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
-using Serilog;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
