@@ -1,6 +1,7 @@
 ﻿using Mackiloha;
 using Mackiloha.Song;
 using NAudio.Midi;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -89,7 +90,7 @@ namespace P9SongTool.Helpers
             {
                 // No events parsed
                 totalTime = 0.0f;
-                Console.WriteLine("Warning: No venue events found");
+                Log.Warning("No venue events found");
             }
 
             var anim = new PropAnim()

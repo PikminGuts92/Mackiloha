@@ -10,6 +10,7 @@ using P9SongTool.Helpers;
 using P9SongTool.Json;
 using P9SongTool.Models;
 using P9SongTool.Options;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,11 +24,6 @@ namespace P9SongTool.Apps
     public class NewProjectApp
     {
         protected readonly string[] DefaultMIDITracks = new[] { "PAUL", "JOHN", "GEORGE", "RINGO", "VENUE" };
-
-        public NewProjectApp()
-        {
-
-        }
 
         public void Parse(NewProjectOptions op)
         {
@@ -44,14 +40,14 @@ namespace P9SongTool.Apps
             {
                 Directory.CreateDirectory(lipsyncDir);
                 File.WriteAllText(Path.Combine(lipsyncDir, "LIPSYNC_HERE"), "");
-                Console.WriteLine($"Created lipsync directory");
+                Log.Information("Created lipsync directory");
             }
 
             if (!Directory.Exists(extraDir))
             {
                 Directory.CreateDirectory(extraDir);
                 File.WriteAllText(Path.Combine(extraDir, "EXTRA_MILO_RELATED_FILES_HERE"), "");
-                Console.WriteLine($"Created extras directory");
+                Log.Information("Created extras directory");
             }
 
             // Write venue mid
@@ -65,9 +61,9 @@ namespace P9SongTool.Apps
             var songJsonPath = songMetaPath;
 
             File.WriteAllText(songJsonPath, songJson);
-            Console.WriteLine($"Wrote \"song.json\"");
+            Log.Information("Wrote \"{SongJsonName}\"", "song.json");
 
-            Console.WriteLine($"Successfully created project in \"{outputDir}\"");
+            Log.Information("Successfully created project in \"{OutputDir}\"", outputDir);
         }
 
         protected P9Song CreateP9Song(string name)
@@ -132,7 +128,7 @@ namespace P9SongTool.Apps
             }
 
             MidiFile.Export(midPath, mid);
-            Console.WriteLine("Wrote \"venue.mid\"");
+            Log.Information("Wrote \"{VenueMidName}\"", "venue.mid");
         }
 
         protected string SerializeSong(P9Song song)

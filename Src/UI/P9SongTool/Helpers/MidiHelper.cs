@@ -1,4 +1,5 @@
 ﻿using NAudio.Midi;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,20 +23,20 @@ namespace P9SongTool.Helpers
         protected virtual MidiFile ParseBaseMidi(string midPath)
         {
             // Check if mid exists
-            if ((midPath is null))
+            if (midPath is null)
             {
                 // No mid path given
-                Console.WriteLine("No base .mid file path given");
+                Log.Warning("No base .mid file path given");
                 return null;
             }
             else if (!File.Exists(midPath))
             {
                 // Mid not found
-                Console.WriteLine($"Could not find \"{midPath}\" to use as base .mid file, proceeding anyways");
+                Log.Warning("Could not find \"{MidPath}\" to use as base .mid file, proceeding anyways", midPath);
                 return null;
             }
 
-            Console.WriteLine($"Using \"{midPath}\" as base .mid file");
+            Log.Information("Using \"{MidPath}\" as base .mid file", midPath);
             return new MidiFile(midPath);
         }
 

@@ -10,6 +10,7 @@ using P9SongTool.Helpers;
 using P9SongTool.Json;
 using P9SongTool.Models;
 using P9SongTool.Options;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -141,7 +142,7 @@ namespace P9SongTool.Apps
                 : BlockStructure.MILO_B;
 
             miloFile.WriteToFile(op.OutputPath);
-            Console.WriteLine($"Successfully created milo at \"{outputMiloPath}\"");
+            Log.Information("Successfully created milo at \"{OutputMiloPath}\" as {Compression}", outputMiloPath, op.UncompressedMilo ? "uncompressed" : "compressed");
         }
 
         protected void ProcessExtraFiles(string extrasDir, MiloObjectDir miloDir, AppState state)
@@ -257,7 +258,7 @@ namespace P9SongTool.Apps
         {
             var fileName = Path.GetFileName(path);
             var data = File.ReadAllBytes(path);
-            Console.WriteLine($"Adding \"{fileName}\" as {type}");
+            Log.Information("Adding \"{FileName}\" as {Type}", fileName, type);
 
             return new MiloObjectBytes(type)
             {
@@ -269,7 +270,7 @@ namespace P9SongTool.Apps
         protected Tex CreateTex(string pngPath, SystemInfo info)
         {
             var fileName = Path.GetFileName(pngPath);
-            Console.WriteLine($"Adding \"{fileName}\" (and encoding) as Tex");
+            Log.Information("Adding \"{FileName}\" (and encoding) as {Type}", fileName, "Tex");
 
             return TextureExtensions
                 .TexFromImage(pngPath, info);

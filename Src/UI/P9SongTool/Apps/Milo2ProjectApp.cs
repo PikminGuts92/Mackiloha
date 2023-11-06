@@ -9,6 +9,7 @@ using P9SongTool.Helpers;
 using P9SongTool.Json;
 using P9SongTool.Models;
 using P9SongTool.Options;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -73,7 +74,7 @@ namespace P9SongTool.Apps
             var songJsonPath = Path.Combine(outputDir, "song.json");
 
             File.WriteAllText(songJsonPath, songJson);
-            Console.WriteLine($"Wrote \"song.json\"");
+            Log.Information("Wrote \"{SongJsonName}\"", "song.json");
 
             // Export midi
             var songAnim = propAnims
@@ -81,7 +82,7 @@ namespace P9SongTool.Apps
 
             var converter = new Anim2Midi(songAnim, op.BaseMidiPath);
             converter.ExportMidi(Path.Combine(outputDir, "venue.mid"));
-            Console.WriteLine($"Wrote \"venue.mid\"");
+            Log.Information("Wrote \"{VenueMidName}\"", "venue.mid");
 
             // Export whatever remaining files
             var remaining = entries
@@ -101,10 +102,10 @@ namespace P9SongTool.Apps
                 var miloObj = entry as MiloObjectBytes;
 
                 File.WriteAllBytes(entryPath, miloObj.Data);
-                Console.WriteLine($"Extracted \"{miloObj.Name}\"");
+                Log.Information("Extracted \"{MiloObjectName}\"", miloObj.Name);
             }
 
-            Console.WriteLine($"Successfully created project in \"{outputDir}\"");
+            Log.Information("Successfully created project in \"{OutputDir}\"", outputDir);
         }
 
         protected SystemInfo GetSystemInfo(Milo2ProjectOptions op)
@@ -161,7 +162,7 @@ namespace P9SongTool.Apps
                 var lipBytes = lipsync as MiloObjectBytes; // Should always be this
                 File.WriteAllBytes(lipFilePath, lipBytes.Data);
 
-                Console.WriteLine($"Extracted \"{lipsync.Name}\"");
+                Log.Information("Extracted \"{LipsyncObjectName}\"", lipsync.Name);
             }
         }
 
