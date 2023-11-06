@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using Mackiloha.IO.Serializers;
+﻿using Mackiloha.IO.Serializers;
 using Mackiloha.Render;
 
 namespace Mackiloha.IO

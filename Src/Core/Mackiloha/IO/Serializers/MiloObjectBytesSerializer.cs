@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Mackiloha.IO.Serializers
+﻿namespace Mackiloha.IO.Serializers
 {
     public class MiloObjectBytesSerializer : AbstractSerializer
     {

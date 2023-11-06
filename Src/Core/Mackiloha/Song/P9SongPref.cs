@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Mackiloha.Song
+﻿namespace Mackiloha.Song
 {
     public enum DreamscapeCamera : int
     {

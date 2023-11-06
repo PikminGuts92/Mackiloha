@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Mackiloha
+﻿namespace Mackiloha
 {
     public struct Matrix4
     {

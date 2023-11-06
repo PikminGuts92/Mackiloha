@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Mackiloha.Render;
+﻿using Mackiloha.Render;
 
 namespace Mackiloha.IO.Serializers
 {

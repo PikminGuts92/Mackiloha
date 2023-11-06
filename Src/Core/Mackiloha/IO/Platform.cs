@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Mackiloha.IO
+﻿namespace Mackiloha.IO
 {
     public enum Platform
     {

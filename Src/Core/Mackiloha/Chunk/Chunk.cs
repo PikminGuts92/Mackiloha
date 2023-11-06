@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-
-/*
+﻿/*
 All bytes are in big endian order.
 
 It looks like milo files were replaced with this. Max Block Size = 0x10000 (2^16)

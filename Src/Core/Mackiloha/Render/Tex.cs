@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Mackiloha.DTB;
+﻿using Mackiloha.DTB;
 
 namespace Mackiloha.Render
 {

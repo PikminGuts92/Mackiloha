@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-
-// Custom inherited class created with big endian / little endian in mind
+﻿// Custom inherited class created with big endian / little endian in mind
 // Added in custom features as required
 
 namespace Mackiloha

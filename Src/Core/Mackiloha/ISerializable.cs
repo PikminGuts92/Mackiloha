@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Mackiloha
+﻿namespace Mackiloha
 {
     public interface ISerializable
     {
