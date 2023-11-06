@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace P9SongTool.Models
+﻿namespace P9SongTool.Models
 {
     public class LyricConfig
     {

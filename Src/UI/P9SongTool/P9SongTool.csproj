@@ -20,4 +20,13 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Mackiloha.App\Mackiloha.App.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Serilog" />
+    <Using Include="System" />
+    <Using Include="System.Collections.Generic" />
+    <Using Include="System.IO" />
+    <Using Include="System.Linq" />
+  </ItemGroup>
+
 </Project>

@@ -1,6 +1,5 @@
 ﻿using CommandLine;
 using CommandLine.Text;
-using System.Collections.Generic;
 
 namespace P9SongTool.Options
 {
