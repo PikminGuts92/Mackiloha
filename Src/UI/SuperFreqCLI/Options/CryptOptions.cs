@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -49,24 +50,24 @@ namespace SuperFreqCLI.Options
 
             if (modeCount == 0)
             {
-                Console.WriteLine("At least one crypt mode (-d, -e, -D, -E) must be set");
+                Log.Error("At least one crypt mode (-d, -e, -D, -E) must be set");
                 return;
             }
             else if (modeCount > 1)
             {
-                Console.WriteLine("Only a single crypt mode (-d, -e, -D, -E) can be set at a time");
+                Log.Error("Only a single crypt mode (-d, -e, -D, -E) can be set at a time");
                 return;
             }
 
             // Checks if inputs are files
             if (Directory.Exists(op.InputPath))
             {
-                Console.WriteLine($"Input of \"{op.InputPath}\" is a directory, not file");
+                Log.Error("Input of \"{InputPath}\" is a directory, not file", op.InputPath);
                 return;
             }
             else if (!File.Exists(op.InputPath))
             {
-                Console.WriteLine($"Input of \"{op.InputPath}\" does not exist");
+                Log.Error("Input of \"{InputPath}\" does not exist", op.InputPath);
                 return;
             }
 
@@ -86,7 +87,7 @@ namespace SuperFreqCLI.Options
                 ? "encrypted"
                 : "decrypted";
 
-            Console.WriteLine($"Successfully {encMode} \"{op.InputPath}\" and wrote output to \"{op.OutputPath}\"");
+            Log.Information("Successfully {Encryption} \"{InputPath}\" and wrote output to \"{OutputPath}\"", encMode, op.InputPath, op.OutputPath);
         }
     }
 }
