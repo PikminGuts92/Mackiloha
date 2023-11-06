@@ -1,6 +1,7 @@
 ﻿using ArkHelper.Exceptions;
 using CliWrap;
 using Mackiloha.DTB;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -34,11 +35,11 @@ namespace ArkHelper.Helpers
             // Check if dtab exists relative to exe
             if (File.Exists(dtabPath))
             {
-                Console.WriteLine($"Using {dtabFileName} relative to executable");
+                Log.Information("Using {DtabFileName} relative to executable", dtabFileName);
                 return dtabPath;
             }
 
-            Console.WriteLine($"Using {dtabFileName} in Path environment variable");
+            Log.Information("Using {DtabFileName} in Path environment variable", dtabFileName);
             return dtabFileName;
         }
 
@@ -49,7 +50,24 @@ namespace ArkHelper.Helpers
             => AppContext.BaseDirectory;
 
         protected virtual void WriteOutput(string text)
-            => Console.WriteLine(text);
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return;
+            }
+            else if (text.Contains("Parse error")
+                || text.Contains("CallStack")
+                || text.Contains("error, called at"))
+            {
+                WriteOutputError(text);
+                return;
+            };
+
+            Log.Information(text);
+        }
+
+        protected virtual void WriteOutputError(string text)
+            => Log.Error(text);
 
         public virtual void ConvertNewDtbToOld(string newDtbPath, string oldDtbPath, bool fme = false)
         {
@@ -84,7 +102,7 @@ namespace ArkHelper.Helpers
                     })
                     .WithValidation(CommandResultValidation.None)
                     .WithStandardOutputPipe(PipeTarget.ToDelegate(WriteOutput))
-                    .WithStandardErrorPipe(PipeTarget.ToDelegate(WriteOutput))
+                    .WithStandardErrorPipe(PipeTarget.ToDelegate(WriteOutputError))
                     .ExecuteAsync()
                     .Task.Wait();
             }

@@ -8,6 +8,7 @@ using Mackiloha.Ark;
 using Mackiloha.CSV;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -139,7 +140,7 @@ namespace ArkHelper.Apps
             foreach (var arkEntry in entriesToExtract)
             {
                 var filePath = ExtractEntry(ark, arkEntry, CombinePath(op.OutputPath, arkEntry.FullPath));
-                Console.WriteLine($"Wrote \"{filePath}\"");
+                Log.Information("Wrote \"{FilePath}\"", filePath);
             }
 
             // Create temp path
@@ -172,7 +173,7 @@ namespace ArkHelper.Apps
                 var bitmap = serializer.ReadFromStream<HMXBitmap>(arkEntryStream);
 
                 bitmap.SaveAs(info, pngPath);
-                Console.WriteLine($"Wrote \"{pngPath}\"");
+                Log.Information("Wrote \"{PngPath}\"", pngPath);
             }
 
             foreach (var miloEntry in milosToInflate)
@@ -184,7 +185,7 @@ namespace ArkHelper.Apps
                 milo.Structure = BlockStructure.MILO_A;
                 milo.WriteToFile(filePath);
 
-                Console.WriteLine($"Wrote \"{filePath}\"");
+                Log.Information("Wrote \"{FilePath}\"", filePath);
             }
 
             foreach (var miloEntry in milosToExtract)
@@ -208,7 +209,7 @@ namespace ArkHelper.Apps
                 // TODO: Refactor IDirectory and remove temp file write/delete
                 File.Delete(tempPath);
 
-                Console.WriteLine($"Wrote \"{extPath}\"");
+                Log.Information("Wrote \"{ExtractedMiloPath}\"", extPath);
             }
 
             foreach (var csvEntry in csvsToConvert)
@@ -221,7 +222,7 @@ namespace ArkHelper.Apps
                 csvPath = platformExtRegex.Replace(csvPath, "");
 
                 csv.SaveToFileAsCSV(csvPath);
-                Console.WriteLine($"Wrote \"{csvPath}\"");
+                Log.Information("Wrote \"{CsvPath}\"", csvPath);
             }
 
             var successDtas = 0;
@@ -231,7 +232,7 @@ namespace ArkHelper.Apps
                 if (dtaRegex.IsMatch(scriptEntry.FullPath))
                 {
                     var filePath = ExtractEntry(ark, scriptEntry, CombinePath(op.OutputPath, scriptEntry.FullPath));
-                    Console.WriteLine($"Wrote \"{filePath}\"");
+                    Log.Information("Wrote \"{FilePath}\"", filePath);
                     continue;
                 }
 
@@ -253,12 +254,12 @@ namespace ArkHelper.Apps
                 try
                 {
                     ScriptHelper.ConvertDtbToDta(tempDtbPath, tempDir, arkEncrypted, arkVersion, dtaPath, op.IndentSize);
-                    Console.WriteLine($"Wrote \"{dtaPath}\"");
+                    Log.Information("Wrote \"{DtaPath}\"", dtaPath);
                     successDtas++;
                 }
                 catch (DTBParseException)
                 {
-                    Console.WriteLine($"Unable to convert to script, skipping \'{scriptEntry.FullPath}\'");
+                    Log.Error("Unable to convert to script, skipping \'{ScriptEntryPath}\'", scriptEntry.FullPath);
                     if (File.Exists(dtaPath))
                         File.Delete(dtaPath);
                 }
@@ -269,7 +270,7 @@ namespace ArkHelper.Apps
             }
 
             if (scriptsToConvert.Count > 0)
-                Console.WriteLine($"Converted {successDtas} of {scriptsToConvert.Count} scripts");
+                Log.Information("Converted {SuccessDtaCount} of {DtaCount} scripts", successDtas, scriptsToConvert.Count);
 
             // Clean up temp files
             if (Directory.Exists(tempDir))

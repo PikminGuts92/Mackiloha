@@ -5,6 +5,7 @@ using CliWrap;
 using Mackiloha;
 using Mackiloha.Ark;
 using Mackiloha.DTB;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -62,7 +63,7 @@ namespace ArkHelper.Apps
             {
                 if ((int)ark.Version < 3)
                 {
-                    Console.WriteLine("Hdr version doesn't support multi-part arks, copying single ark for edit");
+                    Log.Warning("Hdr version doesn't support multi-part arks, copying single ark for edit");
 
                     // If ark version doesn't support multiple parts then copy entire ark to new directory
                     ark = ark.CopyToDirectory(Path.Combine(op.OutputPath, genDirName));
@@ -70,7 +71,7 @@ namespace ArkHelper.Apps
                 }
                 else
                 {
-                    Console.WriteLine("Adding additional ark part");
+                    Log.Information("Adding additional ark part");
 
                     // Add additional ark park
                     var patchPartName = $"{Path.GetFileNameWithoutExtension(hdrFileName)}_{ark.PartCount()}{arkExt}";
@@ -147,7 +148,7 @@ namespace ArkHelper.Apps
                 };
 
                 ark.AddPendingEntry(pendingEntry);
-                Console.WriteLine($"Added {pendingEntry.FullPath}");
+                Log.Information("Added {EntryPath}", pendingEntry.FullPath);
 
                 if (!entryInfo.TryGetValue(internalPath, out var hashInfo))
                     continue;
@@ -158,7 +159,7 @@ namespace ArkHelper.Apps
                 updatedHashes.Add(hashInfo);
             }
 
-            Console.WriteLine("Executing file changes");
+            Log.Information("Executing file changes");
             ark.CommitChanges(inplaceEdit);
 
             // Clean up temp files
@@ -179,13 +180,13 @@ namespace ArkHelper.Apps
                 return;
             }
 
-            Console.WriteLine($"Wrote hdr/ark files");
+            Log.Information("Wrote hdr/ark files");
 
             // Copy exe
             var exeName = Path.GetFileName(op.ExePath);
             var exePath = Path.Combine(op.OutputPath, exeName);
             File.Copy(op.ExePath, exePath, true);
-            Console.WriteLine($"Copied executable \"{exeName}\"");
+            Log.Information("Copied executable \"{ExecutableName}\"", exeName);
 
             if (updatedHashes.Count <= 0)
                 return;
@@ -199,7 +200,7 @@ namespace ArkHelper.Apps
                 exeStream.Seek(hashInfo.Offset, SeekOrigin.Begin);
                 exeStream.Write(hashBytes, 0, hashBytes.Length);
 
-                Console.WriteLine($"Updated hash for {hashInfo.Path}");
+                Log.Information("Updated hash for {HashFilePath}", hashInfo.Path);
             }
         }
     }

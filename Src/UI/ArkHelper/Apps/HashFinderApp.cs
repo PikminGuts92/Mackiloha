@@ -2,6 +2,7 @@
 using ArkHelper.Options;
 using Mackiloha;
 using Mackiloha.Ark;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -71,8 +72,8 @@ namespace ArkHelper.Apps
             ArkEntryInfo.WriteToCSV(protectedInfo, op.HashesPath);
             var hashCount = protectedInfo.Count();
 
-            Console.WriteLine($"Found offsets for {hashCount} entries of out {entryInfo.Count}");
-            Console.WriteLine($"Scan took {watch.Elapsed} ({watch.ElapsedMilliseconds}ms)");
+            Log.Information("Found offsets for {FoundHashCount} entries of out {EntriesCount}", hashCount, entryInfo.Count);
+            Log.Information("Scan took {WatchElapsed} ({WatchElapsedMilliseconds}ms", watch.Elapsed, watch.ElapsedMilliseconds);
         }
     }
 }
