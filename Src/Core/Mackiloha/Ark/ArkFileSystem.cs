@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace Mackiloha.Ark
+﻿namespace Mackiloha.Ark
 {
     public class ArkFileSystem : Archive
     {

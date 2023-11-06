@@ -1,11 +1,7 @@
 ﻿using CommandLine;
-using Mackiloha.App;
-using Mackiloha.App.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using P9SongTool.Apps;
 using P9SongTool.Options;
-using Serilog;
-using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace P9SongTool
