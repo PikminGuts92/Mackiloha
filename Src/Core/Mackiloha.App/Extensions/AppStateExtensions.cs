@@ -9,6 +9,7 @@ using Mackiloha.App.Json;
 using Mackiloha.App.Metadata;
 using Mackiloha.IO;
 using Mackiloha.Milo2;
+using Serilog;
 
 namespace Mackiloha.App.Extensions
 {
@@ -160,7 +161,7 @@ namespace Mackiloha.App.Extensions
                     dirEntryPath = dirFiles
                         .First();
 
-                    Console.WriteLine($"Explicit directory name not given for \"{dirType}\" type, using \"{Path.GetFileName(dirEntryPath)}\"");
+                    Log.Warning("Explicit directory name not given for \"{DirectoryType}\" type, using \"{FoundDirectoryName}\"", dirType, Path.GetFileName(dirEntryPath));
                 }
                 else
                 {
@@ -174,7 +175,7 @@ namespace Mackiloha.App.Extensions
                         dirEntryPath = dirFiles
                             .First();
 
-                        Console.WriteLine($"Can't find file with name \"{dirName ?? "(null)"}\" for \"{dirType}\" type, using \"{Path.GetFileName(dirEntryPath)}\" instead");
+                        Log.Warning("Can't find file with name \"{DirectoryName}\" for \"{DirectoryType}\" type, using \"{FoundDirectoryName}\" instead", dirName ?? "(null)", dirType, Path.GetFileName(dirEntryPath));
                     }
                 }
 

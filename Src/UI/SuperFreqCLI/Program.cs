@@ -4,6 +4,7 @@ using System.IO;
 using CommandLine;
 using Mackiloha.App;
 using Mackiloha.App.Extensions;
+using Serilog;
 using SuperFreqCLI.Options;
 
 namespace SuperFreqCLI
@@ -18,6 +19,11 @@ namespace SuperFreqCLI
         [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TextureToPngOptions))]
         static void Main(string[] args)
         {
+            // Setup logging
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .CreateLogger();
+
             // TODO: Make pretty
             Parser.Default.ParseArguments<
                 CryptOptions,

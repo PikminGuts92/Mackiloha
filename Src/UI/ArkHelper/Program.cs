@@ -4,6 +4,7 @@ using CommandLine;
 using Mackiloha.App;
 using Mackiloha.App.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -21,6 +22,11 @@ namespace ArkHelper
         static void Main(string[] args)
         {
             using var serviceProvider = CreateProvider();
+
+            // Setup logging
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .CreateLogger();
 
             Parser.Default.ParseArguments<
                 Ark2DirOptions,

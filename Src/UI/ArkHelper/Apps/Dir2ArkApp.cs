@@ -5,6 +5,7 @@ using Mackiloha;
 using Mackiloha.Ark;
 using Mackiloha.CSV;
 using Mackiloha.Milo2;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -172,16 +173,16 @@ namespace ArkHelper.Apps
                 };
 
                 ark.AddPendingEntry(pendingEntry);
-                Console.WriteLine($"Added {pendingEntry.FullPath}");
+                Log.Information("Added {EntryPath}", pendingEntry.FullPath);
 
                 currentPartSize += fileSize;
             }
 
             ark.CommitChanges(true);
             if (op.ArkVersion < 3)
-                Console.WriteLine($"Wrote ark to \"{hdrPath}\"");
+                Log.Information("Wrote ark to \"{ArkPath}\"", hdrPath);
             else
-                Console.WriteLine($"Wrote hdr to \"{hdrPath}\"");
+                Log.Information("Wrote hdr to \"{HdrPath}\"", hdrPath);
 
             if (usingCache)
             {
