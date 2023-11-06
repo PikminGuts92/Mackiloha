@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Mackiloha;
-using Mackiloha.App.Json;
+﻿using Mackiloha.App.Json;
 using Mackiloha.App.Metadata;
 using Mackiloha.IO;
-using Mackiloha.Milo2;
 using Mackiloha.Render;
+using System.Text.Json;
 
 namespace Mackiloha.App.Extensions
 {

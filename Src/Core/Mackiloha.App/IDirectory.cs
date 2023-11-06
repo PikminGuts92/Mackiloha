@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-
-namespace Mackiloha.App
+﻿namespace Mackiloha.App
 {
     public interface IDirectory
     {
