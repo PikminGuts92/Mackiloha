@@ -1,48 +1,47 @@
 ﻿using System.Text;
 
-namespace ArkHelper.Models
+namespace ArkHelper.Models;
+
+internal class ArkEntryInfo
 {
-    internal class ArkEntryInfo
+    public string Path { get; set; }
+    public string Hash { get; set; }
+    public long Offset { get; set; }
+
+    public static List<ArkEntryInfo> ReadFromCSV(string csvPath)
     {
-        public string Path { get; set; }
-        public string Hash { get; set; }
-        public long Offset { get; set; }
+        List<ArkEntryInfo> infoEntries = new List<ArkEntryInfo>();
 
-        public static List<ArkEntryInfo> ReadFromCSV(string csvPath)
+        string[] lineSplit;
+        using (var ar = new StreamReader(csvPath, Encoding.UTF8))
         {
-            List<ArkEntryInfo> infoEntries = new List<ArkEntryInfo>();
+            ar.ReadLine(); // Header info
 
-            string[] lineSplit;
-            using (var ar = new StreamReader(csvPath, Encoding.UTF8))
+            while (!ar.EndOfStream)
             {
-                ar.ReadLine(); // Header info
+                lineSplit = ar.ReadLine().Split(',');
 
-                while (!ar.EndOfStream)
+                infoEntries.Add(new ArkEntryInfo()
                 {
-                    lineSplit = ar.ReadLine().Split(',');
-
-                    infoEntries.Add(new ArkEntryInfo()
-                    {
-                        Path = lineSplit[0].Trim(),
-                        Hash = lineSplit[1].Trim(),
-                        Offset = long.Parse(lineSplit[2].Trim())
-                    });
-                }
+                    Path = lineSplit[0].Trim(),
+                    Hash = lineSplit[1].Trim(),
+                    Offset = long.Parse(lineSplit[2].Trim())
+                });
             }
-
-            return infoEntries;
         }
 
-        public static void WriteToCSV(List<ArkEntryInfo> infoEntries, string csvPath)
-        {
-            using (var sw = new StreamWriter(csvPath, false, Encoding.UTF8))
-            {
-                sw.WriteLine("Path,Hash,Offset");
+        return infoEntries;
+    }
 
-                foreach (var info in infoEntries)
-                {
-                    sw.WriteLine($"{info.Path},{info.Hash},{info.Offset}");
-                }
+    public static void WriteToCSV(List<ArkEntryInfo> infoEntries, string csvPath)
+    {
+        using (var sw = new StreamWriter(csvPath, false, Encoding.UTF8))
+        {
+            sw.WriteLine("Path,Hash,Offset");
+
+            foreach (var info in infoEntries)
+            {
+                sw.WriteLine($"{info.Path},{info.Hash},{info.Offset}");
             }
         }
     }

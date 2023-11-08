@@ -1,98 +1,97 @@
 ﻿using Mackiloha.Render;
 
-namespace Mackiloha.IO.Serializers
+namespace Mackiloha.IO.Serializers;
+
+public class DrawSerializer : AbstractSerializer
 {
-    public class DrawSerializer : AbstractSerializer
+    public DrawSerializer(MiloSerializer miloSerializer) : base(miloSerializer) { }
+
+    public override void ReadFromStream(AwesomeReader ar, ISerializable data)
     {
-        public DrawSerializer(MiloSerializer miloSerializer) : base(miloSerializer) { }
+        var draw = data as Draw;
+        int version = ReadMagic(ar, data);
 
-        public override void ReadFromStream(AwesomeReader ar, ISerializable data)
+        draw.Showing = ar.ReadBoolean();
+
+        if (version < 3)
         {
-            var draw = data as Draw;
-            int version = ReadMagic(ar, data);
-
-            draw.Showing = ar.ReadBoolean();
-
-            if (version < 3)
-            {
-                var drawableCount = ar.ReadInt32();
-                draw.Drawables.Clear();
-                draw.Drawables.AddRange(RepeatFor(drawableCount, () => ar.ReadString()));
-            }
-
-            draw.Boundry = new Sphere()
-            {
-                X = ar.ReadSingle(),
-                Y = ar.ReadSingle(),
-                Z = ar.ReadSingle(),
-                Radius = ar.ReadSingle()
-            };
-
-            if (version == 3)
-            {
-                // Should always be 0
-                ar.BaseStream.Position += 4;
-            }
-            else if (version >= 4)
-            {
-                // Should always be 0'd data
-                ar.BaseStream.Position += 8;
-            }
+            var drawableCount = ar.ReadInt32();
+            draw.Drawables.Clear();
+            draw.Drawables.AddRange(RepeatFor(drawableCount, () => ar.ReadString()));
         }
 
-        public override void WriteToStream(AwesomeWriter aw, ISerializable data)
+        draw.Boundry = new Sphere()
         {
-            var draw = data as Draw;
+            X = ar.ReadSingle(),
+            Y = ar.ReadSingle(),
+            Z = ar.ReadSingle(),
+            Radius = ar.ReadSingle()
+        };
 
-            // TODO: Add version check
-            var version = Magic();
-            aw.Write(version);
-
-            aw.Write((bool)draw.Showing);
-
-            aw.Write((int)draw.Drawables.Count);
-            draw.Drawables.ForEach(x => aw.Write((string)x));
-
-            // Write boundry
-            aw.Write(draw.Boundry.X);
-            aw.Write(draw.Boundry.Y);
-            aw.Write(draw.Boundry.Z);
-            aw.Write(draw.Boundry.Radius);
+        if (version == 3)
+        {
+            // Should always be 0
+            ar.BaseStream.Position += 4;
         }
-
-        public override bool IsOfType(ISerializable data) => data is Draw;
-
-        public override int Magic()
+        else if (version >= 4)
         {
-            switch (MiloSerializer.Info.Version)
-            {
-                case 10:
-                    // GH1
-                    return 1;
-                case 24:
-                    // GH2
-                    return 3;
-                default:
-                    return -1;
-            }
+            // Should always be 0'd data
+            ar.BaseStream.Position += 8;
         }
+    }
 
-        internal override int[] ValidMagics()
+    public override void WriteToStream(AwesomeWriter aw, ISerializable data)
+    {
+        var draw = data as Draw;
+
+        // TODO: Add version check
+        var version = Magic();
+        aw.Write(version);
+
+        aw.Write((bool)draw.Showing);
+
+        aw.Write((int)draw.Drawables.Count);
+        draw.Drawables.ForEach(x => aw.Write((string)x));
+
+        // Write boundry
+        aw.Write(draw.Boundry.X);
+        aw.Write(draw.Boundry.Y);
+        aw.Write(draw.Boundry.Z);
+        aw.Write(draw.Boundry.Radius);
+    }
+
+    public override bool IsOfType(ISerializable data) => data is Draw;
+
+    public override int Magic()
+    {
+        switch (MiloSerializer.Info.Version)
         {
-            switch (MiloSerializer.Info.Version)
-            {
-                case 10:
-                    // GH1
-                    return new[] { 1 };
-                case 24:
-                    // GH2
-                    return new[] { 3 };
-                case 25:
-                    // TBRB
-                    return new[] { 3, 4 /* GDRB */ };
-                default:
-                    return Array.Empty<int>();
-            }
+            case 10:
+                // GH1
+                return 1;
+            case 24:
+                // GH2
+                return 3;
+            default:
+                return -1;
+        }
+    }
+
+    internal override int[] ValidMagics()
+    {
+        switch (MiloSerializer.Info.Version)
+        {
+            case 10:
+                // GH1
+                return new[] { 1 };
+            case 24:
+                // GH2
+                return new[] { 3 };
+            case 25:
+                // TBRB
+                return new[] { 3, 4 /* GDRB */ };
+            default:
+                return Array.Empty<int>();
         }
     }
 }

@@ -1,7 +1,6 @@
-﻿namespace ArkHelper.Exceptions
+﻿namespace ArkHelper.Exceptions;
+
+internal class DTBParseException : Exception
 {
-    internal class DTBParseException : Exception
-    {
-        public DTBParseException(string message) : base(message) { }
-    }
+    public DTBParseException(string message) : base(message) { }
 }

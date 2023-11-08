@@ -10,269 +10,268 @@ using P9SongTool.Models;
 using P9SongTool.Options;
 using System.Text.Json;
 
-namespace P9SongTool.Apps
+namespace P9SongTool.Apps;
+
+public class Milo2ProjectApp
 {
-    public class Milo2ProjectApp
+    public void Parse(Milo2ProjectOptions op)
     {
-        public void Parse(Milo2ProjectOptions op)
+        var appState = AppState.FromFile(op.InputPath);
+        appState.UpdateSystemInfo(GetSystemInfo(op));
+
+        var inputMiloPath = Path.GetFullPath(op.InputPath); // Use abs path until AppState is updated
+        var milo = appState.OpenMiloFile(inputMiloPath);
+
+        // Create output directory
+        var outputDir = Path.GetFullPath(op.OutputPath);
+        if (!Directory.Exists(outputDir))
+            Directory.CreateDirectory(outputDir);
+
+        var entries = GetEntries(milo);
+        ExtractLipsync(entries, outputDir);
+
+        var serializer = appState.GetSerializer();
+
+        var propAnims = entries
+            .Where(x => x.Type == "PropAnim")
+            .Select(y => serializer.ReadFromMiloObjectBytes<PropAnim>(y as MiloObjectBytes))
+            .ToList();
+
+        var songPref = entries
+            .Where(x => x.Type == "P9SongPref")
+            .Select(y => serializer.ReadFromMiloObjectBytes<P9SongPref>(y as MiloObjectBytes))
+            .FirstOrDefault();
+
+        if (songPref is null)
+            throw new UnsupportedMiloException("No P9SongPref entry was found");
+
+        // Write song json
+        var song = new P9Song()
         {
-            var appState = AppState.FromFile(op.InputPath);
-            appState.UpdateSystemInfo(GetSystemInfo(op));
+            Name = milo.Name,
+            Preferences = ConvertFromP9SongPref(songPref),
+            LyricConfigurations = Array.Empty<LyricConfig>()
+        };
 
-            var inputMiloPath = Path.GetFullPath(op.InputPath); // Use abs path until AppState is updated
-            var milo = appState.OpenMiloFile(inputMiloPath);
+        // Convert lyric config
+        var lyricConfig = propAnims
+            .FirstOrDefault(x => x.Name == "lyric_config.anim");
 
-            // Create output directory
-            var outputDir = Path.GetFullPath(op.OutputPath);
-            if (!Directory.Exists(outputDir))
-                Directory.CreateDirectory(outputDir);
-
-            var entries = GetEntries(milo);
-            ExtractLipsync(entries, outputDir);
-
-            var serializer = appState.GetSerializer();
-
-            var propAnims = entries
-                .Where(x => x.Type == "PropAnim")
-                .Select(y => serializer.ReadFromMiloObjectBytes<PropAnim>(y as MiloObjectBytes))
-                .ToList();
-
-            var songPref = entries
-                .Where(x => x.Type == "P9SongPref")
-                .Select(y => serializer.ReadFromMiloObjectBytes<P9SongPref>(y as MiloObjectBytes))
-                .FirstOrDefault();
-
-            if (songPref is null)
-                throw new UnsupportedMiloException("No P9SongPref entry was found");
-
-            // Write song json
-            var song = new P9Song()
-            {
-                Name = milo.Name,
-                Preferences = ConvertFromP9SongPref(songPref),
-                LyricConfigurations = Array.Empty<LyricConfig>()
-            };
-
-            // Convert lyric config
-            var lyricConfig = propAnims
-                .FirstOrDefault(x => x.Name == "lyric_config.anim");
-
-            if (!(lyricConfig is null))
-            {
-                song.LyricConfigurations = ConvertFromPropAnim(lyricConfig);
-            }
-
-            var songJson = SerializeSong(song);
-            var songJsonPath = Path.Combine(outputDir, "song.json");
-
-            File.WriteAllText(songJsonPath, songJson);
-            Log.Information("Wrote \"{SongJsonName}\"", "song.json");
-
-            // Export midi
-            var songAnim = propAnims
-                .First(x => x.Name == "song.anim");
-
-            var converter = new Anim2Midi(songAnim, op.BaseMidiPath);
-            converter.ExportMidi(Path.Combine(outputDir, "venue.mid"));
-            Log.Information("Wrote \"{VenueMidName}\"", "venue.mid");
-
-            // Export whatever remaining files
-            var remaining = entries
-                .Where(x => x.Name != songAnim.Name
-                    && x.Type != "CharLipSync"
-                    && x.Type != "P9SongPref"
-                    && x.Name != "lyric_config.anim")
-                .ToList();
-
-            var extraDirPath = Path.Combine(outputDir, "extra");
-            if (!Directory.Exists(extraDirPath))
-                Directory.CreateDirectory(extraDirPath);
-
-            foreach (var entry in remaining)
-            {
-                var entryPath = Path.Combine(extraDirPath, entry.Name);
-                var miloObj = entry as MiloObjectBytes;
-
-                File.WriteAllBytes(entryPath, miloObj.Data);
-                Log.Information("Extracted \"{MiloObjectName}\"", miloObj.Name);
-            }
-
-            Log.Information("Successfully created project in \"{OutputDir}\"", outputDir);
+        if (!(lyricConfig is null))
+        {
+            song.LyricConfigurations = ConvertFromPropAnim(lyricConfig);
         }
 
-        protected SystemInfo GetSystemInfo(Milo2ProjectOptions op)
-            => new SystemInfo()
-            {
-                Version = 25,
-                BigEndian = true,
-                Platform = op.InputPath
-                    .ToLower()
-                    .EndsWith("_ps3")
-                    ? Platform.PS3
-                    : Platform.X360
-            };
+        var songJson = SerializeSong(song);
+        var songJsonPath = Path.Combine(outputDir, "song.json");
 
-        protected List<MiloObject> GetEntries(MiloObjectDir miloDir)
+        File.WriteAllText(songJsonPath, songJson);
+        Log.Information("Wrote \"{SongJsonName}\"", "song.json");
+
+        // Export midi
+        var songAnim = propAnims
+            .First(x => x.Name == "song.anim");
+
+        var converter = new Anim2Midi(songAnim, op.BaseMidiPath);
+        converter.ExportMidi(Path.Combine(outputDir, "venue.mid"));
+        Log.Information("Wrote \"{VenueMidName}\"", "venue.mid");
+
+        // Export whatever remaining files
+        var remaining = entries
+            .Where(x => x.Name != songAnim.Name
+                && x.Type != "CharLipSync"
+                && x.Type != "P9SongPref"
+                && x.Name != "lyric_config.anim")
+            .ToList();
+
+        var extraDirPath = Path.Combine(outputDir, "extra");
+        if (!Directory.Exists(extraDirPath))
+            Directory.CreateDirectory(extraDirPath);
+
+        foreach (var entry in remaining)
         {
-            var entries = new List<MiloObject>();
-            GetEntries(miloDir, entries);
-            return entries;
+            var entryPath = Path.Combine(extraDirPath, entry.Name);
+            var miloObj = entry as MiloObjectBytes;
+
+            File.WriteAllBytes(entryPath, miloObj.Data);
+            Log.Information("Extracted \"{MiloObjectName}\"", miloObj.Name);
         }
 
-        protected void GetEntries(MiloObjectDir miloDir, List<MiloObject> entries)
+        Log.Information("Successfully created project in \"{OutputDir}\"", outputDir);
+    }
+
+    protected SystemInfo GetSystemInfo(Milo2ProjectOptions op)
+        => new SystemInfo()
         {
-            if (miloDir.Type != "ObjectDir")
-                throw new UnsupportedMiloException($"Directory type of \"{miloDir.Type}\" found, expected \"ObjectDir\" expected");
+            Version = 25,
+            BigEndian = true,
+            Platform = op.InputPath
+                .ToLower()
+                .EndsWith("_ps3")
+                ? Platform.PS3
+                : Platform.X360
+        };
 
-            // Traverse sub directories
-            if (!(miloDir.GetDirectoryEntry() is MiloObjectDirEntry dirEntry))
-                throw new UnsupportedMiloException("Could not parse directory entry");
+    protected List<MiloObject> GetEntries(MiloObjectDir miloDir)
+    {
+        var entries = new List<MiloObject>();
+        GetEntries(miloDir, entries);
+        return entries;
+    }
 
-            foreach (var subDir in dirEntry.SubDirectories)
-            {
-                GetEntries(subDir, entries);
-            }
+    protected void GetEntries(MiloObjectDir miloDir, List<MiloObject> entries)
+    {
+        if (miloDir.Type != "ObjectDir")
+            throw new UnsupportedMiloException($"Directory type of \"{miloDir.Type}\" found, expected \"ObjectDir\" expected");
 
-            // Add entries in current directory
-            entries.AddRange(miloDir.Entries);
+        // Traverse sub directories
+        if (!(miloDir.GetDirectoryEntry() is MiloObjectDirEntry dirEntry))
+            throw new UnsupportedMiloException("Could not parse directory entry");
+
+        foreach (var subDir in dirEntry.SubDirectories)
+        {
+            GetEntries(subDir, entries);
         }
 
-        protected void ExtractLipsync(List<MiloObject> entries, string dirPath)
+        // Add entries in current directory
+        entries.AddRange(miloDir.Entries);
+    }
+
+    protected void ExtractLipsync(List<MiloObject> entries, string dirPath)
+    {
+        var lipsyncEntries = entries
+            .Where(x => x.Type == "CharLipSync")
+            .ToList();
+
+        var lipDirPath = Path.Combine(dirPath, "lipsync");
+        if (!Directory.Exists(lipDirPath))
+            Directory.CreateDirectory(lipDirPath);
+
+        foreach (var lipsync in lipsyncEntries)
         {
-            var lipsyncEntries = entries
-                .Where(x => x.Type == "CharLipSync")
+            var lipFilePath = Path.Combine(lipDirPath, lipsync.Name);
+
+            var lipBytes = lipsync as MiloObjectBytes; // Should always be this
+            File.WriteAllBytes(lipFilePath, lipBytes.Data);
+
+            Log.Information("Extracted \"{LipsyncObjectName}\"", lipsync.Name);
+        }
+    }
+
+    protected SongPreferences ConvertFromP9SongPref(P9SongPref songPref)
+        => new SongPreferences()
+        {
+            Venue = songPref.Venue,
+            MiniVenues = songPref.MiniVenues.ToList(),
+            Scenes = songPref.Scenes.ToList(),
+
+            DreamscapeOutfit = songPref.DreamscapeOutfit,
+            StudioOutfit = songPref.StudioOutfit,
+
+            GeorgeInstruments = songPref.GeorgeInstruments.ToList(),
+            JohnInstruments = songPref.JohnInstruments.ToList(),
+            PaulInstruments = songPref.PaulInstruments.ToList(),
+            RingoInstruments = songPref.RingoInstruments.ToList(),
+
+            Tempo = songPref.Tempo,
+            SongClips = songPref.SongClips,
+            DreamscapeFont = songPref.DreamscapeFont,
+
+            // TBRB specific
+            GeorgeAmp = songPref.GeorgeAmp,
+            JohnAmp = songPref.JohnAmp,
+            PaulAmp = songPref.PaulAmp,
+            Mixer = songPref.Mixer,
+            DreamscapeCamera = Enum.GetName(typeof (DreamscapeCamera), songPref.DreamscapeCamera),
+
+            LyricPart = songPref.LyricPart
+        };
+
+    protected LyricConfig[] ConvertFromPropAnim(PropAnim lyricConfigProp)
+    {
+        var groupedConfigs = lyricConfigProp
+            .DirectorGroups
+            .SelectMany(x => x.Events
+                .Select(y => (y, x.DirectorName, x.PropName))
+                .ToList())
+            .GroupBy(x => (int)x.y.Position)
+            .OrderBy(x => x.Key) // Order by "dc_lyrics_x"
+            .ToList();
+
+        var lyricConfigs = new List<LyricConfig>();
+
+        foreach (var propConfig in groupedConfigs)
+        {
+            var configName = $"dc_lyrics_{propConfig.Key}";
+
+            var lyrics = propConfig
+                .OrderBy(x => x.DirectorName) // Order by "venue_lyric_xx"
+                .GroupBy(x => x.DirectorName)
                 .ToList();
 
-            var lipDirPath = Path.Combine(dirPath, "lipsync");
-            if (!Directory.Exists(lipDirPath))
-                Directory.CreateDirectory(lipDirPath);
+            var lyricEvents = new List<LyricEvent>();
 
-            foreach (var lipsync in lipsyncEntries)
+            foreach (var lyric in lyrics)
             {
-                var lipFilePath = Path.Combine(lipDirPath, lipsync.Name);
-
-                var lipBytes = lipsync as MiloObjectBytes; // Should always be this
-                File.WriteAllBytes(lipFilePath, lipBytes.Data);
-
-                Log.Information("Extracted \"{LipsyncObjectName}\"", lipsync.Name);
-            }
-        }
-
-        protected SongPreferences ConvertFromP9SongPref(P9SongPref songPref)
-            => new SongPreferences()
-            {
-                Venue = songPref.Venue,
-                MiniVenues = songPref.MiniVenues.ToList(),
-                Scenes = songPref.Scenes.ToList(),
-
-                DreamscapeOutfit = songPref.DreamscapeOutfit,
-                StudioOutfit = songPref.StudioOutfit,
-
-                GeorgeInstruments = songPref.GeorgeInstruments.ToList(),
-                JohnInstruments = songPref.JohnInstruments.ToList(),
-                PaulInstruments = songPref.PaulInstruments.ToList(),
-                RingoInstruments = songPref.RingoInstruments.ToList(),
-
-                Tempo = songPref.Tempo,
-                SongClips = songPref.SongClips,
-                DreamscapeFont = songPref.DreamscapeFont,
-
-                // TBRB specific
-                GeorgeAmp = songPref.GeorgeAmp,
-                JohnAmp = songPref.JohnAmp,
-                PaulAmp = songPref.PaulAmp,
-                Mixer = songPref.Mixer,
-                DreamscapeCamera = Enum.GetName(typeof (DreamscapeCamera), songPref.DreamscapeCamera),
-
-                LyricPart = songPref.LyricPart
-            };
-
-        protected LyricConfig[] ConvertFromPropAnim(PropAnim lyricConfigProp)
-        {
-            var groupedConfigs = lyricConfigProp
-                .DirectorGroups
-                .SelectMany(x => x.Events
-                    .Select(y => (y, x.DirectorName, x.PropName))
-                    .ToList())
-                .GroupBy(x => (int)x.y.Position)
-                .OrderBy(x => x.Key) // Order by "dc_lyrics_x"
-                .ToList();
-
-            var lyricConfigs = new List<LyricConfig>();
-
-            foreach (var propConfig in groupedConfigs)
-            {
-                var configName = $"dc_lyrics_{propConfig.Key}";
-
-                var lyrics = propConfig
-                    .OrderBy(x => x.DirectorName) // Order by "venue_lyric_xx"
-                    .GroupBy(x => x.DirectorName)
+                // Assume always pos, rot, scale
+                var parts = lyric
+                    .OrderBy(x => x.PropName)
+                    .Select(x => x.y)
                     .ToList();
 
-                var lyricEvents = new List<LyricEvent>();
+                var pos = (DirectedEventVector3)parts[0];
+                var rot = (DirectedEventVector4)parts[1];
+                var scale = (DirectedEventVector3)parts[2];
 
-                foreach (var lyric in lyrics)
+                lyricEvents.Add(new LyricEvent()
                 {
-                    // Assume always pos, rot, scale
-                    var parts = lyric
-                        .OrderBy(x => x.PropName)
-                        .Select(x => x.y)
-                        .ToList();
-
-                    var pos = (DirectedEventVector3)parts[0];
-                    var rot = (DirectedEventVector4)parts[1];
-                    var scale = (DirectedEventVector3)parts[2];
-
-                    lyricEvents.Add(new LyricEvent()
+                    Position = new float[]
                     {
-                        Position = new float[]
-                        {
-                            pos.Value.X,
-                            pos.Value.Y,
-                            pos.Value.Z
-                        },
-                        Rotation = new float[]
-                        {
-                            rot.Value.X,
-                            rot.Value.Y,
-                            rot.Value.Z,
-                            rot.Value.W
-                        },
-                        Scale = new float[]
-                        {
-                            scale.Value.X,
-                            scale.Value.Y,
-                            scale.Value.Z
-                        }
-                    });
-                }
-
-                lyricConfigs.Add(new LyricConfig()
-                {
-                    Name = configName,
-                    Lyrics = lyricEvents
-                        .ToArray()
+                        pos.Value.X,
+                        pos.Value.Y,
+                        pos.Value.Z
+                    },
+                    Rotation = new float[]
+                    {
+                        rot.Value.X,
+                        rot.Value.Y,
+                        rot.Value.Z,
+                        rot.Value.W
+                    },
+                    Scale = new float[]
+                    {
+                        scale.Value.X,
+                        scale.Value.Y,
+                        scale.Value.Z
+                    }
                 });
             }
 
-            return lyricConfigs
-                .ToArray();
+            lyricConfigs.Add(new LyricConfig()
+            {
+                Name = configName,
+                Lyrics = lyricEvents
+                    .ToArray()
+            });
         }
 
-        protected string SerializeSong(P9Song song)
-        {
-            var str = JsonSerializer.Serialize(song, P9SongToolJsonContext.Default.P9Song);
-            return str;
+        return lyricConfigs
+            .ToArray();
+    }
 
-            /*var jsonSettings = new Newtonsoft.Json.JsonSerializerSettings();
-            jsonSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
-            jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+    protected string SerializeSong(P9Song song)
+    {
+        var str = JsonSerializer.Serialize(song, P9SongToolJsonContext.Default.P9Song);
+        return str;
 
-            // TODO: Fix single line float arrays
-            //jsonSettings.Converters.Add(new SingleLineFloatArrayConverter());
+        /*var jsonSettings = new Newtonsoft.Json.JsonSerializerSettings();
+        jsonSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+        jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
 
-            return Newtonsoft.Json.JsonConvert.SerializeObject(song, jsonSettings);
-            //return JsonSerializer.Serialize(song, appState.JsonSerializerOptions);*/
-        }
+        // TODO: Fix single line float arrays
+        //jsonSettings.Converters.Add(new SingleLineFloatArrayConverter());
+
+        return Newtonsoft.Json.JsonConvert.SerializeObject(song, jsonSettings);
+        //return JsonSerializer.Serialize(song, appState.JsonSerializerOptions);*/
     }
 }

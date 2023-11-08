@@ -1,9 +1,8 @@
-﻿namespace ArkHelper.Models
+﻿namespace ArkHelper.Models;
+
+public class CachedFileInfo
 {
-    public class CachedFileInfo
-    {
-        public string SourcePath { get; set; }
-        public string InternalPath { get; set; }
-        public DateTime LastUpdated { get; set; }
-    }
+    public string SourcePath { get; set; }
+    public string InternalPath { get; set; }
+    public DateTime LastUpdated { get; set; }
 }

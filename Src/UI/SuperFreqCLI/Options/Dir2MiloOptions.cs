@@ -2,24 +2,23 @@
 using Mackiloha.App;
 using Mackiloha.App.Extensions;
 
-namespace SuperFreqCLI.Options
+namespace SuperFreqCLI.Options;
+
+[Verb("dir2milo", HelpText = "Creates milo archive from input directory")]
+internal class Dir2MiloOptions : GameOptions
 {
-    [Verb("dir2milo", HelpText = "Creates milo archive from input directory")]
-    internal class Dir2MiloOptions : GameOptions
+    [Value(0, Required = true, MetaName = "dirPath", HelpText = "Path to input directory")]
+    public string InputPath { get; set; }
+
+    [Value(1, Required = true, MetaName = "miloPath", HelpText = "Path to output milo archive")]
+    public string OutputPath { get; set; }
+
+    public static void Parse(Dir2MiloOptions op)
     {
-        [Value(0, Required = true, MetaName = "dirPath", HelpText = "Path to input directory")]
-        public string InputPath { get; set; }
+        op.UpdateOptions();
 
-        [Value(1, Required = true, MetaName = "miloPath", HelpText = "Path to output milo archive")]
-        public string OutputPath { get; set; }
-
-        public static void Parse(Dir2MiloOptions op)
-        {
-            op.UpdateOptions();
-
-            var appState = new AppState(op.InputPath);
-            appState.UpdateSystemInfo(op.GetSystemInfo());
-            appState.BuildMiloArchive(op.InputPath, op.OutputPath);
-        }
+        var appState = new AppState(op.InputPath);
+        appState.UpdateSystemInfo(op.GetSystemInfo());
+        appState.BuildMiloArchive(op.InputPath, op.OutputPath);
     }
 }

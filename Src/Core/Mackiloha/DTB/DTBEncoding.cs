@@ -1,10 +1,9 @@
-﻿namespace Mackiloha.DTB
+﻿namespace Mackiloha.DTB;
+
+public enum DTBEncoding
 {
-    public enum DTBEncoding
-    {
-        KR,
-        Classic,
-        FME,
-        RBVR
-    }
+    KR,
+    Classic,
+    FME,
+    RBVR
 }

@@ -1,41 +1,40 @@
 ﻿using Mackiloha.IO;
 using System.Text.Json.Serialization;
 
-namespace Mackiloha.App.Metadata
+namespace Mackiloha.App.Metadata;
+
+[JsonConverter(typeof(JsonStringEnumConverter<TexEncoding>))]
+public enum TexEncoding
 {
-    [JsonConverter(typeof(JsonStringEnumConverter<TexEncoding>))]
-    public enum TexEncoding
-    {
-        Bitmap,
-        DXT1,
-        DXT5,
-        ATI2
-    }
+    Bitmap,
+    DXT1,
+    DXT5,
+    ATI2
+}
 
-    public struct TexMeta
-    {
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public TexEncoding? Encoding { get; set; }
-        public bool MipMaps { get; set; }
+public struct TexMeta
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public TexEncoding? Encoding { get; set; }
+    public bool MipMaps { get; set; }
 
-        public static TexMeta DefaultFor(Platform platform)
+    public static TexMeta DefaultFor(Platform platform)
+    {
+        switch (platform)
         {
-            switch (platform)
-            {
-                case Platform.PS3:
-                case Platform.X360:
-                    return new TexMeta()
-                    {
-                        Encoding = TexEncoding.DXT1,
-                        MipMaps = true
-                    };
-                default:
-                    return new TexMeta()
-                    {
-                        Encoding = TexEncoding.Bitmap,
-                        MipMaps = false
-                    };
-            }
+            case Platform.PS3:
+            case Platform.X360:
+                return new TexMeta()
+                {
+                    Encoding = TexEncoding.DXT1,
+                    MipMaps = true
+                };
+            default:
+                return new TexMeta()
+                {
+                    Encoding = TexEncoding.Bitmap,
+                    MipMaps = false
+                };
         }
     }
 }

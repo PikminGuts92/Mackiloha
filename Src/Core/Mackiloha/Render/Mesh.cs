@@ -1,93 +1,92 @@
-﻿namespace Mackiloha.Render
+﻿namespace Mackiloha.Render;
+
+public struct Vertex3
 {
-    public struct Vertex3
-    {
-        public float X;
-        public float Y;
-        public float Z;
+    public float X;
+    public float Y;
+    public float Z;
 
-        public float NormalX;
-        public float NormalY;
-        public float NormalZ;
+    public float NormalX;
+    public float NormalY;
+    public float NormalZ;
 
-        public float ColorR;
-        public float ColorG;
-        public float ColorB;
-        public float ColorA;
+    public float ColorR;
+    public float ColorG;
+    public float ColorB;
+    public float ColorA;
 
-        public float U;
-        public float V;
-    }
+    public float U;
+    public float V;
+}
 
-    public struct Face
-    {
-        public ushort V1;
-        public ushort V2;
-        public ushort V3;
-    }
+public struct Face
+{
+    public ushort V1;
+    public ushort V2;
+    public ushort V3;
+}
 
-    public struct FaceGroup
-    {
-        public int Size;
-        public List<int> Sections;
-        public List<int> VertexIndicies;
-    }
+public struct FaceGroup
+{
+    public int Size;
+    public List<int> Sections;
+    public List<int> VertexIndicies;
+}
 
-    public struct Bone
-    {
-        public string Name;
-        public Matrix4 Mat;
-    }
-    
-    public interface IMesh : IRenderObject
-    {
-        string Material { get; set; }
-        string MainMesh { get; set; }
+public struct Bone
+{
+    public string Name;
+    public Matrix4 Mat;
+}
 
-        int Unknown { get; set; }
+public interface IMesh : IRenderObject
+{
+    string Material { get; set; }
+    string MainMesh { get; set; }
 
-        List<Vertex3> Vertices { get; }
-        List<Face> Faces { get; }
+    int Unknown { get; set; }
 
-        List<FaceGroup> Groups { get; }
-        List<Bone> Bones { get; }
-    }
+    List<Vertex3> Vertices { get; }
+    List<Face> Faces { get; }
 
-    public class Mesh : RenderObject, IMesh, ITrans, IDraw
-    {
-        internal Trans Trans { get; } = new Trans();
-        internal Draw Draw { get; } = new Draw();
+    List<FaceGroup> Groups { get; }
+    List<Bone> Bones { get; }
+}
 
-        // Trans
-        public Matrix4 Mat1 { get => Trans.Mat1; set => Trans.Mat1 = value; }
-        public Matrix4 Mat2 { get => Trans.Mat2; set => Trans.Mat2 = value; }
+public class Mesh : RenderObject, IMesh, ITrans, IDraw
+{
+    internal Trans Trans { get; } = new Trans();
+    internal Draw Draw { get; } = new Draw();
 
-        public List<string> Transformables => Trans.Transformables;
+    // Trans
+    public Matrix4 Mat1 { get => Trans.Mat1; set => Trans.Mat1 = value; }
+    public Matrix4 Mat2 { get => Trans.Mat2; set => Trans.Mat2 = value; }
 
-        public int UnknownInt { get => Trans.UnknownInt; set => Trans.UnknownInt = value; }
-        public string Camera { get => Trans.Camera; set => Trans.Camera = value; }
-        public bool UnknownBool { get => Trans.UnknownBool; set => Trans.UnknownBool = value; }
+    public List<string> Transformables => Trans.Transformables;
 
-        public string Transform { get => Trans.Transform; set => Trans.Transform = value; }
+    public int UnknownInt { get => Trans.UnknownInt; set => Trans.UnknownInt = value; }
+    public string Camera { get => Trans.Camera; set => Trans.Camera = value; }
+    public bool UnknownBool { get => Trans.UnknownBool; set => Trans.UnknownBool = value; }
 
-        // Draw
-        public bool Showing { get => Draw.Showing; set => Draw.Showing = value; }
+    public string Transform { get => Trans.Transform; set => Trans.Transform = value; }
 
-        public List<string> Drawables => Draw.Drawables;
-        public Sphere Boundry { get => Draw.Boundry; set => Draw.Boundry = value; }
-        
-        // Mesh
-        public string Material { get; set; }
-        public string MainMesh { get; set; }
+    // Draw
+    public bool Showing { get => Draw.Showing; set => Draw.Showing = value; }
 
-        public int Unknown { get; set; }
+    public List<string> Drawables => Draw.Drawables;
+    public Sphere Boundry { get => Draw.Boundry; set => Draw.Boundry = value; }
 
-        public List<Vertex3> Vertices { get; } = new List<Vertex3>();
-        public List<Face> Faces { get; } = new List<Face>();
+    // Mesh
+    public string Material { get; set; }
+    public string MainMesh { get; set; }
 
-        public List<FaceGroup> Groups { get; } = new List<FaceGroup>();
-        public List<Bone> Bones { get; } = new List<Bone>();
+    public int Unknown { get; set; }
 
-        public override string Type => "Mesh";
-    }
+    public List<Vertex3> Vertices { get; } = new List<Vertex3>();
+    public List<Face> Faces { get; } = new List<Face>();
+
+    public List<FaceGroup> Groups { get; } = new List<FaceGroup>();
+    public List<Bone> Bones { get; } = new List<Bone>();
+
+    public override string Type => "Mesh";
 }

@@ -1,8 +1,7 @@
-﻿namespace Mackiloha
+﻿namespace Mackiloha;
+
+public struct Vector2
 {
-    public struct Vector2
-    {
-        public float X;
-        public float Y;
-    }
+    public float X;
+    public float Y;
 }

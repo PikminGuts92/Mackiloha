@@ -1,27 +1,26 @@
 ﻿using Mackiloha.IO;
 
-namespace Mackiloha.App.Extensions
+namespace Mackiloha.App.Extensions;
+
+public static class SerializerExtensions
 {
-    public static class SerializerExtensions
+    public static T ReadFromMiloObjectBytes<T>(this MiloSerializer serializer, MiloObjectBytes entry) where T : ISerializable, new()
     {
-        public static T ReadFromMiloObjectBytes<T>(this MiloSerializer serializer, MiloObjectBytes entry) where T : ISerializable, new()
+        using (var ms = new MemoryStream(entry.Data))
         {
-            using (var ms = new MemoryStream(entry.Data))
-            {
-                var obj = serializer.ReadFromStream<T>(ms);
-                (obj as MiloObject).Name = entry.Name;
+            var obj = serializer.ReadFromStream<T>(ms);
+            (obj as MiloObject).Name = entry.Name;
 
-                return obj;
-            }
+            return obj;
         }
+    }
 
-        public static byte[] WriteToBytes(this MiloSerializer serializer, ISerializable obj)
+    public static byte[] WriteToBytes(this MiloSerializer serializer, ISerializable obj)
+    {
+        using (var ms = new MemoryStream())
         {
-            using (var ms = new MemoryStream())
-            {
-                serializer.WriteToStream(ms, obj);
-                return ms.ToArray();
-            }
+            serializer.WriteToStream(ms, obj);
+            return ms.ToArray();
         }
     }
 }

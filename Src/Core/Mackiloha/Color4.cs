@@ -1,10 +1,9 @@
-﻿namespace Mackiloha
+﻿namespace Mackiloha;
+
+public struct Color4
 {
-    public struct Color4
-    {
-        public float R;
-        public float G;
-        public float B;
-        public float A;
-    }
+    public float R;
+    public float G;
+    public float B;
+    public float A;
 }

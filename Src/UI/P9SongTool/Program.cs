@@ -4,39 +4,38 @@ using P9SongTool.Apps;
 using P9SongTool.Options;
 using System.Diagnostics.CodeAnalysis;
 
-namespace P9SongTool
+namespace P9SongTool;
+
+class Program
 {
-    class Program
+    // Fixes AOT for CommandLine
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Milo2ProjectOptions))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(NewProjectOptions))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Project2MiloOptions))]
+    static void Main(string[] args)
     {
-        // Fixes AOT for CommandLine
-        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Milo2ProjectOptions))]
-        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(NewProjectOptions))]
-        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Project2MiloOptions))]
-        static void Main(string[] args)
-        {
-            using var serviceProvider = CreateProvider();
+        using var serviceProvider = CreateProvider();
 
-            // Setup logging
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .CreateLogger();
+        // Setup logging
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Console()
+            .CreateLogger();
 
-            Parser.Default.ParseArguments<
-                Milo2ProjectOptions,
-                NewProjectOptions,
-                Project2MiloOptions>(args)
-                .WithParsed<Milo2ProjectOptions>(serviceProvider.GetService<Milo2ProjectApp>().Parse)
-                .WithParsed<NewProjectOptions>(serviceProvider.GetService<NewProjectApp>().Parse)
-                .WithParsed<Project2MiloOptions>(serviceProvider.GetService<Project2MiloApp>().Parse)
-                .WithNotParsed(errors => { });
-        }
+        Parser.Default.ParseArguments<
+            Milo2ProjectOptions,
+            NewProjectOptions,
+            Project2MiloOptions>(args)
+            .WithParsed<Milo2ProjectOptions>(serviceProvider.GetService<Milo2ProjectApp>().Parse)
+            .WithParsed<NewProjectOptions>(serviceProvider.GetService<NewProjectApp>().Parse)
+            .WithParsed<Project2MiloOptions>(serviceProvider.GetService<Project2MiloApp>().Parse)
+            .WithNotParsed(errors => { });
+    }
 
-        private static ServiceProvider CreateProvider()
-        {
-            var services = new ServiceCollection();
-            Startup.ConfigureServices(services);
+    private static ServiceProvider CreateProvider()
+    {
+        var services = new ServiceCollection();
+        Startup.ConfigureServices(services);
 
-            return services.BuildServiceProvider();
-        }
+        return services.BuildServiceProvider();
     }
 }

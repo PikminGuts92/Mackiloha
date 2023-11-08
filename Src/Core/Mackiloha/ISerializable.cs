@@ -1,6 +1,5 @@
-﻿namespace Mackiloha
+﻿namespace Mackiloha;
+
+public interface ISerializable
 {
-    public interface ISerializable
-    {
-    }
 }

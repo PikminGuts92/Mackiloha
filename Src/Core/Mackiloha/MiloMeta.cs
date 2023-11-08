@@ -1,13 +1,12 @@
 ﻿using Mackiloha.DTB;
 
-namespace Mackiloha
+namespace Mackiloha;
+
+// Serialized w/ milo entries beginning with GH2
+public struct MiloMeta
 {
-    // Serialized w/ milo entries beginning with GH2
-    public struct MiloMeta
-    {
-        public int Revision;
-        public string ScriptName;
-        public DTBFile Script;
-        public string Comments;
-    }
+    public int Revision;
+    public string ScriptName;
+    public DTBFile Script;
+    public string Comments;
 }

@@ -1,22 +1,21 @@
-﻿namespace Mackiloha.DTB
+﻿namespace Mackiloha.DTB;
+
+public class FloatItem : DTBItem
 {
-    public class FloatItem : DTBItem
+    public FloatItem() : this(0.0f)
     {
-        public FloatItem() : this(0.0f)
-        {
 
-        }
+    }
 
-        public FloatItem(float value)
-        {
-            Float = value;
-        }
+    public FloatItem(float value)
+    {
+        Float = value;
+    }
 
-        public float Float { get; set; }
+    public float Float { get; set; }
 
-        public int NumericValue
-        {
-            get { return 0x01; }
-        }
+    public int NumericValue
+    {
+        get { return 0x01; }
     }
 }
