@@ -1,2 +1,4 @@
 [*.cs]
 csharp_style_namespace_declarations=file_scoped:suggestion
+indent_size = 4
+indent_style = space
