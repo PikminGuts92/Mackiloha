@@ -27,11 +27,15 @@ jobs:
             ~/.nuget/packages
             Src/**/bin/*.*
             Src/**/obj/*.*
+            Test/**/bin/*.*
+            Test/**/obj/*.*
           key: ${{ matrix.osname }}-build-${{ hashFiles('**/*.csproj', './*.sln') }}
       - name: Setup dotnet
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
+      - name: Test projects
+        run: dotnet test
       - name: Publish applications
         shell: bash
         run: |
