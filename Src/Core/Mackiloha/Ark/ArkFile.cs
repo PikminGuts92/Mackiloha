@@ -21,6 +21,7 @@ public class ArkFile : Archive
     private bool _encrypted;
     private bool _xor; // 0xFF after encryption?
     private int _cryptKey = 0x295E2D5E;
+    private bool _force32bit = false;
 
     private string[] _arkPaths; // 0 = HDR
     private readonly List<OffsetArkEntry> _offsetEntries;
@@ -33,13 +34,16 @@ public class ArkFile : Archive
         _offsetEntries = new List<OffsetArkEntry>();
     }
 
-    public static ArkFile Create(string hdrPath, ArkVersion version, int? key)
+    public static ArkFile Create(string hdrPath, ArkVersion version, bool force32bit, int? key)
     {
         hdrPath = Path.GetFullPath(hdrPath);
 
-        var ark = new ArkFile();
-        ark._encrypted = key.HasValue;
-        ark._xor = (version >= ArkVersion.V10); // RB4/RBVR?
+        var ark = new ArkFile()
+        {
+            _encrypted = key.HasValue,
+            _force32bit = force32bit,
+            _xor = version >= ArkVersion.V10 // RB4/RBVR?
+        };
 
         if (key.HasValue)
         {
@@ -107,7 +111,8 @@ public class ArkFile : Archive
                 .FirstOrDefault(x => Regex.IsMatch(name, @"(?i).hdr$"));
 
             input = hdrPath;
-        } else if (ext == ".ark")
+        }
+        else if (ext == ".ark")
         {
             // Treat as Freq/Amp
             using var fs = File.OpenRead(input);
@@ -481,7 +486,7 @@ public class ArkFile : Archive
             aw.Write(arkSizes.Length);
 
             // Writes ark sizes
-            if (Version != ArkVersion.V4)
+            if (Version != ArkVersion.V4 || _force32bit)
             {
                 foreach (var size in arkSizes)
                     aw.Write((uint)size);
@@ -495,7 +500,7 @@ public class ArkFile : Archive
         }
 
         // Write ark paths
-        if ((int)Version >= 5)
+        if ((int)Version >= 5 || (Version == ArkVersion.V4 && _force32bit))
         {
             // TODO: Use a better way to write relative path
             var prefix = ((int)Version < 9) ? "gen/" : "";
@@ -701,7 +706,7 @@ public class ArkFile : Archive
         aw.Write((uint)entries.Count);
 
         // TODO: Check for versions below 3 or above 6
-        if (Version == ArkVersion.V4 || Version == ArkVersion.V5 || Version == ArkVersion.V6)
+        if (!_force32bit && (Version == ArkVersion.V4 || Version == ArkVersion.V5 || Version == ArkVersion.V6))
         {
             foreach (var entry in entries)
             {

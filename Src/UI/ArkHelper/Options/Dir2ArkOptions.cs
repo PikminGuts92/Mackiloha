@@ -26,6 +26,9 @@ public class Dir2ArkOptions
     [Option('k', "key", HelpText = "Encryption key (one will be generated if not set)")]
     public uint? EncryptKey { get; set; }
 
+    [Option('f', "force32bit", HelpText = "Force 32-bit addresses (use for RB1 patches)")]
+    public bool Force32Bit { get; set; }
+
     [Option('c', "cache", HelpText = "Directory path to DTB cache")]
     public string CachePath { get; set; }
 }

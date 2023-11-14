@@ -73,7 +73,7 @@ public class Dir2ArkApp
 
         // Create ark
         var hdrPath = Path.Combine(arkDir, $"{op.ArkName}{hdrExt}");
-        var ark = ArkFile.Create(hdrPath, (ArkVersion)op.ArkVersion, (int?)op.EncryptKey);
+        var ark = ArkFile.Create(hdrPath, (ArkVersion)op.ArkVersion, op.Force32Bit, (int?)op.EncryptKey);
 
         var files = Directory.GetFiles(op.InputPath, "*", SearchOption.AllDirectories);
 
