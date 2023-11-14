@@ -7,8 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- TODO: Migrate to stable 8.0.0 after .NET releases -->
-    <PackageReference Include="System.Text.Json" Version="8.0.0-rc.2.23479.6" />
+    <PackageReference Include="System.Text.Json" Version="8.0.0" />
     <PackageReference Include="BCnEncoder.Net.ImageSharp" Version="1.1.1" />
   </ItemGroup>
 
