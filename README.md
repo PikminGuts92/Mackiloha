@@ -3,9 +3,6 @@ A suite of modding software for hacking milo engine based games. This is still v
 
 [Download](https://github.com/PikminGuts92/Mackiloha/releases/latest)
 
-# Build Instructions
-Run `./build.sh`
-
 # Overview
 ## Ark Helper
 CLI tool for unpacking/repacking .ark archives from milo. Should work with Amplitude (PS2) up to RB3. For dta/dtb serialization support, download [dtab](https://github.com/mtolly/dtab) and place in same directory as ark helper executable.
