@@ -15,6 +15,7 @@ Usage:
   - Amp/KR/AntiGrav PS2: `arkhelper dir2ark ext_dir gen_dir -n "MAIN" -v 2`
   - GH1/GH2 PS2: `arkhelper dir2ark ext_dir gen_dir -n "MAIN"`
   - GH2 360: `arkhelper dir2ark ext_dir gen_dir -e`
+  - RB1 Patch: `arkhelper dir2ark ext_dir gen_dir -n "patch_ps3" -e -f -v 4`
   - RB2/TBRB/GDRB PS3: `arkhelper dir2ark ext_dir gen_dir -n "main_ps3" -e -v 5`
   - RB3 360: `arkhelper dir2ark ext_dir gen_dir -n "main_xbox" -e -v 6`
 
@@ -25,7 +26,6 @@ Usage:
 - Create new project: `p9songtool newproj -n temporarysec project_temporarysec`
 - Create project from milo: `p9songtool.exe milo2proj -m temporarysec.mid temporarysec.milo_xbox project_temporarysec`
 - Generate milo from project: `p9songtool.exe proj2milo project_temporarysec temporarysec.milo_xbox`
-
 
 ## SuperFreq (pronounced "Super Freak")
 CLI tool for unpacking/packing rnd archives from milo games. These files usually use the extensions: .gh, .kr, .milo, .rnd
