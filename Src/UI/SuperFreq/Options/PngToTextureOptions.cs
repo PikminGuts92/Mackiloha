@@ -2,7 +2,7 @@
 using Mackiloha.App;
 using Mackiloha.App.Extensions;
 
-namespace Superfreq.Options;
+namespace SuperFreq.Options;
 
 [Verb("png2tex", HelpText = "Converts HMX texture to png (beta feature)")]
 internal class PngToTextureOptions : GameOptions

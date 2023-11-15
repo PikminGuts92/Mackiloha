@@ -1,8 +1,8 @@
 ﻿using CommandLine;
 using Mackiloha.IO;
-using Superfreq.Models;
+using SuperFreq.Models;
 
-namespace Superfreq.Options;
+namespace SuperFreq.Options;
 
 internal class GameOptions
 {
