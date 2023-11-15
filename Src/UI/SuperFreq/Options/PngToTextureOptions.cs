@@ -23,5 +23,7 @@ internal class PngToTextureOptions : GameOptions
         var bitmap = TextureExtensions.BitmapFromImage(op.InputPath, appState.SystemInfo);
         var serializer = appState.GetSerializer();
         serializer.WriteToFile(op.OutputPath, bitmap);
+
+        Log.Information("Wrote image to \"{outputPath}\"", op.OutputPath);
     }
 }

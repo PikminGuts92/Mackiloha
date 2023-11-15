@@ -23,6 +23,11 @@ public static class AppStateExtensions
         using (var miloStream = new MemoryStream(miloFile.Data))
         {
             milo = serializer.ReadFromStream<MiloObjectDir>(miloStream);
+
+            if (miloStream.Position < miloFile.Data.Length)
+            {
+                Log.Warning("Read less data than length of milo file. Likely not parsed correctly.");
+            }
         }
 
         return milo;

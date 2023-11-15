@@ -23,5 +23,7 @@ internal class Milo2DirOptions : GameOptions
         var appState = AppState.FromFile(op.InputPath);
         appState.UpdateSystemInfo(op.GetSystemInfo());
         appState.ExtractMiloContents(op.InputPath, op.OutputPath, op.ConvertTextures);
+
+        Log.Information("Extracted milo contents to \"{outputPath}\"", op.OutputPath);
     }
 }

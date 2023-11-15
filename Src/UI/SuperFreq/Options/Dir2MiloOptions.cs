@@ -20,5 +20,7 @@ internal class Dir2MiloOptions : GameOptions
         var appState = new AppState(op.InputPath);
         appState.UpdateSystemInfo(op.GetSystemInfo());
         appState.BuildMiloArchive(op.InputPath, op.OutputPath);
+
+        Log.Information("Wrote milo to \"{outputPath}\"", op.OutputPath);
     }
 }

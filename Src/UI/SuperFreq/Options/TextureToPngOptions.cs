@@ -24,5 +24,7 @@ internal class TextureToPngOptions : GameOptions
         var serializer = appState.GetSerializer();
         var bitmap = serializer.ReadFromFile<HMXBitmap>(op.InputPath);
         bitmap.SaveAs(appState.SystemInfo, op.OutputPath);
+
+        Log.Information("Wrote image to \"{outputPath}\"", op.OutputPath);
     }
 }
