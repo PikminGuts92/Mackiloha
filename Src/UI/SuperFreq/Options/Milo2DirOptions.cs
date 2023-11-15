@@ -2,7 +2,7 @@
 using Mackiloha.App;
 using Mackiloha.App.Extensions;
 
-namespace SuperFreqCLI.Options;
+namespace Superfreq.Options;
 
 [Verb("milo2dir", HelpText = "Extracts content of milo archive to directory")]
 internal class Milo2DirOptions : GameOptions

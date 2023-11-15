@@ -1,6 +1,6 @@
 ﻿using Mackiloha.IO;
 
-namespace SuperFreqCLI.Models;
+namespace Superfreq.Models;
 
 internal class MiloConfig
 {

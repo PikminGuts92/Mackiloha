@@ -1,7 +1,7 @@
 ﻿using CommandLine;
 using Mackiloha;
 
-namespace SuperFreqCLI.Options;
+namespace Superfreq.Options;
 
 [Verb("crypt", HelpText = "Encrypt and decrypt dtb files")]
 public class CryptOptions

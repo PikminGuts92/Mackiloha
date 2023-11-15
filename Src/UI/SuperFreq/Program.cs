@@ -1,8 +1,8 @@
 ﻿using CommandLine;
-using SuperFreqCLI.Options;
+using Superfreq.Options;
 using System.Diagnostics.CodeAnalysis;
 
-namespace SuperFreqCLI;
+namespace Superfreq;
 
 class Program
 {
