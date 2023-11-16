@@ -6,6 +6,8 @@ namespace SuperFreq.Options;
 
 internal class GameOptions
 {
+    protected readonly Platform[] SupportedPlatforms = [Platform.PS2, Platform.X360];
+
     [Option("miloVersion", Default = 24, HelpText = "Milo archive version (10, 24, 25)")]
     public int MiloVersion { get; set; }
 
@@ -23,7 +25,7 @@ internal class GameOptions
     {
         value = value?.Trim()?.ToLower();
 
-        if (value == null)
+        if (value is null)
             return Platform.PS2;
 
         Platform? platformInput = Enum.GetNames(typeof(Platform))
@@ -41,28 +43,39 @@ internal class GameOptions
     {
         Platform = ParsePlatform(PlatformString);
 
+        // Parse preset value
         var presetValue = Preset?.Trim().ToLower();
-
-        if (presetValue == null)
+        if (presetValue is null)
         {
             // Do nothing
             return;
         }
 
-        var config = MiloConfig.Presets
-                .FirstOrDefault(x => x.Games.Any(y => y == presetValue));
-
-        if (config == null)
+        // Get preset
+        var config = MiloConfig.Presets.FirstOrDefault(x => x.Games.Any(y => y == presetValue));
+        if (config is null)
         {
             // Preset no found
-            // TODO: Throw exception?
+            Log.Warning("Can't find preset for \"{preset}\"", presetValue);
             return;
         }
+
+        Log.Information("Using preset for {presetName}", config.Name);
 
         // Updates options
         MiloVersion = config.MiloVersion;
         BigEndian = config.BigEndian;
         Platform = config.Platform;
+    }
+
+    public void VerifySupportedOptions()
+    {
+        if (MiloVersion > 25
+            || BigEndian
+            || !SupportedPlatforms.Contains(Platform))
+        {
+            Log.Warning("Selected options is an unsupported configuration. Compatibility is unverified.");
+        }
     }
 
     protected SystemInfo GetSystemInfo() => new SystemInfo()

@@ -4,6 +4,7 @@ namespace SuperFreq.Models;
 
 internal class MiloConfig
 {
+    public string Name { get; set; }
     public string[] Games { get; set; }
     public int MiloVersion { get; set; }
     public bool BigEndian { get; set; }
@@ -13,6 +14,7 @@ internal class MiloConfig
     {
         new MiloConfig()
         {
+            Name = "GH1",
             Games = new[] { "gh1" },
             MiloVersion = 10,
             BigEndian = false,
@@ -20,6 +22,7 @@ internal class MiloConfig
         },
         new MiloConfig()
         {
+            Name = "GH2/GH80s",
             Games = new[] { "gh2", "gh80s" },
             MiloVersion = 24,
             BigEndian = false,
@@ -27,6 +30,7 @@ internal class MiloConfig
         },
         new MiloConfig()
         {
+            Name = "GH2 X360",
             Games = new[] { "gh2_x360" },
             MiloVersion = 25,
             BigEndian = false,

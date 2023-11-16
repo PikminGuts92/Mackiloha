@@ -16,6 +16,7 @@ internal class Dir2MiloOptions : GameOptions
     public static void Parse(Dir2MiloOptions op)
     {
         op.UpdateOptions();
+        op.VerifySupportedOptions();
 
         var appState = new AppState(op.InputPath);
         appState.UpdateSystemInfo(op.GetSystemInfo());
