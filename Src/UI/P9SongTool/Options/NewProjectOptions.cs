@@ -12,7 +12,7 @@ public class NewProjectOptions
     [Option('n', "name", HelpText = "Shortname of song (ex. \"temporarysec\")", Required = true)]
     public string ProjectName { get; set; }
 
-    [Usage(ApplicationAlias = "p9songtool.exe")]
+    [Usage(ApplicationAlias = Constants.APPLICATION_EXE_NAME)]
     public static IEnumerable<Example> Examples
         => new[]
         {

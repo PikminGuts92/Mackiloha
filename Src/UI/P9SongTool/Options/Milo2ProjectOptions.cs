@@ -15,7 +15,7 @@ public class Milo2ProjectOptions
     [Option('m', "midi", HelpText = "Base MIDI path to import tempo map (otherwise constant 120bpm will be used)")]
     public string BaseMidiPath { get; set; }
 
-    [Usage(ApplicationAlias = "p9songtool.exe")]
+    [Usage(ApplicationAlias = Constants.APPLICATION_EXE_NAME)]
     public static IEnumerable<Example> Examples
         => new[]
         {

@@ -15,7 +15,7 @@ public class Project2MiloOptions
     [Option('u', "uncompressed", HelpText = "Enable to leave output milo archive uncompressed")]
     public bool UncompressedMilo { get; set; }
 
-    [Usage(ApplicationAlias = "p9songtool.exe")]
+    [Usage(ApplicationAlias = Constants.APPLICATION_EXE_NAME)]
     public static IEnumerable<Example> Examples
         => new[]
         {
