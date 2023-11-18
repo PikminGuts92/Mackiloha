@@ -2,7 +2,7 @@
 using Mackiloha.App;
 using Mackiloha.App.Extensions;
 using Mackiloha.IO;
-using Mackiloha.Milo2;
+using Mackiloha.Milo;
 using Mackiloha.Render;
 using Mackiloha.Song;
 using P9SongTool.Exceptions;

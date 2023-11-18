@@ -1,4 +1,4 @@
-﻿namespace Mackiloha.Milo2;
+﻿namespace Mackiloha.Milo;
 
 public enum BlockStructure : uint
 {
