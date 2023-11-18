@@ -9,10 +9,12 @@ namespace ArkHelper.Apps;
 
 public class PatchCreatorApp
 {
+    protected readonly ILogManager LogManager;
     protected readonly IScriptHelper ScriptHelper;
 
-    public PatchCreatorApp(IScriptHelper scriptHelper)
+    public PatchCreatorApp(ILogManager logManager, IScriptHelper scriptHelper)
     {
+        LogManager = logManager;
         ScriptHelper = scriptHelper;
     }
 
@@ -33,6 +35,8 @@ public class PatchCreatorApp
 
     public void Parse(PatchCreatorOptions op)
     {
+        LogManager.SetLogLevel(op.GetLogLevel());
+
         var ark = ArkFile.FromFile(op.InputPath);
         var inplaceEdit = string.IsNullOrWhiteSpace(op.OutputPath);
 

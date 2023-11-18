@@ -1,4 +1,5 @@
-﻿using ArkHelper.Options;
+﻿using ArkHelper.Helpers;
+using ArkHelper.Options;
 using Mackiloha;
 using Mackiloha.Ark;
 
@@ -6,8 +7,17 @@ namespace ArkHelper.Apps;
 
 public class ArkCompareApp
 {
+    protected readonly ILogManager LogManager;
+
+    public ArkCompareApp(ILogManager logManager)
+    {
+        LogManager = logManager;
+    }
+
     public void Parse(ArkCompareOptions op)
     {
+        LogManager.SetLogLevel(op.GetLogLevel());
+
         var ark1 = ArkFile.FromFile(op.ArkPath1);
         var ark2 = ArkFile.FromFile(op.ArkPath2);
 

@@ -9,16 +9,21 @@ namespace ArkHelper.Apps;
 public class Dir2ArkApp
 {
     protected readonly ICacheHelper CacheHelper;
+    protected readonly ILogManager LogManager;
     protected readonly IScriptHelper ScriptHelper;
 
-    public Dir2ArkApp(ICacheHelper cacheHelper, IScriptHelper scriptHelper)
+    public Dir2ArkApp(ICacheHelper cacheHelper, ILogManager logManager, IScriptHelper scriptHelper)
     {
         CacheHelper = cacheHelper;
+        LogManager = logManager;
         ScriptHelper = scriptHelper;
     }
 
     public void Parse(Dir2ArkOptions op)
     {
+        LogManager.SetLogLevel(op.GetLogLevel());
+        ScriptHelper.Initialize();
+
         var dtaRegex = new Regex("(?i).dta$");
         var genPathedFile = new Regex(@"(?i)gen[\/][^\/]+$");
         var dotRegex = new Regex(@"\([.]+\)/");

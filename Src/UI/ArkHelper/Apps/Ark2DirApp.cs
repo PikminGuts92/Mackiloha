@@ -15,10 +15,12 @@ namespace ArkHelper.Apps;
 
 public class Ark2DirApp
 {
+    protected readonly ILogManager LogManager;
     protected readonly IScriptHelper ScriptHelper;
 
-    public Ark2DirApp(IScriptHelper scriptHelper)
+    public Ark2DirApp(ILogManager logManager, IScriptHelper scriptHelper)
     {
+        LogManager = logManager;
         ScriptHelper = scriptHelper;
     }
 
@@ -63,6 +65,9 @@ public class Ark2DirApp
 
     public void Parse(Ark2DirOptions op)
     {
+        LogManager.SetLogLevel(op.GetLogLevel());
+        ScriptHelper.Initialize();
+
         var scriptRegex = new Regex("(?i).((dtb)|(dta)|(([A-Z]+)(_dta_)([A-Z0-9]+)))$");
         var scriptForgeRegex = new Regex("(?i)(_dta_)([A-Z0-9]+)$");
         var csvRegex = new Regex("(?i).csv_([A-Z0-9]+)$");

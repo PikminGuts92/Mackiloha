@@ -1,4 +1,5 @@
-﻿using ArkHelper.Models;
+﻿using ArkHelper.Helpers;
+using ArkHelper.Models;
 using ArkHelper.Options;
 using Mackiloha;
 using Mackiloha.Ark;
@@ -9,8 +10,17 @@ namespace ArkHelper.Apps;
 
 public class HashFinderApp
 {
+    protected readonly ILogManager LogManager;
+
+    public HashFinderApp(ILogManager logManager)
+    {
+        LogManager = logManager;
+    }
+
     public void Parse(HashFinderOptions op)
     {
+        LogManager.SetLogLevel(op.GetLogLevel());
+
         var watch = Stopwatch.StartNew();
 
         var ark = ArkFile.FromFile(op.InputPath);

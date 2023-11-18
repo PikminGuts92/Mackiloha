@@ -19,11 +19,6 @@ class Program
     {
         using var serviceProvider = CreateProvider();
 
-        // Setup logging
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .CreateLogger();
-
         Parser.Default.ParseArguments<
             Ark2DirOptions,
             ArkCompareOptions,

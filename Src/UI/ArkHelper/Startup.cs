@@ -10,6 +10,7 @@ public static class Startup
     {
         // Helpers
         services.AddSingleton<ICacheHelper, CacheHelper>();
+        services.AddSingleton<ILogManager, LogManager>();
         services.AddSingleton<IScriptHelper, ScriptHelperDtab>();
 
         // Apps

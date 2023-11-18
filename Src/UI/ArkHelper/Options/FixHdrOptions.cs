@@ -3,7 +3,7 @@
 namespace ArkHelper.Options;
 
 [Verb("fixhdr", HelpText = "Re-writes HDR (ark header) to hopefully fix sorting of entries", Hidden = true)]
-public class FixHdrOptions
+public class FixHdrOptions : BaseOptions
 {
     [Value(0, Required = true, MetaName = "hdrPath", HelpText = "Path to hdr file")]
     public string InputPath { get; set; }

@@ -3,7 +3,7 @@
 namespace ArkHelper.Options;
 
 [Verb("dir2ark", HelpText = "Creates ark archive from input directory")]
-public class Dir2ArkOptions
+public class Dir2ArkOptions : BaseOptions
 {
     [Value(0, Required = true, MetaName = "dirPath", HelpText = "Path to input directory")]
     public string InputPath { get; set; }

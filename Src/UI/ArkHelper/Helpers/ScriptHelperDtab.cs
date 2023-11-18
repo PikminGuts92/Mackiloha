@@ -9,15 +9,21 @@ namespace ArkHelper.Helpers;
 
 public class ScriptHelperDtab : IScriptHelper
 {
-    protected readonly string DtabPath;
+    protected string DtabPath;
+
     protected readonly Encoding Encoding;
     protected readonly Regex IndentRegex;
 
-    public ScriptHelperDtab()
+    public ScriptHelperDtab(ILogManager _)
     {
-        DtabPath = ResolveDtabPath();
+        DtabPath = $"dtab{GetExeExtension()}";
         Encoding = Encoding.UTF8;
         IndentRegex = new Regex(@"^[\s]+");
+    }
+
+    public void Initialize()
+    {
+        DtabPath = ResolveDtabPath();
     }
 
     protected virtual string ResolveDtabPath()

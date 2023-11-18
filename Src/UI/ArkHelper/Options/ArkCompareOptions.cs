@@ -3,7 +3,7 @@
 namespace ArkHelper.Options;
 
 [Verb("compare", HelpText = "Compares differences between two arks", Hidden = true)]
-public class ArkCompareOptions
+public class ArkCompareOptions : BaseOptions
 {
     [Value(0, Required = true, MetaName = "arkPath1", HelpText = "Path to ark 1 (hdr file)")]
     public string ArkPath1 { get; set; }

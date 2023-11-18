@@ -3,7 +3,7 @@
 namespace ArkHelper.Options;
 
 [Verb("ark2dir", HelpText = "Extracts content of milo ark to directory")]
-public class Ark2DirOptions
+public class Ark2DirOptions : BaseOptions
 {
     [Value(0, Required = true, MetaName = "arkPath", HelpText = "Path to ark (hdr file)")]
     public string InputPath { get; set; }

@@ -3,7 +3,7 @@
 namespace ArkHelper.Options;
 
 [Verb("hashfinder", HelpText = "Compute hashes for ark entries and find offsets in decrypted executable")]
-public class HashFinderOptions
+public class HashFinderOptions : BaseOptions
 {
     [Value(0, Required = true, MetaName = "arkPath", HelpText = "Path to ark (hdr file)" )]
     public string InputPath { get; set; }
