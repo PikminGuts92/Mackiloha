@@ -2,6 +2,7 @@
 
 public enum Platform
 {
+    PC,
     PS2,
     XBOX,
     GC,
