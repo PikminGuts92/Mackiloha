@@ -1,4 +1,4 @@
-BUILD_VERSION="1.2.0"
+BUILD_VERSION="$(cat version.txt)"
 RUNTIME=""
 BUILD_MODE="Release"
 OUTPUT_PATH="./BUILD"
