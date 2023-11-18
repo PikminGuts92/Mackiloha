@@ -33,28 +33,6 @@ public static class AppStateExtensions
         return milo;
     }
 
-    public static IDirectory GetRoot(this AppState state)
-    {
-        // TODO: Set from user input
-        IDirectory dir = state.GetWorkingDirectory();
-        IDirectory[] subDirs;
-
-        do
-        {
-            subDirs = dir.GetSubDirectories();
-
-            if (subDirs.Any(x =>
-                string.Equals(x.Name, "songs",
-                    StringComparison.CurrentCultureIgnoreCase)))
-                return dir;
-
-            dir = dir.GetParent();
-
-        } while (dir != null);
-
-        return null;
-    }
-
     public static void ExtractMiloContents(this AppState state, string miloPath, string outputDir, bool convertTextures)
     {
         var milo = OpenMiloFile(state, miloPath);
@@ -73,7 +51,6 @@ public static class AppStateExtensions
             ("gc", _) => Platform.GC,
             ("ps2", _) => Platform.PS2,
             ("ps3", _) => Platform.PS3,
-            ("ps4", _) => Platform.PS3,
             ("wii", _) => Platform.Wii,
             var (p, v) when p == "xbox" && v <= 24 => Platform.XBOX,
             var (p, v) when p == "xbox" && v >= 25 => Platform.X360,

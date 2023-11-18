@@ -8,14 +8,6 @@ namespace Mackiloha.App.Extensions;
 
 public static class MiloExtensions
 {
-    public static int Size(this MiloObject entry) => entry is MiloObjectBytes ? (entry as MiloObjectBytes).Data.Length : -1;
-
-    public static string Extension(this MiloObject entry)
-    {
-        if (entry == null || !((string)entry.Name).Contains('.')) return "";
-        return Path.GetExtension(entry.Name); // Returns .cs
-    }
-
     private static string MakeGenPath(string path, Platform platform)
     {
         var ext = (platform) switch
@@ -35,12 +27,6 @@ public static class MiloExtensions
     {
         if (!Directory.Exists(path))
             Directory.CreateDirectory(path);
-
-        /*
-        var entriesByType = milo.Entries
-            .GroupBy(x => x.Type)
-            .ToDictionary(x => Path.Combine(path, x.Key), y => y.ToList())
-            .ToList();*/
 
         var miloEntries = new List<MiloObject>();
 
@@ -183,127 +169,4 @@ public static class MiloExtensions
             File.WriteAllText(metaPath, metaJson);
         }
     }
-
-    /*
-    public static void WriteTree(this MiloObjectDir milo, string path)
-    {
-        using (StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8))
-        {
-            foreach (var view in milo.Entries.Where(x => x.Type == "View"))
-                WriteTree(milo, view.Name, sw, 0);
-        }
-    }
-
-    public static void WriteTree2(this MiloFile milo, string path)
-    {
-        MiloOG.AbstractEntry GetOGEntry(string name)
-        {
-            var e = milo.Entries.First(x => x.Name == name) as MiloEntry;
-
-            switch (e.Type)
-            {
-                case "Mesh":
-                    var mesh = MiloOG.Mesh.FromStream(new MemoryStream(e.Data));
-                    mesh.Name = e.Name;
-                    return mesh;
-                case "Trans":
-                    var trans = MiloOG.Trans.FromStream(new MemoryStream(e.Data));
-                    trans.Name = e.Name;
-                    return trans;
-                case "View":
-                    var view = MiloOG.View.FromStream(new MemoryStream(e.Data));
-                    view.Name = e.Name;
-                    return view;
-                default:
-                    return null;
-            }
-        }
-
-        string GetTransformName(string name)
-        {
-            var e = milo.Entries.First(x => x.Name == name) as MiloEntry;
-
-            switch (e.Type)
-            {
-                case "Mesh":
-                    var mesh = MiloOG.Mesh.FromStream(new MemoryStream(e.Data));
-                    mesh.Name = e.Name;
-                    return mesh.Transform;
-                case "Trans":
-                    var trans = MiloOG.Trans.FromStream(new MemoryStream(e.Data));
-                    trans.Name = e.Name;
-                    return trans.Name;
-                case "View":
-                    var view = MiloOG.View.FromStream(new MemoryStream(e.Data));
-                    view.Name = e.Name;
-                    return view.Transform;
-                default:
-                    return null;
-            }
-        }
-
-        using (StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8))
-        {
-            var children = new Dictionary<string, List<string>>();
-            
-            foreach (var entry in milo.Entries)
-            {
-                // if (!children.ContainsKey(entry.Name))
-                //     children.Add(entry.Name, new List<string>());
-
-                var trans = GetTransformName(entry.Name);
-                if (trans == null || trans == entry.Name) continue;
-
-                if (!children.ContainsKey(trans))
-                    children.Add(trans, new List<string>(new string[] { entry.Name }));
-                else if (!children[trans].Contains(entry.Name))
-                    children[trans].Add(entry.Name);
-
-                //WriteTree(milo, view.Name, sw, 0);
-            }
-        }
-    }
-
-    private static void WriteTree(MiloFile milo, string entry, StreamWriter sw, int depth, bool bone = false)
-    {
-        MiloOG.AbstractEntry GetOGEntry(string name)
-        {
-            var e = milo.Entries.First(x => x.Name == name) as MiloEntry;
-
-            switch (e.Type)
-            {
-                case "Mesh":
-                    var mesh = MiloOG.Mesh.FromStream(new MemoryStream(e.Data));
-                    mesh.Name = e.Name;
-                    return mesh;
-                case "Trans":
-                    var trans = MiloOG.Trans.FromStream(new MemoryStream(e.Data));
-                    trans.Name = e.Name;
-                    return trans;
-                case "View":
-                    var view = MiloOG.View.FromStream(new MemoryStream(e.Data));
-                    view.Name = e.Name;
-                    return view;
-                default:
-                    return null;
-            }
-        }
-
-        dynamic transEntry = GetOGEntry(entry);
-        List<string> subBones = transEntry.Meshes;
-        List<string> subEntries = transEntry.Meshes;
-        string type = bone ? "Bone" : "Mesh";
-
-        sw.WriteLine($"{new string('\t', depth)}{type}: {transEntry.Name} ({transEntry.Transform})");
-
-        foreach (var sub in subBones)
-        {
-            WriteTree(milo, sub, sw, depth + 1, true);
-        }
-
-        foreach (var sub in subEntries)
-        {
-            WriteTree(milo, sub, sw, depth + 1);
-        }
-    }*/
 }
