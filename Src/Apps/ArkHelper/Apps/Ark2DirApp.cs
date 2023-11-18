@@ -83,6 +83,15 @@ public class Ark2DirApp
         int arkVersion;
         bool arkEncrypted;
 
+        if (!op.ConvertScripts
+            && !op.ConvertTextures
+            && !op.InflateMilos
+            && !op.ExtractMilos)
+        {
+            op.ExtractAll = true;
+            Log.Information("No extract options specified, defaulting to extract all");
+        }
+
         if (Directory.Exists(op.InputPath))
         {
             // Open as directory
