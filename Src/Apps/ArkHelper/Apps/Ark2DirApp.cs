@@ -83,7 +83,8 @@ public class Ark2DirApp
         int arkVersion;
         bool arkEncrypted;
 
-        if (!op.ConvertScripts
+        if (!op.ExtractAll
+            && !op.ConvertScripts
             && !op.ConvertTextures
             && !op.InflateMilos
             && !op.ExtractMilos)
