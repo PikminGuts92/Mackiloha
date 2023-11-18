@@ -1,7 +1,7 @@
 ﻿using CommandLine;
 using Serilog.Events;
 
-namespace ArkHelper.Options;
+namespace P9SongTool.Options;
 
 public abstract class BaseOptions
 {

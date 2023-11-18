@@ -1,6 +1,7 @@
 ﻿using Mackiloha.App;
 using NAudio.Midi;
 using P9SongTool.Json;
+using P9SongTool.Helpers;
 using P9SongTool.Models;
 using P9SongTool.Options;
 using System.Text.Json;
@@ -11,8 +12,17 @@ public class NewProjectApp
 {
     protected readonly string[] DefaultMIDITracks = new[] { "PAUL", "JOHN", "GEORGE", "RINGO", "VENUE" };
 
+    protected readonly ILogManager LogManager;
+
+    public NewProjectApp(ILogManager logManager)
+    {
+        LogManager = logManager;
+    }
+
     public void Parse(NewProjectOptions op)
     {
+        LogManager.SetLogLevel(op.GetLogLevel());
+
         var outputDir = Path.GetFullPath(op.OutputPath);
         if (!Directory.Exists(outputDir))
             Directory.CreateDirectory(outputDir);

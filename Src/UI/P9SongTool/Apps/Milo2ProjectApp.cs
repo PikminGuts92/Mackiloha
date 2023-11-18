@@ -14,8 +14,17 @@ namespace P9SongTool.Apps;
 
 public class Milo2ProjectApp
 {
+    protected readonly ILogManager LogManager;
+
+    public Milo2ProjectApp(ILogManager logManager)
+    {
+        LogManager = logManager;
+    }
+
     public void Parse(Milo2ProjectOptions op)
     {
+        LogManager.SetLogLevel(op.GetLogLevel());
+
         var appState = AppState.FromFile(op.InputPath);
         appState.UpdateSystemInfo(GetSystemInfo(op));
 

@@ -17,10 +17,12 @@ namespace P9SongTool.Apps;
 
 public class Project2MiloApp
 {
+    protected readonly ILogManager LogManager;
     protected readonly (string extension, string miloType)[] SupportedExtraTypes;
 
-    public Project2MiloApp()
+    public Project2MiloApp(ILogManager logManager)
     {
+        LogManager = logManager;
         SupportedExtraTypes = new (string extension, string miloType)[]
         {
             (".anim", "PropAnim"),
@@ -36,6 +38,8 @@ public class Project2MiloApp
 
     public void Parse(Project2MiloOptions op)
     {
+        LogManager.SetLogLevel(op.GetLogLevel());
+
         if (!Directory.Exists(op.InputPath))
             throw new MiloBuildException("Input directory doesn't exist");
 

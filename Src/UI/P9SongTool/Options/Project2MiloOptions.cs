@@ -4,7 +4,7 @@ using CommandLine.Text;
 namespace P9SongTool.Options;
 
 [Verb("proj2milo", HelpText = "Build song milo archive from input project")]
-public class Project2MiloOptions
+public class Project2MiloOptions : BaseOptions
 {
     [Value(0, Required = true, MetaName = "dirPath", HelpText = "Path to input project directory")]
     public string InputPath { get; set; }

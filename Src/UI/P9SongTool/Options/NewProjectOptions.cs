@@ -4,7 +4,7 @@ using CommandLine.Text;
 namespace P9SongTool.Options;
 
 [Verb("newproj", HelpText = "Create new song project from scratch")]
-public class NewProjectOptions
+public class NewProjectOptions : BaseOptions
 {
     [Value(0, Required = true, MetaName = "dirPath", HelpText = "Path to output project directory")]
     public string OutputPath { get; set; }
