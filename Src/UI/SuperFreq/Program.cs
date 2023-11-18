@@ -1,4 +1,6 @@
 ﻿using CommandLine;
+using Microsoft.Extensions.DependencyInjection;
+using SuperFreq.Apps;
 using SuperFreq.Options;
 using System.Diagnostics.CodeAnalysis;
 
@@ -9,25 +11,30 @@ class Program
     // Fixes AOT for CommandLine
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Dir2MiloOptions))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Milo2DirOptions))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(PngToTextureOptions))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TextureToPngOptions))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Png2TextureOptions))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Texture2PngOptions))]
     static void Main(string[] args)
     {
-        // Setup logging
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .CreateLogger();
+        using var serviceProvider = CreateProvider();
 
         // TODO: Make pretty
         Parser.Default.ParseArguments<
             Dir2MiloOptions,
             Milo2DirOptions,
-            PngToTextureOptions,
-            TextureToPngOptions>(args)
-            .WithParsed<Dir2MiloOptions>(Dir2MiloOptions.Parse)
-            .WithParsed<Milo2DirOptions>(Milo2DirOptions.Parse)
-            .WithParsed<PngToTextureOptions>(PngToTextureOptions.Parse)
-            .WithParsed<TextureToPngOptions>(TextureToPngOptions.Parse)
+            Png2TextureOptions,
+            Texture2PngOptions>(args)
+            .WithParsed<Dir2MiloOptions>(serviceProvider.GetService<Dir2MiloApp>().Parse)
+            .WithParsed<Milo2DirOptions>(serviceProvider.GetService<Milo2DirApp>().Parse)
+            .WithParsed<Png2TextureOptions>(serviceProvider.GetService<Png2TextureApp>().Parse)
+            .WithParsed<Texture2PngOptions>(serviceProvider.GetService<Texture2PngApp>().Parse)
             .WithNotParsed(errors => { });
+    }
+
+    private static ServiceProvider CreateProvider()
+    {
+        var services = new ServiceCollection();
+        Startup.ConfigureServices(services);
+
+        return services.BuildServiceProvider();
     }
 }

@@ -4,21 +4,21 @@ using SuperFreq.Models;
 
 namespace SuperFreq.Options;
 
-internal class GameOptions
+public class GameOptions : BaseOptions
 {
     protected readonly Platform[] SupportedPlatforms = [Platform.PS2, Platform.X360];
 
-    [Option("miloVersion", Default = 24, HelpText = "Milo archive version (10, 24, 25)")]
+    [Option('m', "miloVersion", Default = 24, HelpText = "Milo archive version (10, 24, 25)")]
     public int MiloVersion { get; set; }
 
-    [Option("bigEndian", Default = false, HelpText = "Use big endian serialization")]
+    [Option('b', "bigEndian", Default = false, HelpText = "Use big endian serialization")]
     public bool BigEndian { get; set; }
 
-    [Option("platform", Default = "ps2", HelpText = "Platform (ps2, x360)")]
+    [Option('p', "platform", Default = "ps2", HelpText = "Platform (ps2, x360)")]
     public string PlatformString { get; set; }
     public Platform Platform { get; set; } = Platform.PS2;
 
-    [Option("preset", HelpText = "Game preset (gh1, gh2, gh80s, gh2_x360)")]
+    [Option('r', "preset", HelpText = "Game preset (gh1, gh2, gh80s, gh2_x360)")]
     public string Preset { get; set; }
 
     private Platform ParsePlatform(string value)
@@ -39,7 +39,7 @@ internal class GameOptions
         throw new Exception($"Preset of \"{value}\" not recognized");
     }
 
-    protected void UpdateOptions()
+    public void UpdateOptions()
     {
         Platform = ParsePlatform(PlatformString);
 
@@ -78,7 +78,7 @@ internal class GameOptions
         }
     }
 
-    protected SystemInfo GetSystemInfo() => new SystemInfo()
+    public SystemInfo GetSystemInfo() => new SystemInfo()
     {
         Version = MiloVersion,
         BigEndian = BigEndian,
