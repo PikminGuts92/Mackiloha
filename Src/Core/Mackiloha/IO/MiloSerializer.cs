@@ -14,21 +14,12 @@ public class MiloSerializer
 
         Serializers = new AbstractSerializer[]
         {
-            new AnimSerializer(this),
-            new CamSerializer(this),
-            new DrawSerializer(this),
-            new EnvironSerializer(this),
-            new FontSerializer(this),
             new HMXBitmapSerializer(this),
-            new MatSerializer(this),
-            new MeshSerializer(this),
             new MiloObjectBytesSerializer(this),
             new MiloObjectDirSerializer(this),
             new P9SongPrefSerializer(this),
             new PropAnimSerializer(this),
-            new TexSerializer(this),
-            new TransSerializer(this),
-            new ViewSerializer(this)
+            new TexSerializer(this)
         };
     }
 
