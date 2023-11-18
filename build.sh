@@ -39,7 +39,7 @@ echo ">> Clearing old files"
 rm $OUTPUT_PATH -rf
 
 # Get projects to build
-PROJECTS=$(find Src/UI/**/*.csproj)
+PROJECTS=$(find Src/Apps/**/*.csproj)
 
 # Build + publish projects
 echo ">> Building solution"
