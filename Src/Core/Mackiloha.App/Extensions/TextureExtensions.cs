@@ -791,8 +791,13 @@ public static class TextureExtensions
         if (bitmap == null || bitmap.RawData.Length <= 0) return;
         var rgba = bitmap.ToRGBA(info);
 
-        if (!Directory.Exists(Path.GetDirectoryName(path)))
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
+        var dirPath = Path.GetDirectoryName(Path.GetFullPath(path));
+
+        if (!Directory.Exists(dirPath) && !string.IsNullOrEmpty(dirPath))
+        {
+            Log.Debug("Creating directory: {dirPath}", dirPath);
+            Directory.CreateDirectory(dirPath);
+        }
 
         using var image = ImageWrapper.FromRGBA(rgba, bitmap.Width, bitmap.Height);
         image.WriteToFile(path);
