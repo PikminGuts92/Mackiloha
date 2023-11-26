@@ -2,7 +2,7 @@
 
 namespace SuperFreq.Options;
 
-[Verb("png2tex", HelpText = "Converts HMX texture to png (beta feature)")]
+[Verb("png2tex", HelpText = "Converts HMX texture to png")]
 public class Png2TextureOptions : GameOptions
 {
     [Value(0, Required = true, MetaName = "pngPath", HelpText = "Path to input png")]
