@@ -40,6 +40,7 @@ public static class TextureExtensions
             case 8: // DXT1 or Bitmap
             case 24: // DXT5
             case 32: // ATI2
+            case 72:
                 if (bitmap.Encoding == 8 && info.Platform == Platform.XBOX)
                 {
                     var image2 = DecodeBitmap(bitmap.RawData, bitmap.Width, bitmap.Height, bitmap.MipMaps, bitmap.Bpp);
@@ -50,10 +51,25 @@ public static class TextureExtensions
                 var tempData = new byte[bitmap.RawData.Length];
                 Array.Copy(bitmap.RawData, tempData, tempData.Length);
 
-                if (info.Platform == Platform.X360)
+                if (info.Platform == Platform.Wii)
+                {
+                    Texture.TPL.ShuffleBlocks(bitmap, tempData);
                     SwapBytes(tempData);
+                }
+                else if (info.Platform == Platform.X360)
+                {
+                    SwapBytes(tempData);
+                }
 
-                return DecodeDxImage(tempData, bitmap.Width, bitmap.Height, bitmap.MipMaps, (DxEncoding)bitmap.Encoding);
+                var dxEncoding = bitmap.Encoding switch
+                {
+                    8 or 72 => DxEncoding.DXGI_FORMAT_BC1_UNORM, // DXT1
+                    24 => DxEncoding.DXGI_FORMAT_BC3_UNORM, // DXT5
+                    32 => DxEncoding.DXGI_FORMAT_BC5_UNORM, // ATI2
+                    _ => throw new NotSupportedException("Unknown DX texture encoding")
+                };
+
+                return DecodeDxImage(tempData, bitmap.Width, bitmap.Height, bitmap.MipMaps, dxEncoding);
             default:
                 return null;
         }
