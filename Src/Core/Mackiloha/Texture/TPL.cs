@@ -64,6 +64,13 @@ public static class TPL
             //newSpan.CopyTo(currentSpan);
             //buffer.CopyTo(newSpan);
         }
+
+        // Shuffle mip map textures...
+        if (data.Length > workingData.Length)
+        {
+            var mipData = data[workingData.Length..];
+            ShuffleBlocks(mipData, bx >> 1, by >> 1, blockSize);
+        }
     }
 
     public static void FixIndicies(int bpp, Span<byte> data)
