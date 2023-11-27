@@ -54,7 +54,7 @@ public static class TextureExtensions
                 if (info.Platform == Platform.Wii)
                 {
                     Texture.TPL.ShuffleBlocks(bitmap, tempData);
-                    SwapBytes(tempData);
+                    Texture.TPL.FixIndicies(bitmap.Bpp, tempData);
                 }
                 else if (info.Platform == Platform.X360)
                 {

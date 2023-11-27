@@ -13,14 +13,6 @@ public static class TPL
 
     private static void ShuffleBlocks(Span<byte> data, int bx, int by, int blockSize)
     {
-        /*for (var y = 0; y < by; y++)
-        {
-            for (var x = 0; x < bx; x++)
-            {
-
-            }
-        }*/
-
         var totalBlocks = bx * by;
         // var totalByteSize = totalBlocks * blockSize;
         var bytesInLine = bx * blockSize;
@@ -40,15 +32,9 @@ public static class TPL
             map[i] = (i / 2) + ((i % 2) * (bx / 2));
         }
 
-        //Array.Sort()
-
-        /*var blocks = Enumerable
-            .Range(0, totalBlocks)
-            .Select(i => (i, ));*/
-
         Span<byte> origData = stackalloc byte[groupBlocksIn2Rows * groupByteSize];
 
-        for (var i = 0; i < totalGroupedBlocks; i += 1)
+        for (var i = 0; i < totalGroupedBlocks; i++)
         {
             var o = i / groupBlocksIn2Rows;
             var x = i % groupBlocksIn2Rows;
@@ -71,12 +57,48 @@ public static class TPL
             }*/
 
             Span<byte> currentSpan = origData[currentIndex..(currentIndex + groupByteSize)];
-            Span<byte> newSpan = workingData[(currentWorkingIndex + newIndex)..((currentWorkingIndex + newIndex) + groupByteSize)];
+            Span<byte> newSpan = workingData[((currentWorkingIndex * groupByteSize) + newIndex)..(((currentWorkingIndex * groupByteSize) + newIndex) + groupByteSize)];
 
             // Copy data
             currentSpan.CopyTo(newSpan);
             //newSpan.CopyTo(currentSpan);
             //buffer.CopyTo(newSpan);
         }
+    }
+
+    public static void FixIndicies(int bpp, Span<byte> data)
+    {
+        var blockSize = (16 * bpp) / 8; // 1 block = 16 pixels
+        Span<byte> buffer = stackalloc byte[4];
+
+        for (int i = 0; i < data.Length; i += blockSize)
+        {
+            // Fix colors
+            data[i..(i + 4)].CopyTo(buffer);
+            data[i + 0] = buffer[1];
+            data[i + 1] = buffer[0];
+            data[i + 2] = buffer[3];
+            data[i + 3] = buffer[2];
+
+            // Fix indicies
+            data[(i + 4)..(i + 8)].CopyTo(buffer);
+
+            data[i + 4] = ReverseIndexRow(buffer[0]);
+            data[i + 5] = ReverseIndexRow(buffer[1]);
+            data[i + 6] = ReverseIndexRow(buffer[2]);
+            data[i + 7] = ReverseIndexRow(buffer[3]);
+
+            /*data[i + 4] = buffer[3];
+            data[i + 5] = buffer[2];
+            data[i + 6] = buffer[1];
+            data[i + 7] = buffer[0];*/
+
+            // TODO: Fix alphas
+        }
+    }
+
+    private static byte ReverseIndexRow(byte b)
+    {
+        return (byte)(((b & 0b00_00_00_11) << 6) | ((b & 0b00_00_11_00) << 2) | ((b & 0b00_11_00_00) >> 2) | ((b & 0b11_00_00_00) >> 6));
     }
 }
