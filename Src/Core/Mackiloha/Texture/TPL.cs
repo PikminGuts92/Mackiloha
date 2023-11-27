@@ -66,7 +66,7 @@ public static class TPL
         }
 
         // Shuffle mip map textures...
-        if (data.Length > workingData.Length)
+        if (data.Length > workingData.Length && bx > 1 && by > 1)
         {
             var mipData = data[workingData.Length..];
             ShuffleBlocks(mipData, bx >> 1, by >> 1, blockSize);
