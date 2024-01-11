@@ -1,22 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <!-- Suppress Magick.NET architecture mismatch warning -->
-    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsAotCompatible>true</IsAotCompatible>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="6.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.0" />
     <PackageReference Include="BCnEncoder.Net.ImageSharp" Version="1.1.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GLTFTools\GLTFTools.csproj" />
     <ProjectReference Include="..\Mackiloha\Mackiloha.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Serilog" />
+    <Using Include="System" />
+    <Using Include="System.Collections.Generic" />
+    <Using Include="System.IO" />
+    <Using Include="System.Linq" />
   </ItemGroup>
 
 </Project>

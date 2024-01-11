@@ -1,4 +1,4 @@
-BUILD_VERSION="0.0.0.0"
+BUILD_VERSION="$(cat version.txt)"
 RUNTIME=""
 BUILD_MODE="Release"
 OUTPUT_PATH="./BUILD"
@@ -34,32 +34,28 @@ then
     esac
 fi
 
-ZIP_PATH="$OUTPUT_PATH/Mackiloha_v$BUILD_VERSION-$RUNTIME.zip"
-
 # Clear previous build
 echo ">> Clearing old files"
 rm $OUTPUT_PATH -rf
 
 # Get projects to build
-PROJECTS=$(find Src/UI/**/*.csproj)
+PROJECTS=$(find Src/Apps/**/*.csproj)
 
 # Build + publish projects
 echo ">> Building solution"
 for proj in $PROJECTS; do
-    dotnet publish $proj -c $BUILD_MODE -o $OUTPUT_PATH -p:Version=$BUILD_VERSION --self-contained=false -r=$RUNTIME
+    dotnet publish $proj -c $BUILD_MODE -o $OUTPUT_PATH -p:Version=$BUILD_VERSION -r=$RUNTIME
 done
 
 # Delete debug + config files
 echo ">> Removing debug files"
-rm ./$OUTPUT_PATH/*.config -f
-rm ./$OUTPUT_PATH/*.pdb -f
+rm -f ./$OUTPUT_PATH/*.config
+rm -f ./$OUTPUT_PATH/*.pdb # Windows debug
+rm -f ./$OUTPUT_PATH/*.dbg # Linux debug
+rm -rf ./$OUTPUT_PATH/*.dsym # Mac debug
 
 # Copy licences + README
 echo ">> Copying licenses and README"
-cp ./LICENSE ./$OUTPUT_PATH/LICENSE -f
-cp ./THIRDPARTY ./$OUTPUT_PATH/THIRDPARTY -f
-cp ./README.md ./$OUTPUT_PATH/README.md -f
-
-# Zip everything up
-echo ">> Zipping everything up"
-zip $ZIP_PATH $OUTPUT_PATH -jr
+cp -f ./LICENSE ./$OUTPUT_PATH/LICENSE
+cp -f ./THIRDPARTY ./$OUTPUT_PATH/THIRDPARTY
+cp -f ./README.md ./$OUTPUT_PATH/README.md

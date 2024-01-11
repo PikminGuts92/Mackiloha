@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Mackiloha.DTB;
 
-namespace Mackiloha.DTB
+public enum DTBEncoding
 {
-    public enum DTBEncoding
-    {
-        KR,
-        Classic,
-        FME,
-        RBVR
-    }
+    KR,
+    Classic,
+    FME,
+    RBVR
 }
