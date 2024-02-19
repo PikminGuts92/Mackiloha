@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="8.0.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.2" />
     <PackageReference Include="BCnEncoder.Net.ImageSharp" Version="1.1.1" />
   </ItemGroup>
 
