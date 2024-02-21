@@ -27,10 +27,7 @@ public static class TPL
 
         // Create map
         Span<int> map = stackalloc int[groupBlocksIn2Rows];
-        for (var i = 0; i < map.Length; i++)
-        {
-            map[i] = (i / 2) + ((i % 2) * (bx / 2));
-        }
+        CreateBlockMap(map);
 
         Span<byte> origData = stackalloc byte[groupBlocksIn2Rows * groupByteSize];
 
@@ -70,6 +67,16 @@ public static class TPL
         {
             var mipData = data[workingData.Length..];
             ShuffleBlocks(mipData, bx >> 1, by >> 1, blockSize);
+        }
+    }
+
+    internal static void CreateBlockMap(Span<int> map)
+    {
+        var bx = map.Length;
+
+        for (var i = 0; i < map.Length; i++)
+        {
+            map[i] = (i / 2) + ((i % 2) * (bx / 2));
         }
     }
 
