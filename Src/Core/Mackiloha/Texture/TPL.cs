@@ -2,13 +2,15 @@ namespace Mackiloha.Texture;
 
 public static class TPL
 {
+    const int BLOCK_SIZE = 8; // 1 block = 16 pixels
+
     public static void ShuffleBlocks(HMXBitmap bitmap, Span<byte> data)
     {
-        var span = (16 * (bitmap.Bpp)) / 8; // 1 block = 16 pixels
+        //var span = (16 * (bitmap.Bpp)) / 8; // 1 block = 16 pixels
         var blocksX = bitmap.Width / 4;
         var blocksY = bitmap.Height / 4;
 
-        ShuffleBlocks(data, blocksX, blocksY, span);
+        ShuffleBlocks(data, blocksX, blocksY, BLOCK_SIZE);
     }
 
     private static void ShuffleBlocks(Span<byte> data, int bx, int by, int blockSize)
@@ -82,10 +84,10 @@ public static class TPL
 
     public static void FixIndicies(int bpp, Span<byte> data)
     {
-        var blockSize = (16 * bpp) / 8; // 1 block = 16 pixels
-        Span<byte> buffer = stackalloc byte[4];
+        //var blockSize = (16 * bpp) / 8; // 1 block = 16 pixels
+        Span<byte> buffer = stackalloc byte[BLOCK_SIZE];
 
-        for (int i = 0; i < data.Length; i += blockSize)
+        for (int i = 0; i < data.Length; i += BLOCK_SIZE)
         {
             // Fix colors
             data[i..(i + 4)].CopyTo(buffer);
@@ -101,13 +103,6 @@ public static class TPL
             data[i + 5] = ReverseIndexRow(buffer[1]);
             data[i + 6] = ReverseIndexRow(buffer[2]);
             data[i + 7] = ReverseIndexRow(buffer[3]);
-
-            /*data[i + 4] = buffer[3];
-            data[i + 5] = buffer[2];
-            data[i + 6] = buffer[1];
-            data[i + 7] = buffer[0];*/
-
-            // TODO: Fix alphas
         }
     }
 

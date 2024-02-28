@@ -5,6 +5,10 @@ namespace Mackiloha.App.Extensions;
 
 public static class TextureExtensions
 {
+    private const int TPL_CMP = 0x48;
+    private const int TPL_CMP_2 = 0x0248;
+    private const int TPL_CMP_ALPHA = 0x0148;
+
     private enum DxEncoding : int
     {
         DXGI_FORMAT_BC1_UNORM =  8, // DXT1
@@ -37,10 +41,12 @@ public static class TextureExtensions
                     UpdateAlphaTo8Bit(image);
 
                 return image;
-            case 8: // DXT1 or Bitmap
+            case 8:  // DXT1 or Bitmap
             case 24: // DXT5
             case 32: // ATI2
-            case 72:
+            case TPL_CMP:
+            case TPL_CMP_2:
+            case TPL_CMP_ALPHA:
                 if (bitmap.Encoding == 8 && info.Platform == Platform.XBOX)
                 {
                     var image2 = DecodeBitmap(bitmap.RawData, bitmap.Width, bitmap.Height, bitmap.MipMaps, bitmap.Bpp);
@@ -51,10 +57,28 @@ public static class TextureExtensions
                 var tempData = new byte[bitmap.RawData.Length];
                 Array.Copy(bitmap.RawData, tempData, tempData.Length);
 
-                if (info.Platform == Platform.Wii)
+                if (info.Platform == Platform.Wii && bitmap.Bpp == 4)
                 {
                     Texture.TPL.ShuffleBlocks(bitmap, tempData);
                     Texture.TPL.FixIndicies(bitmap.Bpp, tempData);
+                }
+                else if (info.Platform == Platform.Wii)
+                {
+                    // 8bpp wii texture is actually two DXT1 textures?
+                    // TODO: How to support mip maps?
+                    var rgb_data = tempData.AsSpan(0, tempData.Length / 2);
+                    var alpha_data = tempData.AsSpan(tempData.Length / 2, tempData.Length / 2);
+
+                    // RGB data
+                    Texture.TPL.ShuffleBlocks(bitmap, rgb_data);
+                    Texture.TPL.FixIndicies(bitmap.Bpp, rgb_data);
+
+                    // Alpha data
+                    Texture.TPL.ShuffleBlocks(bitmap, alpha_data);
+                    Texture.TPL.FixIndicies(bitmap.Bpp, alpha_data);
+
+                    //Texture.TPL.ShuffleBlocks(bitmap, tempData);
+                    //Texture.TPL.FixIndicies(bitmap.Bpp, tempData);
                 }
                 else if (info.Platform == Platform.X360)
                 {
@@ -63,7 +87,7 @@ public static class TextureExtensions
 
                 var dxEncoding = bitmap.Encoding switch
                 {
-                    8 or 72 => DxEncoding.DXGI_FORMAT_BC1_UNORM, // DXT1
+                    8 or TPL_CMP or TPL_CMP_2 or TPL_CMP_ALPHA => DxEncoding.DXGI_FORMAT_BC1_UNORM, // DXT1
                     24 => DxEncoding.DXGI_FORMAT_BC3_UNORM, // DXT5
                     32 => DxEncoding.DXGI_FORMAT_BC5_UNORM, // ATI2
                     _ => throw new NotSupportedException("Unknown DX texture encoding")
