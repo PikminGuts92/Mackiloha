@@ -54,7 +54,8 @@ public static class TextureExtensions
                     return image2;
                 }
 
-                var tempData = new byte[bitmap.RawData.Length];
+                //var tempData = new byte[bitmap.RawData.Length];
+                var tempData = new byte[((bitmap.Width * bitmap.Height) * 8) / bitmap.Bpp]; // Just ignore mips
                 Array.Copy(bitmap.RawData, tempData, tempData.Length);
 
                 if (info.Platform == Platform.Wii && bitmap.Bpp == 4)
@@ -64,21 +65,29 @@ public static class TextureExtensions
                 }
                 else if (info.Platform == Platform.Wii)
                 {
-                    // 8bpp wii texture is actually two DXT1 textures?
-                    // TODO: How to support mip maps?
-                    var rgb_data = tempData.AsSpan(0, tempData.Length / 2);
-                    var alpha_data = tempData.AsSpan(tempData.Length / 2, tempData.Length / 2);
+                    // 8bpp wii texture is actually two DXT1 textures
+                    var rgbData = tempData.AsSpan(0, tempData.Length / 2);
+                    var alphaData = tempData.AsSpan(tempData.Length / 2, tempData.Length / 2);
 
                     // RGB data
-                    Texture.TPL.ShuffleBlocks(bitmap, rgb_data);
-                    Texture.TPL.FixIndicies(bitmap.Bpp, rgb_data);
+                    Texture.TPL.ShuffleBlocks(bitmap, rgbData);
+                    Texture.TPL.FixIndicies(bitmap.Bpp, rgbData);
 
                     // Alpha data
-                    Texture.TPL.ShuffleBlocks(bitmap, alpha_data);
-                    Texture.TPL.FixIndicies(bitmap.Bpp, alpha_data);
+                    Texture.TPL.ShuffleBlocks(bitmap, alphaData);
+                    Texture.TPL.FixIndicies(bitmap.Bpp, alphaData);
 
-                    //Texture.TPL.ShuffleBlocks(bitmap, tempData);
-                    //Texture.TPL.FixIndicies(bitmap.Bpp, tempData);
+                    // Decode both images
+                    var decodedImage = DecodeDxImage(rgbData, bitmap.Width, bitmap.Height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+                    var decodedAlpha = DecodeDxImage(alphaData, bitmap.Width, bitmap.Height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+
+                    // Combine alpha channel
+                    for (int i = 0; i < decodedImage.Length; i += 4)
+                    {
+                        decodedImage[i + 3] = decodedAlpha[i + 1];
+                    }
+
+                    return decodedImage;
                 }
                 else if (info.Platform == Platform.X360)
                 {
@@ -369,7 +378,7 @@ public static class TextureExtensions
         return image;
     }
 
-    private static byte[] DecodeDxImage(byte[] raw, int width, int height, int mips, DxEncoding encoding)
+    private static byte[] DecodeDxImage(Span<byte> raw, int width, int height, int mips, DxEncoding encoding)
     {
         byte[] image = new byte[width * height * 4]; // 32 bpp
 
@@ -792,7 +801,7 @@ public static class TextureExtensions
                 0xFF
             };
 
-    private static byte[] UnpackIndexedInterpolatedColors(byte[] data, int i = 0)
+    private static byte[] UnpackIndexedInterpolatedColors(Span<byte> data, int i = 0)
     {
         byte[] pixels = new byte[16];
 
