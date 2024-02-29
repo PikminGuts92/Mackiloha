@@ -41,29 +41,21 @@ public static class TextureExtensions
                     UpdateAlphaTo8Bit(image);
 
                 return image;
-            case 8:  // DXT1 or Bitmap
-            case 24: // DXT5
-            case 32: // ATI2
             case TPL_CMP:
             case TPL_CMP_2:
             case TPL_CMP_ALPHA:
-                if (bitmap.Encoding == 8 && info.Platform == Platform.XBOX)
-                {
-                    var image2 = DecodeBitmap(bitmap.RawData, bitmap.Width, bitmap.Height, bitmap.MipMaps, bitmap.Bpp);
-                    SwapRBColors(image2);
-                    return image2;
-                }
-
-                //var tempData = new byte[bitmap.RawData.Length];
-                var tempData = new byte[((bitmap.Width * bitmap.Height) * 8) / bitmap.Bpp]; // Just ignore mips
+                // Wii textures
+                var tempData = new byte[((bitmap.Width * bitmap.Height) * bitmap.Bpp) / 8]; // Just ignore mips
                 Array.Copy(bitmap.RawData, tempData, tempData.Length);
 
-                if (info.Platform == Platform.Wii && bitmap.Bpp == 4)
+                if (bitmap.Bpp == 4)
                 {
                     Texture.TPL.ShuffleBlocks(bitmap, tempData);
                     Texture.TPL.FixIndicies(bitmap.Bpp, tempData);
+
+                    return DecodeDxImage(tempData, bitmap.Width, bitmap.Height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
                 }
-                else if (info.Platform == Platform.Wii)
+                else
                 {
                     // 8bpp wii texture is actually two DXT1 textures
                     var rgbData = tempData.AsSpan(0, tempData.Length / 2);
@@ -89,20 +81,33 @@ public static class TextureExtensions
 
                     return decodedImage;
                 }
-                else if (info.Platform == Platform.X360)
+            case 8:  // DXT1 or Bitmap
+            case 24: // DXT5
+            case 32: // ATI2
+                if (bitmap.Encoding == 8 && info.Platform == Platform.XBOX)
                 {
-                    SwapBytes(tempData);
+                    var image2 = DecodeBitmap(bitmap.RawData, bitmap.Width, bitmap.Height, bitmap.MipMaps, bitmap.Bpp);
+                    SwapRBColors(image2);
+                    return image2;
+                }
+
+                var tempData2 = new byte[bitmap.RawData.Length];
+                Array.Copy(bitmap.RawData, tempData2, tempData2.Length);
+
+                if (info.Platform == Platform.X360)
+                {
+                    SwapBytes(tempData2);
                 }
 
                 var dxEncoding = bitmap.Encoding switch
                 {
-                    8 or TPL_CMP or TPL_CMP_2 or TPL_CMP_ALPHA => DxEncoding.DXGI_FORMAT_BC1_UNORM, // DXT1
+                    8  => DxEncoding.DXGI_FORMAT_BC1_UNORM, // DXT1
                     24 => DxEncoding.DXGI_FORMAT_BC3_UNORM, // DXT5
                     32 => DxEncoding.DXGI_FORMAT_BC5_UNORM, // ATI2
                     _ => throw new NotSupportedException("Unknown DX texture encoding")
                 };
 
-                return DecodeDxImage(tempData, bitmap.Width, bitmap.Height, bitmap.MipMaps, dxEncoding);
+                return DecodeDxImage(tempData2, bitmap.Width, bitmap.Height, bitmap.MipMaps, dxEncoding);
             default:
                 return null;
         }

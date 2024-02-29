@@ -8,8 +8,10 @@ public class HMXBitmapSerializer : AbstractSerializer
     {
         var bitmap = data as HMXBitmap;
 
-        if (ar.ReadByte() != 0x01)
-            throw new NotSupportedException($"HMXBitmapReader: Expected 0x01 at offset 0");
+        var firstByte = ar.ReadByte();
+
+        if (firstByte != 0x01 && firstByte != 0x02)
+            throw new NotSupportedException($"HMXBitmapReader: Expected 0x01 or 0x02 at offset 0");
 
         bitmap.Bpp = ar.ReadByte();
         bitmap.Encoding = ar.ReadInt32();
