@@ -6,7 +6,6 @@ public static class TPL
 
     public static void ShuffleBlocks(HMXBitmap bitmap, Span<byte> data)
     {
-        //var span = (16 * (bitmap.Bpp)) / 8; // 1 block = 16 pixels
         var blocksX = bitmap.Width / 4;
         var blocksY = bitmap.Height / 4;
 
@@ -82,9 +81,8 @@ public static class TPL
         }
     }
 
-    public static void FixIndicies(int bpp, Span<byte> data)
+    public static void FixIndicies(Span<byte> data)
     {
-        //var blockSize = (16 * bpp) / 8; // 1 block = 16 pixels
         Span<byte> buffer = stackalloc byte[BLOCK_SIZE];
 
         for (int i = 0; i < data.Length; i += BLOCK_SIZE)

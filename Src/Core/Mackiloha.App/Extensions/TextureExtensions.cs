@@ -51,7 +51,7 @@ public static class TextureExtensions
                 if (bitmap.Bpp == 4)
                 {
                     Texture.TPL.ShuffleBlocks(bitmap, tempData);
-                    Texture.TPL.FixIndicies(bitmap.Bpp, tempData);
+                    Texture.TPL.FixIndicies(tempData);
 
                     return DecodeDxImage(tempData, bitmap.Width, bitmap.Height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
                 }
@@ -63,11 +63,11 @@ public static class TextureExtensions
 
                     // RGB data
                     Texture.TPL.ShuffleBlocks(bitmap, rgbData);
-                    Texture.TPL.FixIndicies(bitmap.Bpp, rgbData);
+                    Texture.TPL.FixIndicies(rgbData);
 
                     // Alpha data
                     Texture.TPL.ShuffleBlocks(bitmap, alphaData);
-                    Texture.TPL.FixIndicies(bitmap.Bpp, alphaData);
+                    Texture.TPL.FixIndicies(alphaData);
 
                     // Decode both images
                     var decodedImage = DecodeDxImage(rgbData, bitmap.Width, bitmap.Height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
