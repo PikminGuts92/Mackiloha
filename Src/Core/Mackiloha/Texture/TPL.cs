@@ -18,6 +18,8 @@ public static class TPL
 
     internal static void ShuffleBlocks(int width, int height, Span<byte> data, bool inverse = false)
     {
+        if (!ShouldShuffleBlocks(width, height)) return;
+
         var blocksX = width / 4;
         var blocksY = height / 4;
 
@@ -142,4 +144,7 @@ public static class TPL
     {
         return (byte)(((b & 0b00_00_00_11) << 6) | ((b & 0b00_00_11_00) << 2) | ((b & 0b00_11_00_00) >> 2) | ((b & 0b11_00_00_00) >> 6));
     }
+
+    private static bool ShouldShuffleBlocks(int w, int h)
+        => (w * h) >= 64; // 1 block of 16 pixels x 4 blocks per shuffle = 64 pixels
 }
