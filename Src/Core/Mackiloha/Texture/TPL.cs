@@ -4,15 +4,27 @@ public static class TPL
 {
     const int BLOCK_SIZE = 8; // 1 block = 16 pixels
 
-    public static void ShuffleBlocks(HMXBitmap bitmap, Span<byte> data)
+    public static void TPLToDXT1(int width, int height, Span<byte> data)
     {
-        var blocksX = bitmap.Width / 4;
-        var blocksY = bitmap.Height / 4;
-
-        ShuffleBlocks(data, blocksX, blocksY, BLOCK_SIZE);
+        ShuffleBlocks(width, height, data);
+        FixIndicies(data);
     }
 
-    private static void ShuffleBlocks(Span<byte> data, int bx, int by, int blockSize)
+    public static void DXT1ToTPL(int width, int height, Span<byte> data)
+    {
+        ShuffleBlocks(width, height, data, true);
+        FixIndicies(data);
+    }
+
+    internal static void ShuffleBlocks(int width, int height, Span<byte> data, bool inverse = false)
+    {
+        var blocksX = width / 4;
+        var blocksY = height / 4;
+
+        ShuffleBlocks(data, blocksX, blocksY, BLOCK_SIZE, inverse);
+    }
+
+    private static void ShuffleBlocks(Span<byte> data, int bx, int by, int blockSize, bool inverse)
     {
         var totalBlocks = bx * by;
         // var totalByteSize = totalBlocks * blockSize;
@@ -28,7 +40,14 @@ public static class TPL
 
         // Create map
         Span<int> map = stackalloc int[groupBlocksIn2Rows];
-        CreateBlockMap(map);
+        if (inverse)
+        {
+            CreateBlockMapInverse(map);
+        }
+        else
+        {
+            CreateBlockMap(map);
+        }
 
         Span<byte> origData = stackalloc byte[groupBlocksIn2Rows * groupByteSize];
 
@@ -67,7 +86,7 @@ public static class TPL
         if (data.Length > workingData.Length && bx > 1 && by > 1)
         {
             var mipData = data[workingData.Length..];
-            ShuffleBlocks(mipData, bx >> 1, by >> 1, blockSize);
+            ShuffleBlocks(mipData, bx >> 1, by >> 1, blockSize, inverse);
         }
     }
 
@@ -78,6 +97,21 @@ public static class TPL
         for (var i = 0; i < map.Length; i++)
         {
             map[i] = (i / 2) + ((i % 2) * (bx / 2));
+        }
+    }
+
+    internal static void CreateBlockMapInverse(Span<int> map)
+    {
+        var halfSize = map.Length / 2;
+
+        for (var i = 0; i < halfSize; i++)
+        {
+            map[i] = i * 2;
+        }
+
+        for (var i = halfSize; i < map.Length; i++)
+        {
+            map[i] = ((i % halfSize) * 2) + 1;
         }
     }
 
