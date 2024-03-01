@@ -78,7 +78,7 @@ public static class TextureExtensions
             case 8:  // DXT1 or Bitmap
             case 24: // DXT5
             case 32: // ATI2
-                if (bitmap.Encoding == 8 && info.Platform == Platform.XBOX)
+                if (bitmap.Encoding == 8 && (info.Platform == Platform.XBOX || info.Platform == Platform.X360))
                 {
                     var image2 = DecodeBitmap(bitmap.RawData, bitmap.Width, bitmap.Height, bitmap.MipMaps, bitmap.Bpp);
                     SwapRBColors(image2);
