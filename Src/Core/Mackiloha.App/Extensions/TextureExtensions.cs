@@ -869,12 +869,13 @@ public static class TextureExtensions
         if (info.Platform == Platform.PS3
             || info.Platform == Platform.X360)
         {
-            // TODO: Refactor to be more efficient
             var inputBytes = image.AsRGBA();
 
-            // Encode as DXT5 for now
-            var rawData = EncodeDxImage(inputBytes, width, height, 0, DxEncoding.DXGI_FORMAT_BC3_UNORM);
-            var bpp2 = 8;
+            var (bpp2, enc, dxEnc) = HasAlpha(inputBytes)
+                ? (8, 24, DxEncoding.DXGI_FORMAT_BC3_UNORM) // DXT5
+                : (4, 8, DxEncoding.DXGI_FORMAT_BC1_UNORM); // DXT1
+
+            var rawData = EncodeDxImage(inputBytes, width, height, 0, dxEnc);
 
             if (info.Platform == Platform.X360)
                 SwapBytes(rawData);
@@ -882,13 +883,18 @@ public static class TextureExtensions
             return new HMXBitmap()
             {
                 Bpp = bpp2,
-                Encoding = 24, // DXT5
+                Encoding = enc,
                 MipMaps = 0,
                 Width = width,
                 Height = height,
                 BPL = (width * bpp2) / 8,
                 RawData = rawData
             };
+        }
+        else if (info.Platform == Platform.Wii)
+        {
+            var rawData = image.AsRGBA();
+            var rgbData = EncodeDxImage(rawData, width, height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
         }
 
         var uniqueColors = image.GetUniqueColors();
@@ -1048,5 +1054,16 @@ public static class TextureExtensions
             UseExternal = false,
             Bitmap = bitmap
         };
+    }
+
+    private static bool HasAlpha(byte[] rgbaData)
+    {
+        for (int i = 3; i < rgbaData.Length; i += 4)
+        {
+            if (rgbaData[i] < byte.MaxValue)
+                return true;
+        }
+
+        return false;
     }
 }
