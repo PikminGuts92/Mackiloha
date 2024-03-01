@@ -894,7 +894,28 @@ public static class TextureExtensions
         else if (info.Platform == Platform.Wii)
         {
             var rawData = image.AsRGBA();
-            var rgbData = EncodeDxImage(rawData, width, height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+
+            if (HasAlpha(rawData))
+            {
+                throw new NotImplementedException("No wii alpha support yet!");
+            }
+            else
+            {
+                // Encode as DXT1
+                var dxData = EncodeDxImage(rawData, width, height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+                Texture.TPL.DXT1ToTPL(width, height, dxData);
+
+                return new HMXBitmap()
+                {
+                    Bpp = 4,
+                    Encoding = TPL_CMP,
+                    MipMaps = 0,
+                    Width = width,
+                    Height = height,
+                    BPL = (width * 4) / 8,
+                    RawData = rawData
+                };
+            }
         }
 
         var uniqueColors = image.GetUniqueColors();
