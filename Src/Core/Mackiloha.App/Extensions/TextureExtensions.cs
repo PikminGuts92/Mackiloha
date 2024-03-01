@@ -897,7 +897,30 @@ public static class TextureExtensions
 
             if (HasAlpha(rawData))
             {
-                throw new NotImplementedException("No wii alpha support yet!");
+                var (rgbData, alphaData) = SplitRGBAForTPL(rawData);
+
+                // Encode as two DXT1 images
+                var rgbDxData = EncodeDxImage(rgbData, width, height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+                Texture.TPL.DXT1ToTPL(width, height, rgbDxData);
+
+                var alphaDxData = EncodeDxImage(alphaData, width, height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+                Texture.TPL.DXT1ToTPL(width, height, alphaDxData);
+
+                // Combine image data
+                var combinedImageData = new byte[rgbDxData.Length + alphaDxData.Length];
+                Array.Copy(rgbDxData, 0, combinedImageData, 0, rgbDxData.Length);
+                Array.Copy(alphaDxData, 0, combinedImageData, rgbDxData.Length, alphaDxData.Length);
+
+                return new HMXBitmap()
+                {
+                    Bpp = 8,
+                    Encoding = TPL_CMP_ALPHA,
+                    MipMaps = 0,
+                    Width = width,
+                    Height = height,
+                    BPL = (width * 8) / 8,
+                    RawData = rawData
+                };
             }
             else
             {
@@ -1086,5 +1109,24 @@ public static class TextureExtensions
         }
 
         return false;
+    }
+
+    private static (byte[] rgb, byte[] alpha) SplitRGBAForTPL(byte[] data)
+    {
+        var rgb = new byte[data.Length];
+        var alpha = new byte[data.Length];
+
+        for (int i = 0; i < data.Length; i += 4)
+        {
+            rgb[i] = data[i];
+            rgb[i + 1] = data[i + 1];
+            rgb[i + 2] = data[i + 2];
+            rgb[i + 3] = 0xFF;
+
+            // Put alpha on green channel
+            alpha[i + 1] = data[i + 3];
+        }
+
+        return (rgb, alpha);
     }
 }
