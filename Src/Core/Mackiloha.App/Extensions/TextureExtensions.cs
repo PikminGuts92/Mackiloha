@@ -919,7 +919,7 @@ public static class TextureExtensions
                     Width = width,
                     Height = height,
                     BPL = (width * 8) / 8,
-                    RawData = rawData
+                    RawData = combinedImageData
                 };
             }
             else
@@ -936,7 +936,7 @@ public static class TextureExtensions
                     Width = width,
                     Height = height,
                     BPL = (width * 4) / 8,
-                    RawData = rawData
+                    RawData = dxData
                 };
             }
         }
