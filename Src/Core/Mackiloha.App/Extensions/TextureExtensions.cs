@@ -238,28 +238,34 @@ public static class TextureExtensions
             int r = 0;
             for (int i = 0; i < image.Length; i += 16)
             {
-                // TODO: Figure out if big endian is encoded differently
-
                 // Pixel 1
-                image[i    ]  = _4BitsTo8Bits(raw[r  + 1], 0xF0);
-                image[i + 1]  = _4BitsTo8Bits(raw[r  + 1], 0x0F);
-                image[i + 2]  = _4BitsTo8Bits(raw[r     ], 0xF0);
-                image[i + 3]  = _4BitsTo8Bits(raw[r     ], 0x0F);
+                var (r1, g1, b1, a1) = RGBAFromBGR555((ushort)(((ushort)raw[r + 1] << 8) | (ushort)raw[r]));
+                image[i    ]  = r1;
+                image[i + 1]  = g1;
+                image[i + 2]  = b1;
+                image[i + 3]  = a1;
+
                 // Pixel 2
-                image[i + 4]  = _4BitsTo8Bits(raw[r  + 3], 0xF0);
-                image[i + 5]  = _4BitsTo8Bits(raw[r  + 3], 0x0F);
-                image[i + 6]  = _4BitsTo8Bits(raw[r  + 2], 0xF0);
-                image[i + 7]  = _4BitsTo8Bits(raw[r  + 2], 0x0F);
+                var (r2, g2, b2, a2) = RGBAFromBGR555((ushort)(((ushort)raw[r + 3] << 8) | (ushort)raw[r + 2]));
+                image[i + 4] = r2;
+                image[i + 5] = g2;
+                image[i + 6] = b2;
+                image[i + 7] = a2;
+
                 // Pixel 3
-                image[i +  8] = _4BitsTo8Bits(raw[r  + 5], 0xF0);
-                image[i +  9] = _4BitsTo8Bits(raw[r  + 5], 0x0F);
-                image[i + 10] = _4BitsTo8Bits(raw[r  + 4], 0xF0);
-                image[i + 11] = _4BitsTo8Bits(raw[r  + 4], 0x0F);
+                var (r3, g3, b3, a3) = RGBAFromBGR555((ushort)(((ushort)raw[r + 5] << 8) | (ushort)raw[r + 4]));
+                image[i +  8] = r3;
+                image[i +  9] = g3;
+                image[i + 10] = b3;
+                image[i + 11] = a3;
+
                 // Pixel 4
-                image[i + 12] = _4BitsTo8Bits(raw[r  + 7], 0xF0);
-                image[i + 13] = _4BitsTo8Bits(raw[r  + 7], 0x0F);
-                image[i + 14] = _4BitsTo8Bits(raw[r  + 6], 0xF0);
-                image[i + 15] = _4BitsTo8Bits(raw[r  + 6], 0x0F);
+                var (r4, g4, b4, a4) = RGBAFromBGR555((ushort)(((ushort)raw[r + 7] << 8) | (ushort)raw[r + 6]));
+                image[i + 12] = r4;
+                image[i + 13] = g4;
+                image[i + 14] = b4;
+                image[i + 15] = a4;
+
                 r += 8;
             }
 
@@ -689,6 +695,17 @@ public static class TextureExtensions
         ddsStream.Read(data, 0, data.Length);
 
         return data;*/
+    }
+
+    private static (byte r, byte g, byte b, byte a) RGBAFromBGR555(ushort data)
+    {
+        var a = ((data >> 15) == 1) ? (byte)0xFF : (byte)0x00;
+
+        var b = (byte)(((data & 0b0111_1100_0000_0000) >> 7) | 0b111);
+        var g = (byte)(((data & 0b0000_0011_1110_0000) >> 2) | 0b111);
+        var r = (byte)(((data & 0b0000_0000_0001_1111) << 3) | 0b111);
+
+        return (r, g, b, a);
     }
 
     private static int LinearOffset(int x, int y, int w) => (y * (w << 2)) + (x << 2);
