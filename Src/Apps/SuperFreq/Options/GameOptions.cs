@@ -14,7 +14,7 @@ public class GameOptions : BaseOptions
     [Option('b', "bigEndian", Default = false, HelpText = "Use big endian serialization")]
     public bool BigEndian { get; set; }
 
-    [Option('p', "platform", Default = "ps2", HelpText = "Platform (ps2, x360)")]
+    [Option('p', "platform", Default = "ps2", HelpText = "Platform (ps2, ps3, x360, wii)")]
     public string PlatformString { get; set; }
     public Platform Platform { get; set; } = Platform.PS2;
 
