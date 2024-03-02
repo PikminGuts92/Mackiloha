@@ -1,7 +1,7 @@
 # Mackiloha [![CI](https://github.com/PikminGuts92/Mackiloha/workflows/CI/badge.svg)](https://github.com/PikminGuts92/Mackiloha/actions?query=workflow%3ACI)
 A suite of modding software for hacking milo engine based games. This is still very much a work-in-progress project. So don't expect perfection. Although feel free to submit [issues](https://github.com/PikminGuts92/Mackiloha/issues) for any bugs found. The latest CI build can be found [here](https://github.com/PikminGuts92/Mackiloha/actions/workflows/ci.yml).
 
-[Download](https://github.com/PikminGuts92/Mackiloha/releases/latest)
+**[DOWNLOAD](https://github.com/PikminGuts92/Mackiloha/releases/latest)**
 
 # Overview
 ## Ark Helper
@@ -27,7 +27,7 @@ Usage:
 - Create project from milo: `p9songtool.exe milo2proj -m temporarysec.mid temporarysec.milo_xbox project_temporarysec`
 - Generate milo from project: `p9songtool.exe proj2milo project_temporarysec temporarysec.milo_xbox`
 
-## SuperFreq (pronounced "Super Freak")
+## SuperFreq
 CLI tool for unpacking/packing rnd archives from milo games. These files usually use the extensions: .gh, .kr, .milo, .rnd
 
 **Warning:** Game compatibility is *very* limited. Editing archives for games beyond GH2 will have mixed results.
