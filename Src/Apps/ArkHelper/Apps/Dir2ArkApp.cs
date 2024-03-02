@@ -2,6 +2,7 @@
 using ArkHelper.Options;
 using Mackiloha;
 using Mackiloha.Ark;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 namespace ArkHelper.Apps;
@@ -38,6 +39,7 @@ public class Dir2ArkApp
         }
 
         var arkDir = Path.GetFullPath(op.OutputPath);
+        var watch = Stopwatch.StartNew();
 
         // Set encrypted data
         if (op.ArkVersion < 3)
@@ -175,6 +177,10 @@ public class Dir2ArkApp
         }
 
         ark.CommitChanges(true);
+        watch.Stop();
+
+        Log.Information("Finished building ark in {WatchElapsed}", watch.Elapsed);
+
         if (op.ArkVersion < 3)
             Log.Information("Wrote ark to \"{ArkPath}\"", hdrPath);
         else

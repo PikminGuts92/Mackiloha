@@ -5,6 +5,10 @@ namespace Mackiloha.App.Extensions;
 
 public static class TextureExtensions
 {
+    private const int TPL_CMP = 0x48;
+    private const int TPL_CMP_2 = 0x0248;
+    private const int TPL_CMP_ALPHA = 0x0148;
+
     private enum DxEncoding : int
     {
         DXGI_FORMAT_BC1_UNORM =  8, // DXT1
@@ -37,39 +41,67 @@ public static class TextureExtensions
                     UpdateAlphaTo8Bit(image);
 
                 return image;
-            case 8: // DXT1 or Bitmap
+            case TPL_CMP:
+            case TPL_CMP_2:
+            case TPL_CMP_ALPHA:
+                // Wii textures
+                var tempData = new byte[((bitmap.Width * bitmap.Height) * bitmap.Bpp) / 8]; // Just ignore mips
+                Array.Copy(bitmap.RawData, tempData, tempData.Length);
+
+                if (bitmap.Bpp == 4)
+                {
+                    Texture.TPL.TPLToDXT1(bitmap.Width, bitmap.Height, tempData);
+                    return DecodeDxImage(tempData, bitmap.Width, bitmap.Height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+                }
+                else
+                {
+                    // 8bpp wii texture is actually two DXT1 textures
+                    var rgbData = tempData.AsSpan(0, tempData.Length / 2);
+                    var alphaData = tempData.AsSpan(tempData.Length / 2, tempData.Length / 2);
+
+                    // Remap blocks to DXT1
+                    Texture.TPL.TPLToDXT1(bitmap.Width, bitmap.Height, rgbData);
+                    Texture.TPL.TPLToDXT1(bitmap.Width, bitmap.Height, alphaData);
+
+                    // Decode both images
+                    var decodedImage = DecodeDxImage(rgbData, bitmap.Width, bitmap.Height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+                    var decodedAlpha = DecodeDxImage(alphaData, bitmap.Width, bitmap.Height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+
+                    // Combine alpha channel
+                    for (int i = 0; i < decodedImage.Length; i += 4)
+                    {
+                        decodedImage[i + 3] = decodedAlpha[i + 1];
+                    }
+
+                    return decodedImage;
+                }
+            case 8:  // DXT1 or Bitmap
             case 24: // DXT5
             case 32: // ATI2
-            case 72:
-                if (bitmap.Encoding == 8 && info.Platform == Platform.XBOX)
+                if (bitmap.Encoding == 8 && (info.Platform == Platform.XBOX || info.Platform == Platform.X360))
                 {
                     var image2 = DecodeBitmap(bitmap.RawData, bitmap.Width, bitmap.Height, bitmap.MipMaps, bitmap.Bpp);
                     SwapRBColors(image2);
                     return image2;
                 }
 
-                var tempData = new byte[bitmap.RawData.Length];
-                Array.Copy(bitmap.RawData, tempData, tempData.Length);
+                var tempData2 = new byte[bitmap.RawData.Length];
+                Array.Copy(bitmap.RawData, tempData2, tempData2.Length);
 
-                if (info.Platform == Platform.Wii)
+                if (info.Platform == Platform.X360)
                 {
-                    Texture.TPL.ShuffleBlocks(bitmap, tempData);
-                    Texture.TPL.FixIndicies(bitmap.Bpp, tempData);
-                }
-                else if (info.Platform == Platform.X360)
-                {
-                    SwapBytes(tempData);
+                    SwapBytes(tempData2);
                 }
 
                 var dxEncoding = bitmap.Encoding switch
                 {
-                    8 or 72 => DxEncoding.DXGI_FORMAT_BC1_UNORM, // DXT1
+                    8  => DxEncoding.DXGI_FORMAT_BC1_UNORM, // DXT1
                     24 => DxEncoding.DXGI_FORMAT_BC3_UNORM, // DXT5
                     32 => DxEncoding.DXGI_FORMAT_BC5_UNORM, // ATI2
                     _ => throw new NotSupportedException("Unknown DX texture encoding")
                 };
 
-                return DecodeDxImage(tempData, bitmap.Width, bitmap.Height, bitmap.MipMaps, dxEncoding);
+                return DecodeDxImage(tempData2, bitmap.Width, bitmap.Height, bitmap.MipMaps, dxEncoding);
             default:
                 return null;
         }
@@ -206,28 +238,34 @@ public static class TextureExtensions
             int r = 0;
             for (int i = 0; i < image.Length; i += 16)
             {
-                // TODO: Figure out if big endian is encoded differently
-
                 // Pixel 1
-                image[i    ]  = _4BitsTo8Bits(raw[r  + 1], 0xF0);
-                image[i + 1]  = _4BitsTo8Bits(raw[r  + 1], 0x0F);
-                image[i + 2]  = _4BitsTo8Bits(raw[r     ], 0xF0);
-                image[i + 3]  = _4BitsTo8Bits(raw[r     ], 0x0F);
+                var (r1, g1, b1, a1) = RGBAFromBGR555((ushort)(((ushort)raw[r + 1] << 8) | (ushort)raw[r]));
+                image[i    ]  = r1;
+                image[i + 1]  = g1;
+                image[i + 2]  = b1;
+                image[i + 3]  = a1;
+
                 // Pixel 2
-                image[i + 4]  = _4BitsTo8Bits(raw[r  + 3], 0xF0);
-                image[i + 5]  = _4BitsTo8Bits(raw[r  + 3], 0x0F);
-                image[i + 6]  = _4BitsTo8Bits(raw[r  + 2], 0xF0);
-                image[i + 7]  = _4BitsTo8Bits(raw[r  + 2], 0x0F);
+                var (r2, g2, b2, a2) = RGBAFromBGR555((ushort)(((ushort)raw[r + 3] << 8) | (ushort)raw[r + 2]));
+                image[i + 4] = r2;
+                image[i + 5] = g2;
+                image[i + 6] = b2;
+                image[i + 7] = a2;
+
                 // Pixel 3
-                image[i +  8] = _4BitsTo8Bits(raw[r  + 5], 0xF0);
-                image[i +  9] = _4BitsTo8Bits(raw[r  + 5], 0x0F);
-                image[i + 10] = _4BitsTo8Bits(raw[r  + 4], 0xF0);
-                image[i + 11] = _4BitsTo8Bits(raw[r  + 4], 0x0F);
+                var (r3, g3, b3, a3) = RGBAFromBGR555((ushort)(((ushort)raw[r + 5] << 8) | (ushort)raw[r + 4]));
+                image[i +  8] = r3;
+                image[i +  9] = g3;
+                image[i + 10] = b3;
+                image[i + 11] = a3;
+
                 // Pixel 4
-                image[i + 12] = _4BitsTo8Bits(raw[r  + 7], 0xF0);
-                image[i + 13] = _4BitsTo8Bits(raw[r  + 7], 0x0F);
-                image[i + 14] = _4BitsTo8Bits(raw[r  + 6], 0xF0);
-                image[i + 15] = _4BitsTo8Bits(raw[r  + 6], 0x0F);
+                var (r4, g4, b4, a4) = RGBAFromBGR555((ushort)(((ushort)raw[r + 7] << 8) | (ushort)raw[r + 6]));
+                image[i + 12] = r4;
+                image[i + 13] = g4;
+                image[i + 14] = b4;
+                image[i + 15] = a4;
+
                 r += 8;
             }
 
@@ -345,7 +383,7 @@ public static class TextureExtensions
         return image;
     }
 
-    private static byte[] DecodeDxImage(byte[] raw, int width, int height, int mips, DxEncoding encoding)
+    private static byte[] DecodeDxImage(Span<byte> raw, int width, int height, int mips, DxEncoding encoding)
     {
         byte[] image = new byte[width * height * 4]; // 32 bpp
 
@@ -659,6 +697,17 @@ public static class TextureExtensions
         return data;*/
     }
 
+    private static (byte r, byte g, byte b, byte a) RGBAFromBGR555(ushort data)
+    {
+        var a = ((data >> 15) == 1) ? (byte)0xFF : (byte)0x00;
+
+        var b = (byte)(((data & 0b0111_1100_0000_0000) >> 7) | 0b111);
+        var g = (byte)(((data & 0b0000_0011_1110_0000) >> 2) | 0b111);
+        var r = (byte)(((data & 0b0000_0000_0001_1111) << 3) | 0b111);
+
+        return (r, g, b, a);
+    }
+
     private static int LinearOffset(int x, int y, int w) => (y * (w << 2)) + (x << 2);
 
     private static byte _4BitsTo8Bits(int val, int andVal = 0x0F)
@@ -768,7 +817,7 @@ public static class TextureExtensions
                 0xFF
             };
 
-    private static byte[] UnpackIndexedInterpolatedColors(byte[] data, int i = 0)
+    private static byte[] UnpackIndexedInterpolatedColors(Span<byte> data, int i = 0)
     {
         byte[] pixels = new byte[16];
 
@@ -837,12 +886,13 @@ public static class TextureExtensions
         if (info.Platform == Platform.PS3
             || info.Platform == Platform.X360)
         {
-            // TODO: Refactor to be more efficient
             var inputBytes = image.AsRGBA();
 
-            // Encode as DXT5 for now
-            var rawData = EncodeDxImage(inputBytes, width, height, 0, DxEncoding.DXGI_FORMAT_BC3_UNORM);
-            var bpp2 = 8;
+            var (bpp2, enc, dxEnc) = HasAlpha(inputBytes)
+                ? (8, 24, DxEncoding.DXGI_FORMAT_BC3_UNORM) // DXT5
+                : (4, 8, DxEncoding.DXGI_FORMAT_BC1_UNORM); // DXT1
+
+            var rawData = EncodeDxImage(inputBytes, width, height, 0, dxEnc);
 
             if (info.Platform == Platform.X360)
                 SwapBytes(rawData);
@@ -850,13 +900,62 @@ public static class TextureExtensions
             return new HMXBitmap()
             {
                 Bpp = bpp2,
-                Encoding = 24, // DXT5
+                Encoding = enc,
                 MipMaps = 0,
                 Width = width,
                 Height = height,
                 BPL = (width * bpp2) / 8,
                 RawData = rawData
             };
+        }
+        else if (info.Platform == Platform.Wii)
+        {
+            var rawData = image.AsRGBA();
+
+            if (HasAlpha(rawData))
+            {
+                var (rgbData, alphaData) = SplitRGBAForTPL(rawData);
+
+                // Encode as two DXT1 images
+                var rgbDxData = EncodeDxImage(rgbData, width, height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+                Texture.TPL.DXT1ToTPL(width, height, rgbDxData);
+
+                var alphaDxData = EncodeDxImage(alphaData, width, height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+                Texture.TPL.DXT1ToTPL(width, height, alphaDxData);
+
+                // Combine image data
+                var combinedImageData = new byte[rgbDxData.Length + alphaDxData.Length];
+                Array.Copy(rgbDxData, 0, combinedImageData, 0, rgbDxData.Length);
+                Array.Copy(alphaDxData, 0, combinedImageData, rgbDxData.Length, alphaDxData.Length);
+
+                return new HMXBitmap()
+                {
+                    Bpp = 8,
+                    Encoding = TPL_CMP_ALPHA,
+                    MipMaps = 0,
+                    Width = width,
+                    Height = height,
+                    BPL = (width * 8) / 8,
+                    RawData = combinedImageData
+                };
+            }
+            else
+            {
+                // Encode as DXT1
+                var dxData = EncodeDxImage(rawData, width, height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+                Texture.TPL.DXT1ToTPL(width, height, dxData);
+
+                return new HMXBitmap()
+                {
+                    Bpp = 4,
+                    Encoding = TPL_CMP,
+                    MipMaps = 0,
+                    Width = width,
+                    Height = height,
+                    BPL = (width * 4) / 8,
+                    RawData = dxData
+                };
+            }
         }
 
         var uniqueColors = image.GetUniqueColors();
@@ -1016,5 +1115,35 @@ public static class TextureExtensions
             UseExternal = false,
             Bitmap = bitmap
         };
+    }
+
+    private static bool HasAlpha(byte[] rgbaData)
+    {
+        for (int i = 3; i < rgbaData.Length; i += 4)
+        {
+            if (rgbaData[i] < byte.MaxValue)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static (byte[] rgb, byte[] alpha) SplitRGBAForTPL(byte[] data)
+    {
+        var rgb = new byte[data.Length];
+        var alpha = new byte[data.Length];
+
+        for (int i = 0; i < data.Length; i += 4)
+        {
+            rgb[i] = data[i];
+            rgb[i + 1] = data[i + 1];
+            rgb[i + 2] = data[i + 2];
+            rgb[i + 3] = 0xFF;
+
+            // Put alpha on green channel
+            alpha[i + 1] = data[i + 3];
+        }
+
+        return (rgb, alpha);
     }
 }

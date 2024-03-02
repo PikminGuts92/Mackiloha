@@ -20,8 +20,8 @@ jobs:
       ZIP_NAME: ${{ github.event.repository.name }}-ci-${{ github.sha }}-${{ matrix.osname }}
       OUTPUT_PATH: ./build
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.nuget/packages
@@ -31,7 +31,7 @@ jobs:
             Test/**/obj/*.*
           key: ${{ matrix.osname }}-build-${{ hashFiles('**/*.csproj', './*.sln') }}
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
       - name: Test projects
@@ -41,7 +41,7 @@ jobs:
         run: |
           chmod +x ./build.sh
           ./build.sh -r ${{ matrix.osname }} -o ${{ env.OUTPUT_PATH }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ZIP_NAME }}
           path: ${{ env.OUTPUT_PATH }}

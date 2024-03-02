@@ -8,6 +8,7 @@ using Mackiloha.Ark;
 using Mackiloha.CSV;
 using Mackiloha.IO;
 using Mackiloha.Milo;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using static Mackiloha.FileHelper;
 
@@ -82,6 +83,8 @@ public class Ark2DirApp
         Archive ark;
         int arkVersion;
         bool arkEncrypted;
+
+        var watch = Stopwatch.StartNew();
 
         if (!op.ExtractAll
             && !op.ConvertScripts
@@ -174,7 +177,13 @@ public class Ark2DirApp
             var info = new SystemInfo()
             {
                 Version = 10,
-                Platform = Platform.PS2,
+                Platform = textureEntry.FileName switch
+                {
+                    var p when p.EndsWith("_ps3", StringComparison.InvariantCultureIgnoreCase) => Platform.PS3,
+                    var p when p.EndsWith("_wii", StringComparison.InvariantCultureIgnoreCase) => Platform.Wii,
+                    var p when p.EndsWith("_xbox", StringComparison.InvariantCultureIgnoreCase) => Platform.X360,
+                    _ => Platform.PS2
+                },
                 BigEndian = false
             };
 
@@ -284,5 +293,8 @@ public class Ark2DirApp
         // Clean up temp files
         if (Directory.Exists(tempDir))
             Directory.Delete(tempDir, true);
+
+        watch.Stop();
+        Log.Information("Finished extracting ark in {WatchElapsed}", watch.Elapsed);
     }
 }
