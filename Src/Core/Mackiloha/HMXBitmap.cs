@@ -9,6 +9,7 @@ public class HMXBitmap : ISerializable
     public int Width { get; set; }
     public int Height { get; set; }
     public int BPL { get; set; }
+    public int WiiAlphaNumber { get; set; }
 
     public byte[] RawData { get; set; }
 }
