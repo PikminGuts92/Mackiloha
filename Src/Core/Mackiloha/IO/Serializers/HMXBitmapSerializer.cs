@@ -30,7 +30,10 @@ public class HMXBitmapSerializer : AbstractSerializer
     {
         var bitmap = data as HMXBitmap;
 
-        aw.Write((byte)0x01);
+        if (bitmap.WiiAlphaNumber == 4)
+            aw.Write((byte)0x02);
+        else
+            aw.Write((byte)0x01);
 
         aw.Write((byte)bitmap.Bpp);
         aw.Write((int)bitmap.Encoding);
@@ -40,11 +43,23 @@ public class HMXBitmapSerializer : AbstractSerializer
         aw.Write((short)bitmap.Height);
         aw.Write((short)bitmap.BPL);
 
-        aw.Write(new byte[19]);
+        aw.Write((short)bitmap.WiiAlphaNumber);
 
-        byte[] bytes = new byte[CalculateTextureByteSize(bitmap.Encoding, bitmap.Width, bitmap.Height, bitmap.Bpp, bitmap.MipMaps)];
-        Array.Copy(bitmap.RawData, bytes, bytes.Length);
-        aw.Write(bytes);
+        aw.Write(new byte[17]);
+
+        if (bitmap.WiiAlphaNumber == 4)
+        {
+            byte[] bytes = new byte[CalculateTextureByteSize(bitmap.Encoding, bitmap.Width, bitmap.Height, 8, bitmap.MipMaps)];
+            Array.Copy(bitmap.RawData, bytes, bytes.Length);
+            aw.Write(bytes);
+        }
+        else
+        {
+            byte[] bytes = new byte[CalculateTextureByteSize(bitmap.Encoding, bitmap.Width, bitmap.Height, bitmap.Bpp, bitmap.MipMaps)];
+            Array.Copy(bitmap.RawData, bytes, bytes.Length);
+            aw.Write(bytes);
+        }
+        
     }
 
     private int CalculateTextureByteSize(int encoding, int w, int h, int bpp, int mips, int wiiAlphaNum = 0)
