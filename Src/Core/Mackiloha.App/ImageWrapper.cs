@@ -146,26 +146,7 @@ public class ImageWrapper : IImageWrapper, IDisposable
     public byte[] AsRGBA()
     {
         var data = new byte[_image.Width * _image.Height * 4];
-
-        _image.ProcessPixelRows(accessor =>
-        {
-            for (int y = 0; y < accessor.Height; y++)
-            {
-                var row = accessor.GetRowSpan(y);
-
-                for (int x = 0; x < row.Length; x++)
-                {
-                    var i = ((y * _image.Width) + x) * 4;
-                    var pixel = row[x];
-
-                    data[i    ] = pixel.R;
-                    data[i + 1] = pixel.G;
-                    data[i + 2] = pixel.B;
-                    data[i + 3] = pixel.A;
-                }
-            }
-        });
-
+        _image.CopyPixelDataTo(data);
         return data;
     }
 
@@ -177,11 +158,11 @@ public class ImageWrapper : IImageWrapper, IDisposable
         encoder.OutputOptions.Format = BCnEncoder.Shared.CompressionFormat.Bc1;
         encoder.OutputOptions.FileFormat = BCnEncoder.Shared.OutputFileFormat.Dds;
 
-        using var ms = new MemoryStream();
+        var data = new byte[(_image.Width * _image.Height) >> 1];
+        using var ms = new MemoryStream(new byte[data.Length + 128]);
         encoder.EncodeToStream(_image, ms);
 
         // Copy to array (definitely not the most efficient...)
-        var data = new byte[(_image.Width * _image.Height) >> 1];
         ms.Seek(128, SeekOrigin.Begin);
         ms.Read(data, 0, data.Length);
 
@@ -196,11 +177,11 @@ public class ImageWrapper : IImageWrapper, IDisposable
         encoder.OutputOptions.Format = BCnEncoder.Shared.CompressionFormat.Bc3;
         encoder.OutputOptions.FileFormat = BCnEncoder.Shared.OutputFileFormat.Dds;
 
-        using var ms = new MemoryStream();
+        var data = new byte[_image.Width * _image.Height];
+        using var ms = new MemoryStream(new byte[data.Length + 128]);
         encoder.EncodeToStream(_image, ms);
 
         // Copy to array (definitely not the most efficient...)
-        var data = new byte[_image.Width * _image.Height];
         ms.Seek(128, SeekOrigin.Begin);
         ms.Read(data, 0, data.Length);
 
