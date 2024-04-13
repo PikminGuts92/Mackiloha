@@ -156,7 +156,7 @@ public class Dir2ArkApp
             else if ((int)ark.Version >= 3 && potentialPartSize >= arkPartSizeLimit)
             {
                 // Kind of hacky but multiple part writing isn't implemented in commit changes yet
-                ark.CommitChanges(true);
+                ark.CommitChanges(false);
                 ark.AddAdditionalPart();
 
                 currentPartSize = 0;
@@ -176,7 +176,8 @@ public class Dir2ArkApp
             currentPartSize += fileSize;
         }
 
-        ark.CommitChanges(true);
+        ark.CommitChanges(false);
+        ark.WriteHeader();
         watch.Stop();
 
         Log.Information("Finished building ark in {WatchElapsed}", watch.Elapsed);
