@@ -20,9 +20,10 @@ public class HMXBitmapSerializer : AbstractSerializer
         bitmap.Width = ar.ReadUInt16();
         bitmap.Height = ar.ReadUInt16();
         bitmap.BPL = ar.ReadUInt16();
+        bitmap.WiiAlphaNumber = ar.ReadUInt16(); // Assuming u16
 
-        ar.BaseStream.Position += 19; // Skips zeros
-        bitmap.RawData = ar.ReadBytes(CalculateTextureByteSize(bitmap.Encoding, bitmap.Width, bitmap.Height, bitmap.Bpp, bitmap.MipMaps));
+        ar.BaseStream.Position += 17; // Skips zeros
+        bitmap.RawData = ar.ReadBytes(CalculateTextureByteSize(bitmap.Encoding, bitmap.Width, bitmap.Height, bitmap.Bpp, bitmap.MipMaps, bitmap.WiiAlphaNumber));
     }
 
     public override void WriteToStream(AwesomeWriter aw, ISerializable data)
@@ -46,7 +47,7 @@ public class HMXBitmapSerializer : AbstractSerializer
         aw.Write(bytes);
     }
 
-    private int CalculateTextureByteSize(int encoding, int w, int h, int bpp, int mips)
+    private int CalculateTextureByteSize(int encoding, int w, int h, int bpp, int mips, int wiiAlphaNum = 0)
     {
         int bytes = 0;
 
@@ -61,6 +62,12 @@ public class HMXBitmapSerializer : AbstractSerializer
 
                 // Each color is 32 bits 
                 bytes += (bpp == 4 || bpp == 8) ? 1 << (bpp + 2) : 0;
+                break;
+            case 72: // Wii 4bpp texture
+                if (wiiAlphaNum == 4)
+                {
+                    bytes += (w * h * bpp) / 8;
+                }
                 break;
         }
 

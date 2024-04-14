@@ -446,6 +446,11 @@ public class ArkFile : Archive
         return (currentIdx, (entryOffset - currentOffset));
     }
 
+    public void WriteHeader()
+    {
+        WriteHeader(_arkPaths.First());
+    }
+
     public void WriteHeader(string path)
     {
         using var ms = new MemoryStream();
@@ -819,48 +824,17 @@ public class ArkFile : Archive
             _offsetEntries.Clear();
         }
 
-        List<EntryOffset> GetGaps()
+        static void CopyToArchive(Stream fsArk, long arkOffset, string entryFile)
         {
-            List<EntryOffset> offsetGaps = new List<EntryOffset>();
-            long previousOffset = 0;
+            fsArk.Seek(arkOffset, SeekOrigin.Begin);
 
-            foreach (var offsetEntry in remainingOffsetEntries)
-            {
-                if (offsetEntry.Offset - previousOffset == 0)
-                {
-                    // No gap, continues
-                    previousOffset = offsetEntry.Offset + offsetEntry.Size;
-                    continue;
-                }
-
-                // Adds gap to list
-                long gapOffset = previousOffset;
-                int gapSize = (int)(offsetEntry.Offset - previousOffset);
-                offsetGaps.Add(new EntryOffset(gapOffset, gapSize));
-
-                previousOffset = offsetEntry.Offset + offsetEntry.Size;
-            }
-
-            return offsetGaps;
+            using var fsEntry = File.OpenRead(entryFile);
+            fsEntry.CopyTo(fsArk);
         }
 
-        void CopyToArchive(string arkFile, long arkOffset, string entryFile)
-        {
-            // TODO: Extract out of this
-            using (FileStream fsArk = File.OpenWrite(arkFile))
-            {
-                fsArk.Seek(arkOffset, SeekOrigin.Begin);
-
-                using (FileStream fsEntry = File.OpenRead(entryFile))
-                {
-                    fsEntry.CopyTo(fsArk);
-                }
-            }
-        }
-
-        // TODO: Compare previousOffset to ark file size
-        List<EntryOffset> gaps = GetGaps();
-        var pendingEntries = _pendingEntries.Select(x => new { Length = new FileInfo(x.LocalFilePath).Length, Entry = x }).OrderBy(x => x.Length);
+        var pendingEntries = _pendingEntries
+            .Select(x => new { Length = new FileInfo(x.LocalFilePath).Length, Entry = x })
+            .OrderBy(x => x.Length);
 
         // Gets lengths of ark files
         // TODO: Also check if part is encrypted
@@ -868,69 +842,38 @@ public class ArkFile : Archive
             .Select(x => x.size)
             .ToArray();
 
+        var lastPartStartOffset = arkSizes
+            .Reverse()
+            .Skip(1)
+            .Sum();
+
+        using var lastPartStream = File.OpenWrite(_arkPaths.Last());
+
         foreach (var pending in pendingEntries)
         {
-            // Looks at smallest gaps first, selects first fit
-            var bestFit = gaps.OrderBy(x => x.Size).FirstOrDefault(x => x.Size >= pending.Length);
+            // Adds to end of last archive file
+            var lastEntry = remainingOffsetEntries
+                .OrderByDescending(x => x.Offset + x.Size) // Ensures 0-length files don't conflict w/ regular files at same offset
+                .FirstOrDefault();
 
-            if (arkSizes.Length > 1)
-                bestFit = null; // TODO: Update for multi-part arks
-
-            if (bestFit == null)
-            {
-                // Adds to end of last archive file
-                var lastEntry = remainingOffsetEntries
-                    .OrderByDescending(x => x.Offset + x.Size) // Ensures 0-length files don't conflict w/ regular files at same offset
-                    .FirstOrDefault();
-
-                long offset = (lastEntry != null)
-                    ? lastEntry.Offset + lastEntry.Size
-                    : Version switch
-                    {
-                        ArkVersion.V2 => arkSizes.First(),
-                        _ => 0
-                    };
-
-                long partOffset = offset - arkSizes
-                    .Reverse()
-                    .Skip(1)
-                    .Sum();
-
-                // Copies entry to ark file
-                CopyToArchive(_arkPaths.Last(), partOffset, pending.Entry.LocalFilePath);
-
-                // Get inflate size if v2 or lower
-                var inflateSize = GetInflateSize(pending.Entry.LocalFilePath);
-
-                // Adds ark offset entry
-                remainingOffsetEntries.Add(new OffsetArkEntry(offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, inflateSize, arkSizes.Length, partOffset));
-            }
-            else
-            {
-                (int partIdx, long partOffset) = GetArkOffsetForEntry(bestFit.Offset, arkSizes);
-
-                // Copies entry to ark file (TODO: Calculate arkPath beforehand)
-                CopyToArchive(_arkPaths[partIdx + 1], partOffset, pending.Entry.LocalFilePath);
-
-                // Get inflate size if v2 or lower
-                var inflateSize = GetInflateSize(pending.Entry.LocalFilePath);
-
-                // Adds ark offset entry
-                remainingOffsetEntries.Add(new OffsetArkEntry(bestFit.Offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, inflateSize, partIdx + 1, partOffset));
-
-                // Updates gap entry
-                if (bestFit.Size == pending.Length)
+            long offset = (lastEntry != null)
+                ? lastEntry.Offset + lastEntry.Size
+                : Version switch
                 {
-                    // Remove gap
-                    gaps.Remove(bestFit);
-                }
-                else
-                {
-                    // Updates values
-                    bestFit.Offset += pending.Length;
-                    bestFit.Size -= (int)pending.Length;
-                }
-            }
+                    ArkVersion.V2 => arkSizes.First(),
+                    _ => 0
+                };
+
+            long partOffset = offset - lastPartStartOffset;
+
+            // Copies entry to ark file
+            CopyToArchive(lastPartStream, partOffset, pending.Entry.LocalFilePath);
+
+            // Get inflate size if v2 or lower
+            var inflateSize = GetInflateSize(pending.Entry.LocalFilePath);
+
+            // Adds ark offset entry
+            remainingOffsetEntries.Add(new OffsetArkEntry(offset, pending.Entry.FileName, pending.Entry.Directory, (uint)pending.Length, inflateSize, arkSizes.Length, partOffset));
         }
 
         // Updates archive entries
@@ -938,17 +881,11 @@ public class ArkFile : Archive
         _offsetEntries.Clear();
         _offsetEntries.AddRange(remainingOffsetEntries);
 
-        // Re-writes header file
-        if (writeHeader && (int)Version >= 3)
-            WriteHeader(_arkPaths[0]);
-        else if ((int)Version < 3)
+        // Writes header file
+        if (writeHeader || (int)Version < 3)
         {
-            // Update header
-            using var fs = File.OpenWrite(_arkPaths.First());
-            WriteHeader(fs);
+            WriteHeader(_arkPaths.First());
         }
-
-        // TODO: Add an output log
     }
 
     protected uint GetInflateSize(string path)
@@ -958,11 +895,11 @@ public class ArkFile : Archive
             // Don't care when version is 3 or above
             return 0;
         }
-        else if (Regex.IsMatch(path, "(?i).gz$"))
+        else if (path.EndsWith(".gz", StringComparison.InvariantCultureIgnoreCase))
         {
             return GetGZipInflateSize(path);
         }
-        else if (path.EndsWith(".z") || path.EndsWith(".Z"))
+        else if (path.EndsWith(".z", StringComparison.InvariantCultureIgnoreCase))
         {
             return GetZlibInflateSize(path);
         }

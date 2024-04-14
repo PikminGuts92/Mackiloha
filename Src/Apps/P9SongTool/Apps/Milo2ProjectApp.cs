@@ -114,10 +114,10 @@ public class Milo2ProjectApp
         {
             Version = 25,
             BigEndian = true,
-            Platform = op.InputPath.ToLower() switch
+            Platform = op.InputPath switch
             {
-                var p when p.EndsWith("_ps3") => Platform.PS3,
-                var p when p.EndsWith("_wii") => Platform.Wii,
+                var p when p.EndsWith("_ps3", StringComparison.InvariantCultureIgnoreCase) => Platform.PS3,
+                var p when p.EndsWith("_wii", StringComparison.InvariantCultureIgnoreCase) => Platform.Wii,
                 _ => Platform.X360
             }
         };

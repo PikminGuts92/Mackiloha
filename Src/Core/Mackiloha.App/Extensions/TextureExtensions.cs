@@ -45,16 +45,47 @@ public static class TextureExtensions
             case TPL_CMP_2:
             case TPL_CMP_ALPHA:
                 // Wii textures
-                var tempData = new byte[((bitmap.Width * bitmap.Height) * bitmap.Bpp) / 8]; // Just ignore mips
-                Array.Copy(bitmap.RawData, tempData, tempData.Length);
-
-                if (bitmap.Bpp == 4)
+                if (bitmap.Bpp == 4 && bitmap.WiiAlphaNumber == 4)
                 {
+                    // Hidden alpha texture after mips... ugh
+                    var dxSize = (bitmap.Width * bitmap.Height * bitmap.Bpp) / 8;
+
+                    var rgbData = new byte[dxSize];
+                    var alphaData = new byte[dxSize];
+
+                    Array.Copy(bitmap.RawData, 0, rgbData, 0, rgbData.Length);
+                    Array.Copy(bitmap.RawData, bitmap.RawData.Length - rgbData.Length, alphaData, 0, alphaData.Length);
+
+                    // Remap blocks to DXT1
+                    Texture.TPL.TPLToDXT1(bitmap.Width, bitmap.Height, rgbData);
+                    Texture.TPL.TPLToDXT1(bitmap.Width, bitmap.Height, alphaData);
+
+                    // Decode both images
+                    var decodedImage = DecodeDxImage(rgbData, bitmap.Width, bitmap.Height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+                    var decodedAlpha = DecodeDxImage(alphaData, bitmap.Width, bitmap.Height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
+
+                    // Combine alpha channel
+                    for (int i = 0; i < decodedImage.Length; i += 4)
+                    {
+                        // Load from green channel
+                        decodedImage[i + 3] = decodedAlpha[i + 1];
+                    }
+
+                    return decodedImage;
+                }
+                else if (bitmap.Bpp == 4)
+                {
+                    var tempData = new byte[((bitmap.Width * bitmap.Height) * bitmap.Bpp) / 8]; // Just ignore mips
+                    Array.Copy(bitmap.RawData, tempData, tempData.Length);
+
                     Texture.TPL.TPLToDXT1(bitmap.Width, bitmap.Height, tempData);
                     return DecodeDxImage(tempData, bitmap.Width, bitmap.Height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
                 }
                 else
                 {
+                    var tempData = new byte[((bitmap.Width * bitmap.Height) * bitmap.Bpp) / 8]; // Just ignore mips
+                    Array.Copy(bitmap.RawData, tempData, tempData.Length);
+
                     // 8bpp wii texture is actually two DXT1 textures
                     var rgbData = tempData.AsSpan(0, tempData.Length / 2);
                     var alphaData = tempData.AsSpan(tempData.Length / 2, tempData.Length / 2);
@@ -70,6 +101,7 @@ public static class TextureExtensions
                     // Combine alpha channel
                     for (int i = 0; i < decodedImage.Length; i += 4)
                     {
+                        // Load from green channel
                         decodedImage[i + 3] = decodedAlpha[i + 1];
                     }
 
