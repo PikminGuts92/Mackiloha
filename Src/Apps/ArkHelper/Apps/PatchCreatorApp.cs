@@ -86,6 +86,10 @@ public class PatchCreatorApp
                 ark.AddAdditionalPart(fullPartPath);
             }
         }
+        else
+        {
+            Log.Warning("Using inplace edit");
+        }
 
         var files = Directory.GetFiles(op.ArkFilesPath, "*", SearchOption.AllDirectories);
 
