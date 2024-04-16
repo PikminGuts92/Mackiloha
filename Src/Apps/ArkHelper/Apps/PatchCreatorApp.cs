@@ -45,7 +45,7 @@ public class PatchCreatorApp
         var hdrFileName = new FileInfo(op.InputPath).Name;
         var isUppercase = Path
             .GetFileNameWithoutExtension(hdrFileName)
-            .All(char.IsUpper);
+            .All(char.IsAsciiLetterUpper);
 
         var genDirName = isUppercase
             ? "GEN"
@@ -54,7 +54,7 @@ public class PatchCreatorApp
         // Use upper case if any file names do
         var genDirNameInternal = ark
             .Entries
-            .Any(x => x.FileName.Any(char.IsUpper))
+            .Any(x => x.FileName.Any(char.IsAsciiLetterUpper))
             ? "GEN"
             : "gen";
 
