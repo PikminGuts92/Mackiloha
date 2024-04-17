@@ -54,7 +54,9 @@ public class PatchCreatorApp
         // Use upper case if any file names do
         var genDirNameInternal = ark
             .Entries
-            .Any(x => x.FileName.Any(char.IsAsciiLetterUpper))
+            .Any(x => x.FileName
+                .Where(char.IsAsciiLetter)
+                .All(char.IsAsciiLetterUpper))
             ? "GEN"
             : "gen";
 
