@@ -45,9 +45,18 @@ public class PatchCreatorApp
         var hdrFileName = new FileInfo(op.InputPath).Name;
         var isUppercase = Path
             .GetFileNameWithoutExtension(hdrFileName)
-            .All(c => char.IsUpper(c));
+            .All(char.IsAsciiLetterUpper);
 
         var genDirName = isUppercase
+            ? "GEN"
+            : "gen";
+
+        // Use upper case if any file names do
+        var genDirNameInternal = ark
+            .Entries
+            .Any(x => x.FileName
+                .Where(char.IsAsciiLetter)
+                .All(char.IsAsciiLetterUpper))
             ? "GEN"
             : "gen";
 
@@ -78,6 +87,10 @@ public class PatchCreatorApp
 
                 ark.AddAdditionalPart(fullPartPath);
             }
+        }
+        else
+        {
+            Log.Warning("Using inplace edit");
         }
 
         var files = Directory.GetFiles(op.ArkFilesPath, "*", SearchOption.AllDirectories);
@@ -114,7 +127,7 @@ public class PatchCreatorApp
                 internalPath = $"{internalPath.Substring(0, internalPath.Length - 1)}b";
 
                 if (!genPathedFile.IsMatch(internalPath))
-                    internalPath = internalPath.Insert(internalPath.LastIndexOf('/'), $"/{genDirName}");
+                    internalPath = internalPath.Insert(internalPath.LastIndexOf('/'), $"/{genDirNameInternal}");
 
                 // Creates temp dtb file
                 inputFilePath = ScriptHelper.ConvertDtaToDtb(file, tempDir, ark.Encrypted, (int)ark.Version);

@@ -31,7 +31,7 @@ public class MidiHelper
         }
 
         Log.Information("Using \"{MidPath}\" as base .mid file", midPath);
-        return new MidiFile(midPath);
+        return new MidiFile(midPath, strictChecking: false);
     }
 
     protected virtual List<(long tickPos, decimal framePos, int mpq)> CreateTempoMap()
