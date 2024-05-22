@@ -946,7 +946,7 @@ public static class TextureExtensions
 
             if (HasAlpha(rawData))
             {
-                var (rgbData, alphaData) = SplitRGBAForTPL(rawData);
+                var (rgbData, alphaData) = SplitRGBAForTPL(rawData, info);
 
                 // Encode as two DXT1 images
                 var rgbDxData = EncodeDxImage(rgbData, width, height, 0, DxEncoding.DXGI_FORMAT_BC1_UNORM);
@@ -960,6 +960,20 @@ public static class TextureExtensions
                 Array.Copy(rgbDxData, 0, combinedImageData, 0, rgbDxData.Length);
                 Array.Copy(alphaDxData, 0, combinedImageData, rgbDxData.Length, alphaDxData.Length);
 
+                if (info.Version == 25)
+                {
+                    return new HMXBitmap()
+                    {
+                        Bpp = 4,
+                        Encoding = TPL_CMP,
+                        MipMaps = 0,
+                        Width = width,
+                        Height = height,
+                        BPL = (width * 4) / 8,
+                        WiiAlphaNumber = 4,
+                        RawData = combinedImageData
+                    };
+                }
                 return new HMXBitmap()
                 {
                     Bpp = 8,
@@ -1160,7 +1174,7 @@ public static class TextureExtensions
         return false;
     }
 
-    private static (byte[] rgb, byte[] alpha) SplitRGBAForTPL(byte[] data)
+    private static (byte[] rgb, byte[] alpha) SplitRGBAForTPL(byte[] data, SystemInfo info)
     {
         var rgb = new byte[data.Length];
         var alpha = new byte[data.Length];
@@ -1172,8 +1186,18 @@ public static class TextureExtensions
             rgb[i + 2] = data[i + 2];
             rgb[i + 3] = 0xFF;
 
-            // Put alpha on green channel
-            alpha[i + 1] = data[i + 3];
+            if (info.Version == 25)
+            {
+                // Put alpha on all channels
+                alpha[i] = data[i + 3];
+                alpha[i + 1] = data[i + 3];
+                alpha[i + 2] = data[i + 3];
+            }
+            else
+            {
+                // Put alpha on green channel
+                alpha[i + 1] = data[i + 3];
+            }
         }
 
         return (rgb, alpha);
