@@ -89,7 +89,7 @@ public class ScriptHelperDtab : IScriptHelper
         if (!Directory.Exists(dtaDir))
             Directory.CreateDirectory(dtaDir);
 
-        if (arkVersion < 7)
+        if (arkVersion < 8)
         {
             // Decrypt dtb
             Cli.Wrap(DtabPath)
@@ -116,7 +116,7 @@ public class ScriptHelperDtab : IScriptHelper
         var result = Cli.Wrap(DtabPath)
             .WithArguments(new[]
             {
-                "-a",
+                arkVersion == 7 ? "-A" : "-a",
                 decDtbPath,
                 dtaPath
             })
